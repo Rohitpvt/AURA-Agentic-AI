@@ -187,6 +187,27 @@ class EmbeddingDimensionMismatchError(AuraException):
         )
 
 
+class ModelNotFoundError(AuraException):
+    def __init__(self, model_name: str, path_or_hint: str = "", details: Optional[Dict[str, Any]] = None):
+        msg = f"Required local model '{model_name}' was not found at '{path_or_hint}'. Zero-cost local execution requires local model assets."
+        super().__init__(
+            message=msg,
+            code="MODEL_NOT_FOUND",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            details=details or {"model_name": model_name, "path_or_hint": path_or_hint},
+        )
+
+
+class VoiceProcessingError(AuraException):
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            code="VOICE_PROCESSING_ERROR",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
 async def aura_exception_handler(request: Request, exc: AuraException) -> JSONResponse:
     from app.core.logging import get_correlation_id
 

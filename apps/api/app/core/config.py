@@ -95,7 +95,15 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
-        return ["http://localhost:3000", "http://127.0.0.1:3000"]
+    # Phase 7: Real-Time Local Voice & Speech
+    VOICE_STT_MODEL: str = Field(default="base.en", description="Faster-Whisper model: base.en, small.en")
+    VOICE_STT_DEVICE: str = Field(default="cpu", description="STT execution device: cpu, cuda")
+    VOICE_STT_COMPUTE_TYPE: str = Field(default="int8", description="STT quantization type: int8, float16, float32")
+    VOICE_VAD_THRESHOLD: float = Field(default=0.5, description="Silero VAD speech detection probability threshold")
+    VOICE_VAD_HANGOVER_MS: int = Field(default=300, description="VAD speech hangover buffer in milliseconds")
+    VOICE_TTS_MODEL: str = Field(default="en_US-lessac-medium", description="Piper-TTS ONNX model name")
+    VOICE_TICKET_EXPIRE_SECONDS: int = Field(default=60, description="Short-lived voice WebSocket ticket TTL in seconds")
+    MODELS_CACHE_DIR: str = Field(default="./.cache/aura/models", description="Root cache directory for local open weights models")
 
     @property
     def is_production(self) -> bool:

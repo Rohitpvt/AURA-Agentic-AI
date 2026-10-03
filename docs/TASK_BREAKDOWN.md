@@ -82,14 +82,16 @@
 
 ---
 
-## 7. Phase 7: Real-Time Local Voice & Speech System (FUTURE)
+## 7. Phase 7: Real-Time Local Voice & Speech System (IN PROGRESS)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **AURA-701** | CPU Faster-Whisper & Silero VAD | Real-time speech capture, VAD voice segmentation, and CPU int8 Whisper transcription. | AURA-102 | 8 pts (3 days) | PLANNED |
-| **AURA-702** | Low-Latency Piper-TTS Synthesis | CPU ONNX Piper speech synthesis with WebSocket streaming and sentence buffering. | AURA-701 | 5 pts (2 days) | PLANNED |
-| **AURA-703** | Real-Time Barge-In Engine | Cooperative interruption token cancelling speech output and active LLM tokens upon user speech. | AURA-701, AURA-702 | 5 pts (2 days) | PLANNED |
-| **AURA-704** | Voice HUD & Audio Waveform UI | Real-time audio visualizer, microphone toggle, and hands-free indicator in Next.js UI. | AURA-301, AURA-703 | 5 pts (2 days) | PLANNED |
+| **AURA-701** | Local STT & Silero VAD | `SileroVADService` on ONNX Runtime (`onnxruntime`), `FasterWhisperSTTService` on CTranslate2 (`faster-whisper`, int8 CPU quantization), ephemeral audio ring buffer, `<untrusted_spoken_content>` prompt-injection envelope. | AURA-102, AURA-508 | 8 pts (3 days) | **COMPLETED & RECONCILED** |
+| **AURA-702** | Piper-TTS Speech Synthesis & Streaming | `PiperTTSService` on ONNX Runtime, streaming sentence-level audio synthesis, linear resampling to 16 kHz, Int16 PCM streaming, sub-250ms TTFA benchmark. | AURA-701 | 5 pts (2 days) | PLANNED |
+| **AURA-703** | Voice Session Protocol & Cooperative Barge-In | `VoiceSessionManager`, bi-directional speech turn-taking, real-time VAD interruption trigger, atomic cancellation of active TTS audio streaming and LLM token generation. | AURA-701, AURA-702 | 5 pts (2 days) | PLANNED |
+| **AURA-704** | Authenticated WebSocket Gateway & Tenancy | Short-lived single-use ticket handshake (`/api/v1/voice/ticket`), binary WebSocket framing (`/api/v1/voice/stream`), 256-bit session nonce, strict `workspace_id` tenant isolation, replay protection. | AURA-703, AURA-103 | 5 pts (2 days) | PLANNED |
+| **AURA-705** | Static Multimodal Vision & Image Inspection | `VisionService` with `Moondream2` default (and local Ollama `qwen2-vl:2b` alternative), image validation and downscaling (max $2048 \times 2048$, 10MB), `<untrusted_multimodal_content>` envelope, OCR fallback. | AURA-602, AURA-508 | 8 pts (3 days) | PLANNED |
+| **AURA-706** | Long-Horizon Checkpoint/Recovery & Voice HUD | `TaskRecoveryService`, FastAPI lifespan `StartupRecoverySweep` for orphaned `RUNNING` tasks, budget governance enforcement, Next.js Voice HUD component with Web Audio `AudioWorkletNode` and `<canvas>` waveform. | AURA-704, AURA-301 | 8 pts (3 days) | PLANNED |
 
 ---
 
