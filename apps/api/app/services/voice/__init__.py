@@ -6,12 +6,22 @@ from app.services.voice.audio_envelope import (
 )
 from app.services.voice.vad_service import SileroVADService, VADState
 from app.services.voice.stt_service import FasterWhisperSTTService, SpeechTranscriptionResult
+from app.services.voice.tts_service import (
+    PiperTTSService,
+    SpeechSynthesisResult,
+    TTSAudioChunk,
+    split_sentences,
+)
 
 __all__ = [
     "SileroVADService",
     "VADState",
     "FasterWhisperSTTService",
     "SpeechTranscriptionResult",
+    "PiperTTSService",
+    "TTSAudioChunk",
+    "SpeechSynthesisResult",
+    "split_sentences",
     "format_untrusted_spoken_envelope",
     "extract_untrusted_spoken_content",
 ]
