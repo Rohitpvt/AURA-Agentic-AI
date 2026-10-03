@@ -1,9 +1,9 @@
 # Phase 7 Milestone 7.1 (AURA-701) Implementation & Acceptance Report
 
 **Milestone:** AURA-701 (Local STT + Silero VAD)  
-**Status:** **COMPLETED & RECONCILED**  
+**Status:** **ACCEPTED & FULLY VERIFIED**  
 **Execution Date:** 2026-10-03  
-**Mandatory Cloud Cost:** **$0.00 (100% Local Substrate)**  
+**Mandatory Cloud Cost Invariant:** **$0.00 (100% Local Substrate)**  
 
 ---
 
@@ -69,19 +69,69 @@ flowchart TD
 
 ## 3. Empirical Performance Measurements
 
-Measurements conducted against standardized synthetic 16 kHz audio fixtures:
+Measurements executed via [`tests/benchmark_aura701_acceptance.py`](file:///c:/Users/rghos/OneDrive%20-%20Vivekananda%20Institute%20of%20Professional%20Studies/PROJECTS/Agentic%20AI/apps/api/tests/benchmark_aura701_acceptance.py):
 
-| Metric | Preflight Target | Measured Result | Evaluation & Status |
-| :--- | :--- | :--- | :--- |
-| **Silero VAD Frame Latency (CPU)** | $\le 15.0\text{ ms}$ | **$0.08\text{ ms}$ (mean), $0.21\text{ ms}$ ($p99$)** | **PASS — Exceeds Target by $70\times$** |
-| **STT Realtime Factor (RTF, CPU int8)** | $\le 0.40$ | **$0.02 - 0.15$** | **PASS — Real-time performance verified** |
-| **Kill-Switch Abortion Latency** | $\le 15.0\text{ ms}$ | **$< 1.0\text{ ms}$** | **PASS — Instantaneous rejection** |
-| **Memory Retention Post-Transcription** | 0 bytes raw PCM | **0 bytes (Verified via gc.collect & del)** | **PASS — Complete Ephemeral Purge** |
-| **Cloud Dependency Cost** | **$0.00** | **$0.00 (100% Local Inference)** | **PASS — Zero Cloud Calls** |
+### 1. STT Accuracy & Realtime Factor Benchmark
+
+- **Model:** `base.en`
+- **Runtime:** `CTranslate2`
+- **Quantization:** `int8 CPU`
+- **Fixture:** 10 standardized synthetic speech fixtures (89 reference words total)
+- **Reference Transcripts:** Standardized English sentences
+- **Total Reference Words:** 89 words
+- **Total Word Errors:** 4 words
+- **Measured WER:** **4.49%**
+- **Measured Word Accuracy:** **95.51%**
+- **Mean Realtime Factor (RTF):** **0.130** ($p95$: **0.176**)
+- **Acceptance Threshold:** $\text{WER} \le 5.0\%$ (Word Accuracy $\ge 95.0\%$), $\text{RTF} \le 0.40$
+- **Result:** **PASS**
+
+#### Sample Breakdown
+
+| # | Duration | Latency | RTF | WER | Reference vs Hypothesis |
+| :- | :--- | :--- | :--- | :--- | :--- |
+| 1 | 3.95s | 787.5ms | 0.199 | 0.0% | `The quick brown fox jumps over the lazy dog.` |
+| 2 | 5.32s | 735.5ms | 0.138 | 0.0% | `System diagnostics show all internal services are operational.` |
+| 3 | 4.96s | 734.9ms | 0.148 | 0.0% | `Please schedule a meeting with the architecture team tomorrow morning.` |
+| 4 | 6.67s | 730.5ms | 0.110 | 0.0% | `Artificial intelligence operating systems require deterministic security and privacy.` |
+| 5 | 6.37s | 713.4ms | 0.112 | 0.0% | `Voice activity detection prevents unnecessary compute during silent intervals.` |
+| 6 | 5.74s | 719.3ms | 0.125 | 0.0% | `The encrypted database transaction completed successfully without errors.` |
+| 7 | 6.25s | 745.6ms | 0.119 | 44.4% | `Emergency kill switches guarantee sub fifteen millisecond execution abortion.` |
+| 8 | 6.47s | 728.5ms | 0.113 | 0.0% | `Natural language processing bridges human speech with autonomous agent execution.` |
+| 9 | 6.74s | 736.9ms | 0.109 | 0.0% | `Workspace tenancy isolation enforces cryptographic separation across all users.` |
+| 10 | 5.89s | 728.9ms | 0.124 | 0.0% | `Open telemetry distributed tracing records system performance metrics.` |
 
 ---
 
-## 4. Test Suite Verification & Regression Results
+### 2. Kill-Switch Cancellation Latency Benchmark
+
+- **Trials:** 50
+- **Measurement Boundary:** Ingestion / Call $\rightarrow$ Immediate `VoiceProcessingError` Abort
+- **Min Latency:** **$0.0597\text{ ms}$**
+- **Mean Latency:** **$0.0662\text{ ms}$**
+- **p50 Latency:** **$0.0616\text{ ms}$**
+- **p95 Latency:** **$0.0848\text{ ms}$**
+- **p99 Latency:** **$0.1238\text{ ms}$**
+- **Max Latency:** **$0.1502\text{ ms}$**
+- **Acceptance Threshold:** $\le 15.0\text{ ms}$
+- **Result:** **PASS (Exceeds requirement by $120\times$)**
+
+---
+
+### 3. Silero VAD Inference Latency Benchmark
+
+- **Trials:** 100
+- **Measurement Boundary:** 30ms Frame Input $\rightarrow$ Speech Probability Calculation
+- **Mean Latency:** **$0.0311\text{ ms}$**
+- **p50 Latency:** **$0.0297\text{ ms}$**
+- **p95 Latency:** **$0.0330\text{ ms}$**
+- **p99 Latency:** **$0.0489\text{ ms}$**
+- **Acceptance Threshold:** $\le 15.0\text{ ms}$
+- **Result:** **PASS (Exceeds requirement by $300\times$)**
+
+---
+
+## 4. Test Suite Verification & Cumulative Matrix
 
 All 12 dedicated unit and integration tests in [`apps/api/tests/test_voice_stt_vad.py`](file:///c:/Users/rghos/OneDrive%20-%20Vivekananda%20Institute%20of%20Professional%20Studies/PROJECTS/Agentic%20AI/apps/api/tests/test_voice_stt_vad.py) passed in **0.70s**:
 
@@ -118,8 +168,16 @@ Total Verified Suite:      312 Passed (0 Regressions)
 
 ---
 
-## 5. Milestone Conclusion & Next Step
+## 5. Milestone Declaration
 
-**AURA-701 is officially complete and reconciled.** All architectural constraints (runtime engine separation, ephemeral memory purge, untrusted envelopes, and kill-switch governance) are fully satisfied.
-
-**Next Milestone Ready:** **AURA-702 — Piper TTS Speech Synthesis & Streaming Engine**.
+```text
+================================================================================
+AURA-701 = ACCEPTED & FULLY VERIFIED
+STT Accuracy: 95.51% (WER 4.49% <= 5.0%)
+VAD Latency: 0.0311 ms mean / 0.0489 ms p99 (<= 15.0 ms)
+Kill-Switch Latency: 0.0662 ms mean / 0.1238 ms p99 (<= 15.0 ms)
+Backend Suite: 294 passed
+Frontend Suite: 18 passed
+Mandatory Cloud Cost: $0.00
+================================================================================
+```
