@@ -1,15 +1,28 @@
-"""Governed Static Multimodal Vision Tool Handlers for Agent Runtime."""
+"""Governed Vision Tool Handlers for Agent Runtime (AURA-705 / AURA-804).
+
+Provides canonical handlers for:
+1. image_inspect (AURA-705 Static Image VLM & OCR)
+2. inspect_current_screen (AURA-804 Live Screen Snapshot & VLM Reasoning)
+3. inspect_active_window (AURA-804 Foreground Window Introspection & VLM)
+4. inspect_camera_frame (AURA-804 Camera Ephemeral Ingestion & VLM)
+5. query_visible_text (AURA-804 Continuous OCR Structured Geometry Extraction)
+"""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AuthorizationError, EntityNotFoundError, ValidationError
 from app.core.logging import logger
+from app.core.sanitization import prompt_sanitizer
 from app.services.file_service import file_service
+from app.services.vision.ocr_service import continuous_ocr_service
 from app.services.vision.service import vision_service
+from app.services.vision.vlm_service import vision_vlm_service
 
 
 async def execute_image_inspect(
@@ -18,7 +31,7 @@ async def execute_image_inspect(
     db: Optional[AsyncSession] = None,
     **kwargs,
 ) -> Dict[str, Any]:
-    """Execute image_inspect tool: Inspects static workspace image using local VLM and returns untrusted content envelope."""
+    """Execute image_inspect tool: Inspects static workspace image using local VLM."""
     args = dict(arguments or {})
     args.update(kwargs)
 
@@ -95,4 +108,155 @@ async def execute_image_inspect(
         "security_flags": result.security_flags,
         "ocr_available": result.ocr_available,
         "status": "success",
+    }
+
+
+async def execute_inspect_current_screen(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute inspect_current_screen tool: Read-only snapshot inspection of current display via local VLM."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    monitor_id = int(args.get("monitor_id", 1))
+    prompt = args.get("prompt")
+    detail_level = str(args.get("detail_level", "standard"))
+    model_override = args.get("model")
+    include_ocr_context = bool(args.get("include_ocr_context", True))
+
+    obs = await vision_vlm_service.inspect_screen(
+        workspace_id=workspace_id,
+        monitor_id=monitor_id,
+        prompt=prompt,
+        detail_level=detail_level,
+        model_override=model_override,
+        include_ocr_context=include_ocr_context,
+    )
+
+    res = obs.to_dict()
+    res["status"] = "success" if not obs.degraded else "degraded"
+    return res
+
+
+async def execute_inspect_active_window(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute inspect_active_window tool: Read-only inspection of foreground active window via local VLM."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    prompt = args.get("prompt")
+    detail_level = str(args.get("detail_level", "standard"))
+    model_override = args.get("model")
+    include_ocr_context = bool(args.get("include_ocr_context", True))
+
+    obs = await vision_vlm_service.inspect_active_window(
+        workspace_id=workspace_id,
+        prompt=prompt,
+        detail_level=detail_level,
+        model_override=model_override,
+        include_ocr_context=include_ocr_context,
+    )
+
+    res = obs.to_dict()
+    res["status"] = "success" if not obs.degraded else "degraded"
+    return res
+
+
+async def execute_inspect_camera_frame(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute inspect_camera_frame tool: Read-only inspection of latest camera frame from AURA-803 buffer."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    prompt = args.get("prompt")
+    detail_level = str(args.get("detail_level", "standard"))
+    model_override = args.get("model")
+
+    obs = await vision_vlm_service.inspect_camera(
+        workspace_id=workspace_id,
+        prompt=prompt,
+        detail_level=detail_level,
+        model_override=model_override,
+    )
+
+    res = obs.to_dict()
+    res["status"] = "success" if not obs.degraded else "camera_inactive"
+    return res
+
+
+async def execute_query_visible_text(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute query_visible_text tool: Queries structured local OCR observations across screen regions."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    query = args.get("query")
+    min_confidence = float(args.get("min_confidence", 0.0))
+    case_sensitive = bool(args.get("case_sensitive", False))
+    monitor_id = int(args.get("monitor_id", 1))
+
+    # Extract or retrieve latest OCR text
+    ocr_obs = continuous_ocr_service.extract_ocr(
+        workspace_id=str(workspace_id),
+        monitor_id=monitor_id,
+    )
+
+    # Filter regions by confidence and query
+    matched_regions = []
+    for reg in ocr_obs.text_regions:
+        if reg.confidence < min_confidence:
+            continue
+
+        if query:
+            target_q = query if case_sensitive else query.lower()
+            text_val = reg.text if case_sensitive else reg.text.lower()
+            if target_q not in text_val:
+                continue
+
+        matched_regions.append({
+            "text": reg.text,
+            "confidence": round(reg.confidence, 4),
+            "bounding_box": [reg.bbox.x, reg.bbox.y, reg.bbox.width, reg.bbox.height],
+            "polygon": reg.bbox.polygon,
+            "normalized_box": reg.bbox.normalized_bbox,
+            "coordinate_space": "captured_frame",
+        })
+
+    matched_text_lines = [r["text"] for r in matched_regions]
+    matched_text = "\n".join(matched_text_lines)
+
+    # Wrap in untrusted multimodal envelope
+    untrusted_envelope = prompt_sanitizer.wrap_untrusted_multimodal_envelope(
+        content=matched_text if matched_text else ocr_obs.full_text,
+        origin="screen_ocr",
+        model="rapidocr_onnx",
+    )
+
+    return {
+        "query": query,
+        "total_regions": len(ocr_obs.text_regions),
+        "matched_regions_count": len(matched_regions),
+        "matched_text": matched_text,
+        "regions": matched_regions,
+        "full_text": ocr_obs.full_text,
+        "coordinate_space": "captured_frame",
+        "degraded": ocr_obs.degraded,
+        "status": "success" if not ocr_obs.degraded else "degraded",
+        "untrusted_content_envelope": untrusted_envelope,
+        "is_untrusted_content": True,
     }

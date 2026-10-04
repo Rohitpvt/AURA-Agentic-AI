@@ -40,7 +40,7 @@ logger = logging.getLogger("aura.telemetry")
 PROHIBITED_KEY_SUBSTRINGS = {
     "token", "secret", "password", "key", "auth", "jwt", "cookie",
     "credential", "bearer", "signature", "private", "cert", "hash",
-    "authorization", "set-cookie", "pairing", "hitl"
+    "authorization", "set-cookie", "pairing", "hitl", "ticket", "nonce"
 }
 
 # Regex to detect raw secrets in values
@@ -52,6 +52,7 @@ SECRET_VALUE_PATTERNS = [
     re.compile(r"\d{8,10}:[A-Za-z0-9\-_]{30,}", re.IGNORECASE),  # Telegram bot token
     re.compile(r"Bearer\s+[A-Za-z0-9\-_.\/+=]{20,}", re.IGNORECASE),  # Bearer token
     re.compile(r"whsec_[A-Za-z0-9\-_]{20,}", re.IGNORECASE),  # Webhook secret
+    re.compile(r"(?:vision_ticket_|voice_ticket_)[A-Za-z0-9\-_]{16,}", re.IGNORECASE),  # Session ticket
 ]
 
 

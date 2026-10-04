@@ -322,9 +322,16 @@ class CameraVisionService:
             return None
         return self._ephemeral_frames.get(workspace_id)
 
-    def clear_ephemeral_frame(self, workspace_id: str) -> None:
-        """Purge volatile camera frame memory for workspace."""
-        self._ephemeral_frames.pop(workspace_id, None)
+    def get_latest_frame(self, workspace_id: str) -> Optional[CameraObservation]:
+        """Convenience alias for get_latest_observation."""
+        return self.get_latest_observation(workspace_id)
+
+    def clear_ephemeral_frame(self, workspace_id: Optional[str] = None) -> None:
+        """Purge volatile camera frame memory for workspace or all workspaces."""
+        if workspace_id:
+            self._ephemeral_frames.pop(workspace_id, None)
+        else:
+            self._ephemeral_frames.clear()
 
     def get_status(self, workspace_id: Optional[str] = None) -> Dict[str, Any]:
         """Get operational status and configuration limits of the camera transport subsystem."""

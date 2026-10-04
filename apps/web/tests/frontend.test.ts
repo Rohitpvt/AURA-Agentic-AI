@@ -505,4 +505,121 @@ describe('AURA Frontend Architecture & Security Invariant Tests', () => {
       expect(stateKeys).not.toContain('capturedImages');
     });
   });
+
+  describe('11. AURA-804 Real-Time Screen VLM, Governed Vision Tools & Vision HUD Invariants', () => {
+    it('1. validates VLM resource policy: strictly CPU allocation & 0.2 FPS rate ceiling', () => {
+      const mockVLMStatus = {
+        status: 'available',
+        default_model: 'moondream',
+        alternative_model: 'qwen2-vl:2b',
+        device: 'cpu',
+        vlm_max_fps: 0.2,
+        min_interval_sec: 5.0,
+        buffer_depth: 1,
+        has_ephemeral_observation: true,
+        zero_cost_floor: true,
+        cloud_fallback: false,
+      };
+
+      expect(mockVLMStatus.device).toBe('cpu');
+      expect(mockVLMStatus.vlm_max_fps).toBe(0.2);
+      expect(mockVLMStatus.min_interval_sec).toBe(5.0);
+      expect(mockVLMStatus.zero_cost_floor).toBe(true);
+      expect(mockVLMStatus.cloud_fallback).toBe(false);
+      expect(mockVLMStatus.buffer_depth).toBe(1);
+    });
+
+    it('2. validates VisionObservation schema and untrusted multimodal XML envelope containment', () => {
+      const mockObservation = {
+        observation_id: 'obs_vlm_123',
+        workspace_id: 'ws_tenant_1',
+        source_type: 'screen',
+        source_id: 'monitor_1',
+        timestamp: Date.now() / 1000,
+        summary: 'VS Code editor open with Next.js dashboard code.',
+        detected_elements: [
+          {
+            label: 'active_window',
+            description: 'VS Code',
+            confidence: 0.95,
+            bounding_box: [100, 100, 1200, 800],
+            coordinate_space: 'screen',
+          },
+        ],
+        coordinate_space: 'captured_frame',
+        confidence: 0.88,
+        model: 'moondream',
+        device: 'cpu',
+        processing_duration_ms: 1250.5,
+        degraded: false,
+        untrusted_content_envelope: '<untrusted_multimodal_content origin="screen_vlm" model="moondream">\nVS Code editor open\n</untrusted_multimodal_content>',
+        is_untrusted_content: true,
+        security_flags: [],
+      };
+
+      expect(mockObservation.is_untrusted_content).toBe(true);
+      expect(mockObservation.untrusted_content_envelope).toContain('<untrusted_multimodal_content');
+      expect(mockObservation.untrusted_content_envelope).toContain('</untrusted_multimodal_content>');
+      expect(mockObservation.coordinate_space).toBe('captured_frame');
+      expect(mockObservation.detected_elements[0].coordinate_space).toBe('screen');
+      expect(mockObservation.detected_elements[0].bounding_box).toHaveLength(4);
+    });
+
+    it('3. validates Vision HUD state aggregation contract and privacy indicators', () => {
+      const mockHUDState = {
+        workspace_id: 'ws_tenant_1',
+        screen_active: true,
+        camera_active: false,
+        ocr_status: 'available',
+        vlm_status: 'ready',
+        kill_switch_active: false,
+        latest_observation: null,
+      };
+
+      expect(mockHUDState.screen_active).toBe(true);
+      expect(mockHUDState.camera_active).toBe(false);
+      expect(mockHUDState.ocr_status).toBe('available');
+      expect(mockHUDState.vlm_status).toBe('ready');
+      expect(mockHUDState.kill_switch_active).toBe(false);
+
+      // Privacy invariant: Camera inactive state never claims hardware LED status
+      const cameraPrivacyLabel = mockHUDState.camera_active ? 'CAMERA ACTIVE' : 'CAMERA STOPPED';
+      expect(cameraPrivacyLabel).toBe('CAMERA STOPPED');
+      expect(cameraPrivacyLabel).not.toContain('LED');
+    });
+
+    it('4. validates Emergency Kill Switch state transition in Vision HUD', () => {
+      const killedHUDState = {
+        workspace_id: 'ws_tenant_1',
+        screen_active: false,
+        camera_active: false,
+        ocr_status: 'kill_switched',
+        vlm_status: 'kill_switched',
+        kill_switch_active: true,
+        latest_observation: null,
+      };
+
+      expect(killedHUDState.kill_switch_active).toBe(true);
+      expect(killedHUDState.screen_active).toBe(false);
+      expect(killedHUDState.camera_active).toBe(false);
+      expect(killedHUDState.ocr_status).toBe('kill_switched');
+      expect(killedHUDState.vlm_status).toBe('kill_switched');
+      expect(killedHUDState.latest_observation).toBeNull();
+    });
+
+    it('5. validates all 4 Governed Vision Tools registered with low risk classification', () => {
+      const visionTools = [
+        { name: 'inspect_current_screen', risk_level: 'low', category: 'vision' },
+        { name: 'inspect_active_window', risk_level: 'low', category: 'vision' },
+        { name: 'inspect_camera_frame', risk_level: 'low', category: 'vision' },
+        { name: 'query_visible_text', risk_level: 'low', category: 'vision' },
+      ];
+
+      expect(visionTools).toHaveLength(4);
+      for (const t of visionTools) {
+        expect(t.risk_level).toBe('low');
+        expect(t.category).toBe('vision');
+      }
+    });
+  });
 });

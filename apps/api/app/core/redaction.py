@@ -26,14 +26,19 @@ class SecretRedactor:
         # Bearer Authorization headers
         (re.compile(r"(Bearer\s+)[A-Za-z0-9\-_.\/+=]{20,}", re.IGNORECASE), r"\1[REDACTED_TOKEN]"),
         # Generic Secret/Key assignments
-        (re.compile(r'("(?:api_key|password|secret|access_token|credential)":\s*")[^"]+(")', re.IGNORECASE), r'\1[REDACTED]\2'),
-        (re.compile(r"((?:api_key|password|secret|access_token|credential)\s*=\s*['\"])[^'\"]+(['\"])", re.IGNORECASE), r"\1[REDACTED]\2"),
+        (re.compile(r'("(?:api_key|password|secret|access_token|credential|ticket|vision_ticket)":\s*")[^"]+(")', re.IGNORECASE), r'\1[REDACTED]\2'),
+        (re.compile(r"((?:api_key|password|secret|access_token|credential|ticket|vision_ticket)\s*=\s*['\"])[^'\"]+(['\"])", re.IGNORECASE), r"\1[REDACTED]\2"),
+        # Vision and Voice URL Ticket Query Parameters
+        (re.compile(r"([?&]ticket=)[A-Za-z0-9\-_]{16,}", re.IGNORECASE), r"\1[REDACTED_TICKET]"),
+        (re.compile(r"([?&]session_nonce=)[A-Za-z0-9\-_]{16,}", re.IGNORECASE), r"\1[REDACTED_NONCE]"),
+        (re.compile(r"\b(?:vision_ticket_|voice_ticket_)[A-Za-z0-9\-_]{16,}\b", re.IGNORECASE), "[REDACTED_TICKET]"),
     ]
 
     SENSITIVE_KEY_NAMES = {
         "api_key", "password", "secret", "access_token", "refresh_token",
         "credential", "token", "master_key", "encryption_key", "authorization",
-        "gemini_api_key", "openai_api_key", "anthropic_api_key"
+        "gemini_api_key", "openai_api_key", "anthropic_api_key", "ticket",
+        "vision_ticket", "session_ticket", "session_nonce", "pairing_token"
     }
 
     @classmethod

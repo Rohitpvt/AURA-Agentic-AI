@@ -95,14 +95,14 @@
 
 ---
 
-## 8. Phase 8: Continuous Screen, Camera & Live Multimodal Vision (FUTURE)
+## 8. Phase 8: Continuous Screen, Camera & Live Multimodal Vision (COMPLETED & ACCEPTED)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **AURA-801** | Multi-Monitor Screen & Active-Window Capture Engine | `ScreenCaptureService`, `mss` multi-monitor discovery, per-monitor DPI v2 scaling, active-window bounding boxes (`pygetwindow`), SSIM frame delta detection ($\ge 5\%$), depth-1 ephemeral memory buffer, kill-switch abort. | Phase 7 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
 | **AURA-802** | Continuous Local OCR & Text Bounding Extraction | `ContinuousOCRService`, sub-100ms volatile cache access via `rapidocr-onnxruntime`, Jaccard deduplication cache, `<untrusted_multimodal_content>` envelope, degraded fallback, 1 Hz rate ceiling. | AURA-801 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
 | **AURA-803** | Live Camera Ingestion & Duplex Vision Transport | `CameraVisionService`, `VisionTicketService` (60s TTL, 256-bit CSPRNG nonce), ticket-authenticated WebSocket `/api/v1/vision/stream`, canonical 26-byte Big-Endian framing, 5.0 FPS server ceiling, depth-1 ephemeral frame buffer, kill-switch abort, Next.js `VisionCamera` component. | AURA-801, AURA-704 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
-| **AURA-804** | Real-Time Screen VLM, Governed Tools & Next.js HUD | 4 Governed Tools (`inspect_current_screen`, `inspect_active_window`, `inspect_camera_frame`, `query_visible_text`), Next.js Vision HUD component with canvas preview, OCR bounding overlays, Kill-Switch hooks. | AURA-802, AURA-803 | 8 pts (3 days) | PLANNED |
+| **AURA-804** | Real-Time Screen VLM, Governed Tools & Next.js HUD | 4 Governed Tools (`inspect_current_screen`, `inspect_active_window`, `inspect_camera_frame`, `query_visible_text`), Next.js Vision HUD component, local CPU VLM substrate (Moondream2 / Qwen2-VL), 0.2 FPS rate ceiling, prompt injection containment, Kill-Switch hooks. | AURA-802, AURA-803 | 8 pts (3 days) | **COMPLETED & ACCEPTED** |
 
 
 

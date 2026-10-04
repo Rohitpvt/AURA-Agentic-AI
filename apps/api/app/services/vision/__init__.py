@@ -31,10 +31,15 @@ from app.services.vision.service import (
     VisionService,
     vision_service,
 )
-from app.services.vision.ticket_service import (
-    VisionTicket,
-    VisionTicketService,
-    vision_ticket_service,
+from app.services.vision.vlm_service import (
+    DEFAULT_VLM_MODEL,
+    VLM_DEVICE,
+    VLM_MAX_FPS,
+    VLM_MIN_INTERVAL_SEC,
+    DetectedVisualElement,
+    VisionObservation,
+    VisionVLMService,
+    vision_vlm_service,
 )
 
 __all__ = [
@@ -45,6 +50,8 @@ __all__ = [
     "CameraVisionService",
     "CapturedFrame",
     "ContinuousOCRService",
+    "DEFAULT_VLM_MODEL",
+    "DetectedVisualElement",
     "MonitorInfo",
     "OCRBoundingBox",
     "OCRObservation",
@@ -52,10 +59,15 @@ __all__ = [
     "OCRTextRegion",
     "ScreenCaptureConfig",
     "ScreenCaptureService",
+    "VLM_DEVICE",
+    "VLM_MAX_FPS",
+    "VLM_MIN_INTERVAL_SEC",
     "VisionInspectionResult",
+    "VisionObservation",
     "VisionService",
     "VisionTicket",
     "VisionTicketService",
+    "VisionVLMService",
     "WindowBounds",
     "camera_vision_service",
     "continuous_ocr_service",
@@ -64,6 +76,7 @@ __all__ = [
     "unpack_camera_frame",
     "vision_service",
     "vision_ticket_service",
+    "vision_vlm_service",
 ]
 
 

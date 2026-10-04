@@ -932,3 +932,347 @@ async def clear_camera_cache(
         message="Ephemeral camera observation cache successfully cleared.",
     )
 
+
+# ==============================================================================
+# 4. Real-Time VLM & Vision HUD Endpoints (AURA-804)
+# ==============================================================================
+
+class VLMInspectRequest(BaseModel):
+    """Payload for on-demand multimodal visual inspection."""
+    source_type: str = Field(default="screen", description="Visual source: 'screen', 'active_window', or 'camera'")
+    monitor_id: Optional[int] = Field(default=1, description="Monitor ID if source_type is screen")
+    prompt: Optional[str] = Field(default=None, description="Optional focus question or visual query")
+    detail_level: Optional[str] = Field(default="standard", description="'standard', 'high', or 'low'")
+    model: Optional[str] = Field(default=None, description="Optional model override (e.g. moondream, qwen2-vl:2b)")
+    include_ocr_context: Optional[bool] = Field(default=True, description="Whether to include OCR context in VLM analysis")
+    force_refresh: Optional[bool] = Field(default=False, description="Whether to bypass rate-limiting cache")
+
+
+class DetectedElementResponse(BaseModel):
+    """Structured detected element with geometry in explicit coordinate space."""
+    label: str
+    description: str
+    confidence: float
+    bounding_box: Optional[List[int]] = None
+    polygon: Optional[List[List[int]]] = None
+    normalized_box: Optional[List[float]] = None
+    coordinate_space: str = "captured_frame"
+
+
+class VisionObservationResponse(BaseModel):
+    """Canonical visual observation response."""
+    observation_id: str
+    workspace_id: str
+    source_type: str
+    source_id: str
+    timestamp: float
+    summary: str
+    detected_elements: List[DetectedElementResponse] = []
+    coordinate_space: str = "captured_frame"
+    confidence: float
+    model: str
+    device: str = "cpu"
+    processing_duration_ms: float
+    degraded: bool = False
+    untrusted_content_envelope: str
+    is_untrusted_content: bool = True
+    security_flags: List[str] = []
+    ocr_context_summary: Optional[str] = None
+    window_info: Optional[Dict[str, Any]] = None
+
+
+class VisionVLMStatusResponse(BaseModel):
+    """Status and resource constraints for the local VLM subsystem."""
+    status: str
+    default_model: str
+    alternative_model: str
+    device: str
+    vlm_max_fps: float
+    min_interval_sec: float
+    buffer_depth: int
+    has_ephemeral_observation: bool
+    zero_cost_floor: bool
+    cloud_fallback: bool
+
+
+class VLMBufferClearResponse(BaseModel):
+    """Response returned when ephemeral VLM observation cache is purged."""
+    status: str
+    cleared: bool
+    message: str
+
+
+class VisionHUDStateResponse(BaseModel):
+    """Consolidated state response for Next.js Vision HUD component."""
+    workspace_id: str
+    screen_active: bool
+    camera_active: bool
+    ocr_status: str
+    vlm_status: str
+    kill_switch_active: bool
+    latest_observation: Optional[VisionObservationResponse] = None
+
+
+@router.post(
+    "/vlm/inspect",
+    response_model=VisionObservationResponse,
+    summary="Execute on-demand VLM visual inspection",
+)
+async def inspect_visual_source(
+    body: VLMInspectRequest,
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> VisionObservationResponse:
+    """Execute local VLM inspection for screen, active window, or camera."""
+    from app.services.vision.vlm_service import vision_vlm_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    if not ws_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Workspace context is required.")
+
+    if kill_switch.is_active(workspace_id=ws_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Emergency Kill Switch is ACTIVE: VLM visual inspection is prohibited.",
+        )
+
+    try:
+        ws_uuid = uuid.UUID(ws_id)
+    except ValueError:
+        ws_uuid = uuid.uuid4()
+
+    try:
+        if body.source_type == "camera":
+            obs = await vision_vlm_service.inspect_camera(
+                workspace_id=ws_uuid,
+                prompt=body.prompt,
+                detail_level=body.detail_level or "standard",
+                model_override=body.model,
+            )
+        elif body.source_type == "active_window":
+            obs = await vision_vlm_service.inspect_active_window(
+                workspace_id=ws_uuid,
+                prompt=body.prompt,
+                detail_level=body.detail_level or "standard",
+                model_override=body.model,
+                include_ocr_context=body.include_ocr_context if body.include_ocr_context is not None else True,
+            )
+        else:
+            obs = await vision_vlm_service.inspect_screen(
+                workspace_id=ws_uuid,
+                monitor_id=body.monitor_id or 1,
+                prompt=body.prompt,
+                detail_level=body.detail_level or "standard",
+                model_override=body.model,
+                include_ocr_context=body.include_ocr_context if body.include_ocr_context is not None else True,
+                force_refresh=body.force_refresh or False,
+            )
+    except AuthorizationError as auth_err:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(auth_err))
+    except Exception as exc:
+        logger.error(f"VLM inspection endpoint error: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Visual inspection failed")
+
+    return VisionObservationResponse(
+        observation_id=obs.observation_id,
+        workspace_id=obs.workspace_id,
+        source_type=obs.source_type,
+        source_id=obs.source_id,
+        timestamp=obs.timestamp,
+        summary=obs.summary,
+        detected_elements=[
+            DetectedElementResponse(
+                label=el.get("label", ""),
+                description=el.get("description", ""),
+                confidence=float(el.get("confidence", 1.0)),
+                bounding_box=el.get("bounding_box"),
+                polygon=el.get("polygon"),
+                normalized_box=el.get("normalized_box"),
+                coordinate_space=el.get("coordinate_space", "captured_frame"),
+            )
+            for el in obs.detected_elements
+        ],
+        coordinate_space=obs.coordinate_space,
+        confidence=obs.confidence,
+        model=obs.model,
+        device=obs.device,
+        processing_duration_ms=obs.processing_duration_ms,
+        degraded=obs.degraded,
+        untrusted_content_envelope=obs.untrusted_content_envelope,
+        is_untrusted_content=obs.is_untrusted_content,
+        security_flags=obs.security_flags,
+        ocr_context_summary=obs.ocr_context_summary,
+        window_info=obs.window_info,
+    )
+
+
+@router.get(
+    "/vlm/latest",
+    response_model=VisionObservationResponse,
+    summary="Get latest cached visual observation",
+)
+async def get_latest_vlm_observation(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> VisionObservationResponse:
+    """Retrieve the latest cached volatile visual observation for the workspace."""
+    from app.services.vision.vlm_service import vision_vlm_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    obs = vision_vlm_service.get_latest_observation(ws_id)
+    if not obs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No visual observation available in volatile memory.",
+        )
+
+    return VisionObservationResponse(
+        observation_id=obs.observation_id,
+        workspace_id=obs.workspace_id,
+        source_type=obs.source_type,
+        source_id=obs.source_id,
+        timestamp=obs.timestamp,
+        summary=obs.summary,
+        detected_elements=[
+            DetectedElementResponse(
+                label=el.get("label", ""),
+                description=el.get("description", ""),
+                confidence=float(el.get("confidence", 1.0)),
+                bounding_box=el.get("bounding_box"),
+                polygon=el.get("polygon"),
+                normalized_box=el.get("normalized_box"),
+                coordinate_space=el.get("coordinate_space", "captured_frame"),
+            )
+            for el in obs.detected_elements
+        ],
+        coordinate_space=obs.coordinate_space,
+        confidence=obs.confidence,
+        model=obs.model,
+        device=obs.device,
+        processing_duration_ms=obs.processing_duration_ms,
+        degraded=obs.degraded,
+        untrusted_content_envelope=obs.untrusted_content_envelope,
+        is_untrusted_content=obs.is_untrusted_content,
+        security_flags=obs.security_flags,
+        ocr_context_summary=obs.ocr_context_summary,
+        window_info=obs.window_info,
+    )
+
+
+@router.get(
+    "/vlm/status",
+    response_model=VisionVLMStatusResponse,
+    summary="Get VLM subsystem operational status and rate limits",
+)
+async def get_vlm_status(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> VisionVLMStatusResponse:
+    """Check VLM subsystem availability, model, and rate limits."""
+    from app.services.vision.vlm_service import vision_vlm_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    st = vision_vlm_service.get_status(workspace_id=ws_id)
+    return VisionVLMStatusResponse(
+        status=st["status"],
+        default_model=st["default_model"],
+        alternative_model=st["alternative_model"],
+        device=st["device"],
+        vlm_max_fps=st["vlm_max_fps"],
+        min_interval_sec=st["min_interval_sec"],
+        buffer_depth=st["buffer_depth"],
+        has_ephemeral_observation=st["has_ephemeral_observation"],
+        zero_cost_floor=st["zero_cost_floor"],
+        cloud_fallback=st["cloud_fallback"],
+    )
+
+
+@router.delete(
+    "/vlm/cache",
+    response_model=VLMBufferClearResponse,
+    summary="Clear ephemeral VLM observation cache",
+)
+async def clear_vlm_cache(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> VLMBufferClearResponse:
+    """Purge ephemeral visual observation cache from volatile memory."""
+    from app.services.vision.vlm_service import vision_vlm_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    vision_vlm_service.clear_observation_cache(workspace_id=ws_id)
+    return VLMBufferClearResponse(
+        status="cleared",
+        cleared=True,
+        message="Ephemeral VLM observation cache successfully cleared.",
+    )
+
+
+@router.get(
+    "/hud/state",
+    response_model=VisionHUDStateResponse,
+    summary="Get consolidated Vision HUD state",
+)
+async def get_vision_hud_state(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> VisionHUDStateResponse:
+    """Consolidated state snapshot across screen, camera, OCR, VLM, and kill switch for Vision HUD."""
+    from app.services.vision.ocr_service import continuous_ocr_service
+    from app.services.vision.vlm_service import vision_vlm_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    is_killed = kill_switch.is_active(workspace_id=ws_id)
+
+    screen_frame = screen_capture_service.get_latest_frame(workspace_id=ws_id)
+    camera_frame = camera_vision_service.get_latest_frame(workspace_id=ws_id)
+    ocr_status_val = "kill_switched" if is_killed else continuous_ocr_service.status.value
+    vlm_status_info = vision_vlm_service.get_status(workspace_id=ws_id)
+    vlm_status_val = "kill_switched" if is_killed else vlm_status_info["status"]
+
+    latest_obs = vision_vlm_service.get_latest_observation(workspace_id=ws_id)
+    latest_obs_resp = None
+    if latest_obs and not is_killed:
+        latest_obs_resp = VisionObservationResponse(
+            observation_id=latest_obs.observation_id,
+            workspace_id=latest_obs.workspace_id,
+            source_type=latest_obs.source_type,
+            source_id=latest_obs.source_id,
+            timestamp=latest_obs.timestamp,
+            summary=latest_obs.summary,
+            detected_elements=[
+                DetectedElementResponse(
+                    label=el.get("label", ""),
+                    description=el.get("description", ""),
+                    confidence=float(el.get("confidence", 1.0)),
+                    bounding_box=el.get("bounding_box"),
+                    polygon=el.get("polygon"),
+                    normalized_box=el.get("normalized_box"),
+                    coordinate_space=el.get("coordinate_space", "captured_frame"),
+                )
+                for el in latest_obs.detected_elements
+            ],
+            coordinate_space=latest_obs.coordinate_space,
+            confidence=latest_obs.confidence,
+            model=latest_obs.model,
+            device=latest_obs.device,
+            processing_duration_ms=latest_obs.processing_duration_ms,
+            degraded=latest_obs.degraded,
+            untrusted_content_envelope=latest_obs.untrusted_content_envelope,
+            is_untrusted_content=latest_obs.is_untrusted_content,
+            security_flags=latest_obs.security_flags,
+            ocr_context_summary=latest_obs.ocr_context_summary,
+            window_info=latest_obs.window_info,
+        )
+
+    return VisionHUDStateResponse(
+        workspace_id=ws_id,
+        screen_active=bool(screen_frame) and not is_killed,
+        camera_active=bool(camera_frame) and not is_killed,
+        ocr_status=ocr_status_val,
+        vlm_status=vlm_status_val,
+        kill_switch_active=is_killed,
+        latest_observation=latest_obs_resp,
+    )
+
+
