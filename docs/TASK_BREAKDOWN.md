@@ -95,14 +95,15 @@
 
 ---
 
-## 8. Phase 8: Live Desktop Screen Intelligence & Multimodal Vision (FUTURE)
+## 8. Phase 8: Continuous Screen, Camera & Live Multimodal Vision (FUTURE)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **AURA-801** | Desktop Window & Screen Capture | Native OS screen/window snapshot service with region clipping and image downscaling. | AURA-106 | 5 pts (2 days) | PLANNED |
-| **AURA-802** | Local Tesseract OCR Engine | Layout extraction, text bounding boxes, and tabular visual extraction from images. | AURA-801 | 5 pts (2 days) | PLANNED |
-| **AURA-803** | Local Multimodal Vision Integration | On-demand local VLM (Moondream2 / Qwen2-VL 2B) visual reasoning and description. | AURA-105, AURA-801 | 8 pts (3 days) | PLANNED |
-| **AURA-804** | Explicit Consent Gate & Privacy Purge | User permission prompt for visual capture and immediate memory deletion of raw frames. | AURA-801, AURA-304 | 5 pts (2 days) | PLANNED |
+| **AURA-801** | Multi-Monitor Screen & Active-Window Capture Engine | `ScreenCaptureService`, `mss` multi-monitor discovery, per-monitor DPI v2 scaling, active-window bounding boxes (`pygetwindow`), SSIM frame delta detection ($\ge 5\%$). | Phase 7 | 5 pts (2 days) | PREFLIGHT PASSED |
+| **AURA-802** | Continuous Local OCR & Text Bounding Extraction | `ContinuousOCRService`, sub-100ms OCR via `rapidocr-onnxruntime`, Jaccard deduplication cache, `<untrusted_multimodal_content>` envelope, degraded fallback. | AURA-801 | 5 pts (2 days) | PREFLIGHT PASSED |
+| **AURA-803** | Live Camera Ingestion & Duplex Vision Transport | `CameraVisionService`, ticket-authenticated WebSocket `/api/v1/vision/stream`, 26-byte binary framing, single-frame ephemeral ring buffer. | AURA-801, AURA-704 | 5 pts (2 days) | PREFLIGHT PASSED |
+| **AURA-804** | Real-Time Screen VLM, Governed Tools & Next.js HUD | 4 Governed Tools (`inspect_current_screen`, `inspect_active_window`, `inspect_camera_frame`, `query_visible_text`), Next.js Vision HUD component with canvas preview, OCR bounding overlays, Kill-Switch hooks. | AURA-802, AURA-803 | 8 pts (3 days) | PREFLIGHT PASSED |
+
 
 ---
 

@@ -137,3 +137,22 @@ Phase 6 registers native, governed file analysis capabilities in the `ToolRegist
 
 All file intelligence tools operate strictly in read-only mode and output results wrapped in `<untrusted_external_content>` envelopes.
 
+---
+
+## 7. Multimodal Vision & Sensory Inspection Tools (Phases 7 & 8)
+
+Multimodal vision tools are registered in the `ToolRegistryService` and governed strictly through `AgentToolBridge` and `PolicyEngine`. Continuous sensors (screen frame grabbers, camera WebSockets, background OCR engines) run as passive capability infrastructure and are NOT exposed as generic agent tools.
+
+Only explicit inspection queries are governed tools:
+
+| Tool Name | Display Name | Category | Risk Level | Description | Input Parameters | Phase |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `inspect_image` | Inspect Static Workspace Image | `vision` | `low` | Inspects an uploaded static image file via local VLM (Moondream2) or OCR. | `file_id: string`, `prompt?: string` | Phase 7 |
+| `inspect_current_screen` | Inspect Current Desktop Screen | `vision` | `low` | Captures a high-resolution snapshot of the desktop, executes OCR and VLM reasoning. | `monitor_id?: int`, `prompt?: string` | Phase 8 |
+| `inspect_active_window` | Inspect Active Application Window | `vision` | `low` | Crops capture bounds to the active foreground window rectangle and extracts content. | `prompt?: string` | Phase 8 |
+| `inspect_camera_frame` | Inspect Live Camera Frame | `vision` | `low` | Ingests the latest ephemeral webcam frame from the video buffer for VLM analysis. | `prompt?: string` | Phase 8 |
+| `query_visible_text` | Query Visible Screen / Window Text | `vision` | `low` | Executes targeted local OCR across the screen or ROI to extract text and bounding boxes. | `roi?: object`, `filter_query?: string` | Phase 8 |
+
+All vision inspection tools operate in read-only mode and output data strictly wrapped in `<untrusted_multimodal_content>` XML envelopes.
+
+

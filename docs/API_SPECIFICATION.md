@@ -296,3 +296,88 @@ All endpoints require standard Bearer JWT authentication and operate strictly wi
 }
 ```
 
+---
+
+## 5. Real-Time Voice & Speech Endpoints (Phase 7)
+
+### 5.1 Issue Voice Ticket: `POST /api/v1/voice/ticket`
+* **Headers:** `Authorization: Bearer <JWT_TOKEN>`
+* **Response (HTTP 200 OK):**
+```json
+{
+  "ticket": "vkt_8f912c...",
+  "expires_in": 60,
+  "ws_url": "ws://localhost:8000/api/v1/voice/stream?ticket=vkt_8f912c..."
+}
+```
+
+### 5.2 Duplex Voice Stream: `WS /api/v1/voice/stream?ticket={ticket}`
+* **Handshake:** Single-use cryptographic ticket (60-second TTL), validated against `workspace_id`.
+* **Framing Protocol:** 256-bit session nonce handshake, binary Int16 PCM audio streaming (16 kHz, 1-channel, 20ms frames), JSON control frames for VAD speech events, interruption barge-in, and transcripts.
+
+---
+
+## 6. Continuous Screen, Camera & Live Multimodal Vision Endpoints (Phase 8)
+
+### 6.1 Discover Desktop Monitors: `GET /api/v1/vision/monitors`
+* **Headers:** `Authorization: Bearer <JWT_TOKEN>`
+* **Response (HTTP 200 OK):**
+```json
+{
+  "monitors": [
+    {
+      "monitor_id": 1,
+      "name": "Primary Display",
+      "width": 1920,
+      "height": 1080,
+      "left": 0,
+      "top": 0,
+      "is_primary": true,
+      "dpi_scale": 1.0
+    }
+  ]
+}
+```
+
+### 6.2 Get Active Window Context: `GET /api/v1/vision/active-window`
+* **Headers:** `Authorization: Bearer <JWT_TOKEN>`
+* **Response (HTTP 200 OK):**
+```json
+{
+  "window_title": "Visual Studio Code - Agentic AI",
+  "process_name": "Code.exe",
+  "pid": 14208,
+  "bounds": {
+    "left": 0,
+    "top": 0,
+    "width": 1920,
+    "height": 1040
+  },
+  "is_maximized": true
+}
+```
+
+### 6.3 Issue Vision Streaming Ticket: `POST /api/v1/vision/ticket`
+* **Headers:** `Authorization: Bearer <JWT_TOKEN>`
+* **Response (HTTP 200 OK):**
+```json
+{
+  "ticket": "vst_1a4b9e...",
+  "expires_in": 60,
+  "ws_url": "ws://localhost:8000/api/v1/vision/stream?ticket=vst_1a4b9e..."
+}
+```
+
+### 6.4 Duplex Vision Stream: `WS /api/v1/vision/stream?ticket={ticket}`
+* **Handshake:** Single-use ticket verified against caller's `workspace_id`.
+* **Binary Frame Structure (Fixed 26-Byte Header + WebP Payload):**
+  - Offset `0` (`uint8`): `stream_type` (`0x01`=Screen, `0x02`=Camera, `0x03`=Window)
+  - Offset `1` (`uint8`): `source_id` (Monitor ID or Camera Index)
+  - Offset `2` (`uint32` BE): `sequence_number` (Monotonic counter)
+  - Offset `6` (`uint64` BE): `timestamp_ns` (Nanosecond timestamp)
+  - Offset `14` (`uint32` BE): `width` (Frame pixel width)
+  - Offset `18` (`uint32` BE): `height` (Frame pixel height)
+  - Offset `22` (`uint32` BE): `payload_length` (Length $N$ of WebP bytes)
+  - Offset `26` (`bytes[N]`): Ephemeral compressed WebP frame payload.
+
+

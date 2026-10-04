@@ -84,11 +84,12 @@
 * **Milestone 7.5 (AURA-705):** Static Multimodal Vision & Image Inspection (`VisionService` with Moondream2 local VLM default, image downscaling, `<untrusted_multimodal_content>` envelope, OCR degraded fallback) — **COMPLETED & ACCEPTED**.
 * **Milestone 7.6 (AURA-706):** Long-Horizon Checkpoint/Recovery & Next.js Voice HUD (`TaskRecoveryService`, deterministic `resume_task`, `StartupRecoverySweep` on lifecycle boot, budget preservation, Next.js Voice HUD component with Web Audio API & spectrum visualizer) — **COMPLETED & ACCEPTED**.
 
-### Phase 8: Live Desktop Screen Intelligence & Multimodal Vision (FUTURE)
-* **Milestone 8.1 (AURA-801):** On-Demand Window & Screen Capture Engine (`mss` / `Pillow`).
-* **Milestone 8.2 (AURA-802):** Local Tesseract OCR & Visual Layout Extractor.
-* **Milestone 8.3 (AURA-803):** Local Multimodal Vision Integration (`Moondream2` / `Qwen2-VL 2B`).
-* **Milestone 8.4 (AURA-804):** Explicit Consent Gate & Ephemeral Frame Privacy Deletion.
+### Phase 8: Continuous Screen, Camera & Live Multimodal Vision (FUTURE)
+* **Milestone 8.1 (AURA-801):** Multi-Monitor Screen & Active-Window Capture Engine (`mss` / `pygetwindow` / Per-Monitor v2 DPI).
+* **Milestone 8.2 (AURA-802):** Continuous Local OCR & Text Bounding Extraction (`rapidocr-onnxruntime` on ONNX Engine).
+* **Milestone 8.3 (AURA-803):** Live Camera Ingestion & Duplex Vision Transport (WebSocket `/api/v1/vision/stream`, 26-byte binary framing).
+* **Milestone 8.4 (AURA-804):** Real-Time Screen VLM, 4 Governed Tools & Next.js HUD (`inspect_current_screen`, `inspect_active_window`, `inspect_camera_frame`, `query_visible_text`).
+
 
 ### Phase 9: Governed Operating System & Hardware Automation (FUTURE)
 * **Milestone 9.1 (AURA-901):** Application Launch & Process Management Allowlist Engine.

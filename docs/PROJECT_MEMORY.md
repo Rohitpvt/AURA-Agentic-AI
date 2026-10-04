@@ -133,8 +133,8 @@
 * **Phase 7.4 (AURA-704):** **COMPLETED & ACCEPTED** (Authenticated WebSocket Gateway & Session Ticket Transport; short-lived single-use ticket handshake `/api/v1/voice/ticket`, binary WebSocket framing `/api/v1/voice/stream`, 256-bit session nonce, strict `workspace_id` tenant isolation, replay protection, 333/333 backend tests passing).
 * **Phase 7.5 (AURA-705):** **COMPLETED & ACCEPTED** (Static Multimodal Vision & Image Inspection; `VisionService` with `Moondream2` default local VLM, static image validation and downscaling [max 2048x2048, 10MB], prompt-injection `<untrusted_multimodal_content>` envelope wrapping, local OCR degraded fallback, zero cloud fallback, 352/352 backend tests passing).
 * **Phase 7.6 (AURA-706):** **COMPLETED & ACCEPTED** (Long-Horizon Checkpoint/Recovery & Next.js Voice HUD; `TaskRecoveryService`, deterministic `resume_task(task_id)` from last verified completed step with zero destructive replay, FastAPI lifespan `StartupRecoverySweep` for orphaned `RUNNING` tasks, strict budget & timeout preservation across restarts, active kill-switch enforcement, Next.js Voice HUD component with Web Audio API, frequency spectrum `<canvas>` visualizer, barge-in controls, multimodal static context attachment, and HITL resumption linkage; 360/360 backend tests passing, 23/23 frontend tests passing, Next.js production build passing).
-* **Phase 7 Master Status:** **PHASE 7 COMPLETE & ACCEPTED** (`AURA-701 ✅`, `AURA-702 ✅`, `AURA-703 ✅`, `AURA-704 ✅`, `AURA-705 ✅`, `AURA-706 ✅`).
-* **Hard Phase Boundary:** **Phase 8 (Live Desktop Screen Intelligence & Multimodal Vision) is NOT STARTED (Awaiting explicit user authorization).**
+* **Hard Phase Boundary:** **Phase 8 (Continuous Screen, Camera & Live Multimodal Vision) Preflight & Implementation Readiness Audit is RECONCILED & LOCKED (Awaiting explicit user authorization before AURA-801).**
+
 
 
 
