@@ -13,6 +13,15 @@ from app.services.voice.tts_service import (
     split_sentences,
 )
 
+from app.services.voice.session_manager import (
+    VoiceEvent,
+    VoiceSession,
+    VoiceSessionManager,
+    VoiceSessionState,
+    VoiceTurn,
+    voice_session_manager,
+)
+
 __all__ = [
     "SileroVADService",
     "VADState",
@@ -24,4 +33,10 @@ __all__ = [
     "split_sentences",
     "format_untrusted_spoken_envelope",
     "extract_untrusted_spoken_content",
+    "VoiceSessionState",
+    "VoiceSession",
+    "VoiceSessionManager",
+    "VoiceTurn",
+    "VoiceEvent",
+    "voice_session_manager",
 ]

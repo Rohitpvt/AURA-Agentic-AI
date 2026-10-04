@@ -168,10 +168,11 @@ class SileroVADService:
             active_state.speech_duration_ms += frame_duration_ms
         else:
             active_state.silence_frames_count += 1
-            # Check hangover window
-            if active_state.is_speaking and active_state.last_speech_time is not None:
-                elapsed_silence_ms = (now - active_state.last_speech_time) * 1000.0
-                if elapsed_silence_ms > self.hangover_ms:
+            # Check hangover window (using audio frame duration and wall clock)
+            if active_state.is_speaking:
+                silence_audio_ms = active_state.silence_frames_count * frame_duration_ms
+                elapsed_wall_ms = ((now - active_state.last_speech_time) * 1000.0) if active_state.last_speech_time else 0.0
+                if silence_audio_ms >= self.hangover_ms or elapsed_wall_ms >= self.hangover_ms:
                     active_state.is_speaking = False
 
         elapsed_inference_ms = (time.perf_counter() - start_time) * 1000.0
