@@ -40,6 +40,9 @@
 | **Tasks** | `POST` | `/tasks` | Dispatch a new autonomous user goal. | Member |
 | **Tasks** | `GET` | `/tasks/{id}` | Retrieve task detail with step DAG. | Member |
 | **Tasks** | `POST` | `/tasks/{id}/cancel` | Abort an active task execution. | Member |
+| **Tasks** | `POST` | `/tasks/{id}/resume` | Deterministically resume task from verified checkpoint. | Member |
+| **Voice** | `POST` | `/voice/ticket` | Issue short-lived ticket for WebSocket voice stream. | Member |
+| **Voice** | `WS` | `/voice/stream` | Authenticated duplex binary audio & VAD stream. | Member (Ticket) |
 | **Approvals** | `GET` | `/approvals` | List pending Human-in-the-Loop approvals. | Member |
 | **Approvals** | `POST` | `/approvals/{id}/resolve` | Approve or Reject a tool execution token. | Admin / Owner |
 | **Tools** | `GET` | `/tools` | List registered tools and JSON schemas. | Member |

@@ -15,6 +15,7 @@ from app.schemas.task import (
     TaskStepUpdate,
     TaskUpdateRequest,
 )
+from app.services.task_recovery_service import task_recovery_service
 from app.services.task_service import task_service
 
 router = APIRouter()
@@ -126,3 +127,21 @@ async def cancel_task(
     return await task_service.cancel_task(
         db=db, task_id=task_id, workspace_id=workspace_id, actor_id=str(current_user.id)
     )
+
+
+@router.post("/{task_id}/resume", response_model=TaskResponse)
+async def resume_task(
+    task_id: uuid.UUID,
+    workspace_id: uuid.UUID = Query(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session),
+) -> TaskResponse:
+    """Deterministically resume a suspended, orphaned, or HITL-resolved task."""
+    await get_workspace_membership(workspace_id=workspace_id, user_id=current_user.id, db=db)
+    return await task_recovery_service.resume_task(
+        db=db,
+        task_id=task_id,
+        workspace_id=workspace_id,
+        actor_id=str(current_user.id),
+    )
+

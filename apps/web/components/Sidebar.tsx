@@ -13,6 +13,7 @@ import {
   Wrench,
   Cpu,
   Lock,
+  Mic,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -23,6 +24,11 @@ export const Sidebar: React.FC = () => {
       id: 'dashboard',
       label: 'Dashboard',
       icon: <LayoutDashboard className="w-4 h-4" />,
+    },
+    {
+      id: 'voice',
+      label: 'Voice HUD',
+      icon: <Mic className="w-4 h-4 text-cyan-400" />,
     },
     {
       id: 'chat',

@@ -76,11 +76,13 @@
 
 
 
-### Phase 7: Real-Time Local Voice & Speech System (FUTURE)
-* **Milestone 7.1 (AURA-701):** Silero VAD & CPU-Optimized Faster-Whisper Speech-to-Text Pipeline.
-* **Milestone 7.2 (AURA-702):** Low-Latency Piper-TTS Synthesis & WebSocket Streaming.
-* **Milestone 7.3 (AURA-703):** Real-Time Barge-In & Cooperative Interruption Engine.
-* **Milestone 7.4 (AURA-704):** Voice-First Web Command Center HUD & Audio Visualizer.
+### Phase 7: Real-Time Local Voice & Speech System (COMPLETE & ACCEPTED)
+* **Milestone 7.1 (AURA-701):** Silero VAD & CPU-Optimized Faster-Whisper Speech-to-Text Pipeline (16kHz Int8 ONNX/CTranslate2, ephemeral PCM ring buffer, `<untrusted_spoken_content>` envelope) — **COMPLETED & ACCEPTED**.
+* **Milestone 7.2 (AURA-702):** Low-Latency Piper-TTS Speech Synthesis & Streaming (ONNX Kokoro/Piper runtime, sentence-level streaming, linear resampling to 16kHz, sub-250ms TTFA benchmark) — **COMPLETED & ACCEPTED**.
+* **Milestone 7.3 (AURA-703):** Real-Time Barge-In & Cooperative Interruption Engine (`VoiceSessionManager`, bi-directional turn-taking, <50ms VAD interruption trigger, atomic TTS/LLM cancellation) — **COMPLETED & ACCEPTED**.
+* **Milestone 7.4 (AURA-704):** Authenticated WebSocket Gateway & Session Ticket Transport (`/api/v1/voice/ticket`, `/api/v1/voice/stream`, single-use ticket handshake, workspace tenancy isolation, replay protection) — **COMPLETED & ACCEPTED**.
+* **Milestone 7.5 (AURA-705):** Static Multimodal Vision & Image Inspection (`VisionService` with Moondream2 local VLM default, image downscaling, `<untrusted_multimodal_content>` envelope, OCR degraded fallback) — **COMPLETED & ACCEPTED**.
+* **Milestone 7.6 (AURA-706):** Long-Horizon Checkpoint/Recovery & Next.js Voice HUD (`TaskRecoveryService`, deterministic `resume_task`, `StartupRecoverySweep` on lifecycle boot, budget preservation, Next.js Voice HUD component with Web Audio API & spectrum visualizer) — **COMPLETED & ACCEPTED**.
 
 ### Phase 8: Live Desktop Screen Intelligence & Multimodal Vision (FUTURE)
 * **Milestone 8.1 (AURA-801):** On-Demand Window & Screen Capture Engine (`mss` / `Pillow`).

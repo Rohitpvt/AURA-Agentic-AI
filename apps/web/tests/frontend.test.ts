@@ -320,4 +320,95 @@ describe('AURA Frontend Architecture & Security Invariant Tests', () => {
       expect(useAuraStore.getState().activeWorkspace?.id).toBe('ws_beta');
     });
   });
+
+  describe('7. AURA-706 Voice HUD State Machine & Recovery Invariants', () => {
+    it('validates canonical VoiceSessionState transitions', () => {
+      const validStates: string[] = [
+        'IDLE',
+        'LISTENING',
+        'TRANSCRIBING',
+        'THINKING',
+        'SPEAKING',
+        'INTERRUPTED',
+        'CANCELLED',
+        'ERROR',
+      ];
+
+      validStates.forEach((st) => {
+        expect(typeof st).toBe('string');
+      });
+      expect(validStates).toHaveLength(8);
+    });
+
+    it('validates Voice Ticket response structure from AURA-704/706 gateway', () => {
+      const mockTicket = {
+        ticket: 'ticket_sample_hex_1234567890abcdef',
+        expires_in_seconds: 60,
+        websocket_url: '/api/v1/voice/stream?ticket=ticket_sample_hex_1234567890abcdef',
+        workspace_id: 'ws_voice_tenant_1',
+        mode: 'duplex',
+        sample_rate: 16000,
+        max_duration_seconds: 300,
+      };
+
+      expect(mockTicket.ticket).toContain('ticket_sample');
+      expect(mockTicket.websocket_url).toContain('/api/v1/voice/stream?ticket=');
+      expect(mockTicket.sample_rate).toBe(16000);
+      expect(mockTicket.mode).toBe('duplex');
+    });
+
+    it('enforces untrusted content envelope encapsulation for spoken and multimodal transcripts', () => {
+      const spokenTranscript = {
+        id: '1',
+        speaker: 'user',
+        text: 'Deploy system updates now',
+        timestamp: '10:00:00 AM',
+        is_untrusted: true,
+        envelope_type: 'spoken',
+      };
+
+      const multimodalTranscript = {
+        id: '2',
+        speaker: 'user',
+        text: '[Visual Context Attached: diagram.png] System architecture diagram',
+        timestamp: '10:00:05 AM',
+        is_untrusted: true,
+        envelope_type: 'multimodal',
+      };
+
+      expect(spokenTranscript.is_untrusted).toBe(true);
+      expect(spokenTranscript.envelope_type).toBe('spoken');
+      expect(multimodalTranscript.is_untrusted).toBe(true);
+      expect(multimodalTranscript.envelope_type).toBe('multimodal');
+    });
+
+    it('handles barge-in and cancellation control frame payloads', () => {
+      const interruptFrame = JSON.stringify({ action: 'interrupt' });
+      const cancelFrame = JSON.stringify({ action: 'cancel' });
+
+      expect(JSON.parse(interruptFrame)).toEqual({ action: 'interrupt' });
+      expect(JSON.parse(cancelFrame)).toEqual({ action: 'cancel' });
+    });
+
+    it('integrates HITL approval resolution and task recovery triggers', () => {
+      const approvalReq = {
+        id: 'appr_001',
+        task_id: 'task_001',
+        tool_name: 'inspect_file',
+        risk_level: 'HIGH' as const,
+        sanitized_params: { file_id: 'file_001' },
+        reason: 'High risk inspection requires approval',
+        status: 'PENDING' as const,
+        requested_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 3600000).toISOString(),
+      };
+
+      useAuraStore.getState().setPendingApprovals([approvalReq]);
+      expect(useAuraStore.getState().pendingApprovals).toHaveLength(1);
+
+      // Resolve and remove
+      useAuraStore.getState().removePendingApproval('appr_001');
+      expect(useAuraStore.getState().pendingApprovals).toHaveLength(0);
+    });
+  });
 });

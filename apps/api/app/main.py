@@ -35,8 +35,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     from app.db.session import async_session_factory
     from app.services.file_job_service import file_job_service
+    from app.services.task_recovery_service import task_recovery_service
     async with async_session_factory() as session:
         await file_job_service.recover_stuck_jobs(session)
+        await task_recovery_service.startup_recovery_sweep(session)
 
     yield
 

@@ -19,6 +19,7 @@ import { ToolsView } from '../components/views/ToolsView';
 import { ProvidersView } from '../components/views/ProvidersView';
 import { SecurityView } from '../components/views/SecurityView';
 import { FileIntelligenceView } from '../components/views/FileIntelligenceView';
+import { VoiceHUDView } from '../components/views/VoiceHUDView';
 
 import { Terminal, Lock, Key, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -216,6 +217,8 @@ export default function MainPage() {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardView />;
+      case 'voice':
+        return <VoiceHUDView />;
       case 'chat':
         return <ChatView />;
       case 'tasks':
