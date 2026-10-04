@@ -1,7 +1,7 @@
 """AURA-804 Dedicated Local VLM Inference Hardware Benchmark.
 
 Measures quantitative latency, throughput, and memory metrics for real local VLM inference:
-1. Model initialization & CPU execution verification
+1. Warm model / service handle initialization & CPU execution verification
 2. Single screen-frame VLM inference latency (AURA-801 integration)
 3. Single camera-frame VLM inference latency (AURA-803 integration)
 4. Observation parsing & untrusted XML envelope synthesis

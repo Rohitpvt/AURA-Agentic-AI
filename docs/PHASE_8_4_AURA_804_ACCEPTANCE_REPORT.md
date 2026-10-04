@@ -176,7 +176,7 @@ Conducted via `tests/verify_aura804_live_vision.py` against AURA-803 binary tran
 
 ### 6.3 VLM Benchmark (Dedicated Statistical Multi-Trial Analysis, N=15)
 Conducted via `tests/benchmark_aura804_vlm_inference.py`:
-- **Model Initialization:** `0.124 ms` (Stateless local CPU executor with pre-warmed image tensors)
+- **Warm Model Initialization Path:** `0.124 ms` (Service/model handle initialization with pre-warmed image tensors)
 - **Single Screen-Frame Inference:** `2462.787 ms`
 - **Single Camera-Frame Inference:** `2254.551 ms`
 - **Observation Parsing & Enveloping:** `0.038 ms`
@@ -248,7 +248,7 @@ Validated using a live visual test screen containing adversarial instructions:
 | `tests/verify_aura804_live_vision.py` (Live Windows Desktop Validation) | 8 Steps | PASSED | ~19s |
 | Full Backend Regression Suite (`pytest tests/ -v`) | 419 | PASSED | 236.27s |
 | Frontend Vitest Suite (`npm test`) | 33 | PASSED | 1.78s |
-| Production Web Build (`npm run build`) | 4 Pages | PASSED | 4.8s |
+| Production Web Build (`npm run build`) | 4 Pages | PASSED (Next.js 15.5.27) | 13.3s |
 
 ---
 

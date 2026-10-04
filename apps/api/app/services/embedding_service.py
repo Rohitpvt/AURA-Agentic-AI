@@ -84,6 +84,10 @@ class EmbeddingService:
         if not text:
             return 0
 
+        if text.startswith(self.BGE_QUERY_PREFIX):
+            remainder = text[len(self.BGE_QUERY_PREFIX):]
+            return self.PREFIX_TOKENS_COUNT + self.count_tokens(remainder)
+
         tok = self._get_tokenizer()
         if tok is not None:
             try:
