@@ -92,8 +92,8 @@
 
 
 
-### Phase 9: Governed Operating System & Hardware Automation (READY / PREFLIGHT COMPLETE)
-* **Milestone 9.1 (AURA-901):** Windows OS Control Foundation & Policy Boundary (`OSGuardService`, action taxonomy, sliding-window rate limiters, serialization lock).
+### Phase 9: Governed Operating System & Hardware Automation (IN PROGRESS)
+* **Milestone 9.1 (AURA-901):** Windows OS Control Foundation & Policy Boundary (`OSGuardService`, action taxonomy, sliding-window rate limiters, serialization lock) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.2 (AURA-902):** Governed Application Launch & Process Control (Executable allowlist, LOLBins denial, PID+create_time verification, HMAC-SHA256 HITL tokens).
 * **Milestone 9.3 (AURA-903):** Governed Mouse & Keyboard Interaction (Coordinate safety layer, window-scoped bounds, stale observation guard $\le 5\text{s}$, PyAutoGUI adapter, failsafe corner).
 * **Milestone 9.4 (AURA-904):** System Telemetry & Hardware Control Boundary (Local read-only CPU/RAM/GPU/Storage telemetry, bounded volume & brightness $\le \pm 10\%$).
