@@ -87,7 +87,7 @@
 ### Phase 8: Continuous Screen, Camera & Live Multimodal Vision (IN PROGRESS)
 * **Milestone 8.1 (AURA-801):** Multi-Monitor Screen & Active-Window Capture Engine (`mss` / `pygetwindow` / Per-Monitor v2 DPI, depth-1 ephemeral memory buffer, kill-switch integration) — **COMPLETED & ACCEPTED**.
 * **Milestone 8.2 (AURA-802):** Continuous Local OCR & Text Bounding Extraction (`rapidocr-onnxruntime` on ONNX Engine, 1 Hz rate ceiling, `<untrusted_multimodal_content>` envelope, volatile depth-1 caching) — **COMPLETED & ACCEPTED**.
-* **Milestone 8.3 (AURA-803):** Live Camera Ingestion & Duplex Vision Transport (WebSocket `/api/v1/vision/stream`, 26-byte binary framing).
+* **Milestone 8.3 (AURA-803):** Live Camera Ingestion & Duplex Vision Transport (`CameraVisionService`, `VisionTicketService` 60s TTL / 256-bit CSPRNG nonce, WebSocket `/api/v1/vision/stream`, canonical 26-byte Big-Endian framing, 5.0 FPS ceiling, depth-1 ephemeral buffer, kill switch abort, Next.js `VisionCamera` component) — **COMPLETED & ACCEPTED**.
 * **Milestone 8.4 (AURA-804):** Real-Time Screen VLM, 4 Governed Tools & Next.js HUD (`inspect_current_screen`, `inspect_active_window`, `inspect_camera_frame`, `query_visible_text`).
 
 

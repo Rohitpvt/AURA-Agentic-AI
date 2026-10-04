@@ -92,22 +92,31 @@ class EmergencyKillSwitchService:
         except Exception as e:
             logger.warning(f"KillSwitch: Failed persisting state to disk ({e})")
 
-    def is_active(self, workspace_id: Optional[uuid.UUID] = None) -> bool:
+    def is_active(self, workspace_id: Optional[Any] = None) -> bool:
         """Check if global kill switch or workspace-specific kill switch is active."""
         self._sync_from_disk()
         if self._is_active:
             return True
-        if workspace_id and workspace_id in self._active_workspaces:
-            return True
+        if workspace_id:
+            ws_str = str(workspace_id)
+            if any(str(w) == ws_str for w in self._active_workspaces):
+                return True
         return False
 
-    def set_active(self, active: bool = True, workspace_id: Optional[uuid.UUID] = None) -> None:
+    def set_active(self, active: bool = True, workspace_id: Optional[Any] = None) -> None:
         """Set active kill-switch state globally or per workspace and persist atomically."""
         if workspace_id:
+            ws_obj = workspace_id if isinstance(workspace_id, uuid.UUID) else None
+            if ws_obj is None:
+                try:
+                    ws_obj = uuid.UUID(str(workspace_id))
+                except Exception:
+                    ws_obj = workspace_id
             if active:
-                self._active_workspaces.add(workspace_id)
+                self._active_workspaces.add(ws_obj)
             else:
-                self._active_workspaces.discard(workspace_id)
+                self._active_workspaces.discard(ws_obj)
+                self._active_workspaces = {w for w in self._active_workspaces if str(w) != str(workspace_id)}
         else:
             self._is_active = active
             if not active:

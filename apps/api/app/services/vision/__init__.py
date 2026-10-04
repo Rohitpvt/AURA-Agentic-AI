@@ -1,5 +1,14 @@
 """AURA Vision Capability Module Exports."""
 
+from app.services.vision.camera_service import (
+    CameraFrameHeader,
+    CameraObservation,
+    CameraSession,
+    CameraVisionService,
+    camera_vision_service,
+    pack_camera_frame,
+    unpack_camera_frame,
+)
 from app.services.vision.ocr_service import (
     ContinuousOCRService,
     OCRBoundingBox,
@@ -22,9 +31,18 @@ from app.services.vision.service import (
     VisionService,
     vision_service,
 )
+from app.services.vision.ticket_service import (
+    VisionTicket,
+    VisionTicketService,
+    vision_ticket_service,
+)
 
 __all__ = [
     "ActiveWindowInfo",
+    "CameraFrameHeader",
+    "CameraObservation",
+    "CameraSession",
+    "CameraVisionService",
     "CapturedFrame",
     "ContinuousOCRService",
     "MonitorInfo",
@@ -36,10 +54,16 @@ __all__ = [
     "ScreenCaptureService",
     "VisionInspectionResult",
     "VisionService",
+    "VisionTicket",
+    "VisionTicketService",
     "WindowBounds",
+    "camera_vision_service",
     "continuous_ocr_service",
+    "pack_camera_frame",
     "screen_capture_service",
+    "unpack_camera_frame",
     "vision_service",
+    "vision_ticket_service",
 ]
 
 

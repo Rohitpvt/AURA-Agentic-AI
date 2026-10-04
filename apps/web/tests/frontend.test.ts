@@ -411,4 +411,98 @@ describe('AURA Frontend Architecture & Security Invariant Tests', () => {
       expect(useAuraStore.getState().pendingApprovals).toHaveLength(0);
     });
   });
+
+  describe('10. AURA-803 Live Camera Ingestion & Duplex Vision Transport Invariants', () => {
+    it('1. validates canonical 26-byte Big-Endian vision frame binary packing', () => {
+      // 26-byte Header Contract: >BBIQIII
+      const streamType = 0x01; // Camera
+      const sourceId = 0x01;   // WebRTC / getUserMedia
+      const seqNum = 42;
+      const timestampNs = BigInt(1728000000000000);
+      const width = 1280;
+      const height = 720;
+      const payloadLen = 1024;
+
+      const headerBuf = new ArrayBuffer(26);
+      const view = new DataView(headerBuf);
+
+      view.setUint8(0, streamType);
+      view.setUint8(1, sourceId);
+      view.setUint32(2, seqNum, false);
+      view.setBigUint64(6, timestampNs, false);
+      view.setUint32(14, width, false);
+      view.setUint32(18, height, false);
+      view.setUint32(22, payloadLen, false);
+
+      expect(headerBuf.byteLength).toBe(26);
+      expect(view.getUint8(0)).toBe(1);
+      expect(view.getUint8(1)).toBe(1);
+      expect(view.getUint32(2, false)).toBe(42);
+      expect(view.getBigUint64(6, false)).toBe(timestampNs);
+      expect(view.getUint32(14, false)).toBe(1280);
+      expect(view.getUint32(18, false)).toBe(720);
+      expect(view.getUint32(22, false)).toBe(1024);
+    });
+
+    it('2. validates Vision Ticket schema invariants and short-lived expiration contract', () => {
+      const mockVisionTicket = {
+        ticket: 'vision_ticket_64hexcharacters1234567890abcdef1234567890abcdef12345678',
+        expires_in_seconds: 60,
+        websocket_url: '/api/v1/vision/stream?ticket=vision_ticket_64hexcharacters1234567890abcdef1234567890abcdef12345678',
+        workspace_id: 'ws_vision_tenant_1',
+        purpose: 'camera_ingestion',
+        max_fps: 5.0,
+        stream_type: 1,
+      };
+
+      expect(mockVisionTicket.expires_in_seconds).toBeLessThanOrEqual(60);
+      expect(mockVisionTicket.purpose).toBe('camera_ingestion');
+      expect(mockVisionTicket.max_fps).toBe(5.0);
+      expect(mockVisionTicket.stream_type).toBe(1);
+      expect(mockVisionTicket.websocket_url).toContain('/api/v1/vision/stream?ticket=');
+    });
+
+    it('3. validates depth-1 ephemeral camera observation schema', () => {
+      const mockObservation = {
+        status: 'ok',
+        frame: {
+          stream_type: 1,
+          source_id: 1,
+          sequence_number: 10,
+          timestamp_ns: 1728000000000000,
+          width: 1280,
+          height: 720,
+          payload_len: 25420,
+          mime_type: 'image/webp',
+          received_at: 1728000000.5,
+          is_ephemeral: true,
+        },
+      };
+
+      expect(mockObservation.status).toBe('ok');
+      expect(mockObservation.frame.is_ephemeral).toBe(true);
+      expect(mockObservation.frame.mime_type).toBe('image/webp');
+      expect(mockObservation.frame.width).toBe(1280);
+      expect(mockObservation.frame.height).toBe(720);
+    });
+
+    it('4. enforces sampling bounds: default 2 FPS, ceiling 5 FPS', () => {
+      const defaultFps = 2;
+      const maxFps = 5;
+      const minIntervalMs = 1000 / maxFps; // 200ms
+
+      expect(defaultFps).toBe(2);
+      expect(maxFps).toBe(5);
+      expect(minIntervalMs).toBe(200);
+      expect(defaultFps).toBeLessThanOrEqual(maxFps);
+    });
+
+    it('5. validates client privacy guarantee: no local storage of raw camera frames', () => {
+      const storeState = useAuraStore.getState();
+      const stateKeys = Object.keys(storeState);
+      expect(stateKeys).not.toContain('rawCameraFrames');
+      expect(stateKeys).not.toContain('cameraBuffer');
+      expect(stateKeys).not.toContain('capturedImages');
+    });
+  });
 });

@@ -208,6 +208,16 @@ class VoiceProcessingError(AuraException):
         )
 
 
+class VisionProcessingError(AuraException):
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            code="VISION_PROCESSING_ERROR",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details,
+        )
+
+
 async def aura_exception_handler(request: Request, exc: AuraException) -> JSONResponse:
     from app.core.logging import get_correlation_id
 

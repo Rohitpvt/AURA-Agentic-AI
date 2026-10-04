@@ -8,22 +8,33 @@ Provides authenticated REST endpoints for:
 """
 
 import base64
+import time
 from typing import Any, Dict, List, Optional
 import uuid
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
-from app.core.errors import AuthorizationError, EntityNotFoundError, ValidationError
+from app.api.deps import get_current_user, get_db_session, get_workspace_membership
+from app.core.errors import AuthenticationError, AuthorizationError, EntityNotFoundError, ValidationError, VisionProcessingError
 from app.core.logging import logger
 from app.db.models.user import User
 from app.services.kill_switch import kill_switch
+from app.services.vision.camera_service import (
+    DEFAULT_CAMERA_FPS,
+    FRAME_HEADER_SIZE,
+    MAX_CAMERA_FPS,
+    camera_vision_service,
+    pack_camera_frame,
+    unpack_camera_frame,
+)
 from app.services.vision.screen_capture import (
     ActiveWindowInfo,
     CapturedFrame,
     MonitorInfo,
     screen_capture_service,
 )
+from app.services.vision.ticket_service import VisionTicket, vision_ticket_service
 
 router = APIRouter()
 
@@ -31,6 +42,59 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 # Request & Response Schemas
 # ---------------------------------------------------------------------------
+
+class VisionTicketRequest(BaseModel):
+    """Payload for requesting a short-lived vision/camera session ticket."""
+    workspace_id: uuid.UUID = Field(..., description="Target workspace UUID for vision session authorization")
+    ttl_seconds: Optional[int] = Field(default=60, ge=10, le=300, description="Ticket validity window in seconds")
+    purpose: Optional[str] = Field(default="camera_stream", description="Intended purpose of ticket (e.g. camera_stream)")
+
+
+class VisionTicketResponse(BaseModel):
+    """Metadata returned upon successful vision ticket issuance."""
+    ticket: str = Field(..., description="Single-use cryptographically secure ticket token")
+    expires_in: int = Field(default=60, description="Ticket TTL in seconds")
+    workspace_id: uuid.UUID = Field(..., description="Authorized workspace UUID")
+    user_id: uuid.UUID = Field(..., description="Authorized user UUID")
+    created_at: float = Field(..., description="Epoch timestamp of ticket creation")
+    purpose: str = Field(default="camera_stream", description="Authorized ticket purpose")
+
+
+class CameraObservationResponse(BaseModel):
+    """Metadata describing the latest ephemeral camera frame in volatile memory."""
+    frame_id: str
+    workspace_id: str
+    session_id: str
+    source_id: int
+    sequence_number: int
+    timestamp_ns: int
+    width: int
+    height: int
+    format: str
+    size_bytes: int
+    received_at: float
+    preview_thumbnail_base64: Optional[str] = None
+
+
+class CameraStatusResponse(BaseModel):
+    """Status and configuration limits for the camera streaming subsystem."""
+    status: str
+    active_sessions_count: int
+    default_fps: float
+    max_fps_ceiling: float
+    min_frame_interval_sec: float
+    max_resolution: str
+    header_size_bytes: int
+    buffer_depth: int
+    has_ephemeral_frame: bool
+    format: str
+
+
+class CameraBufferClearResponse(BaseModel):
+    """Response returned when ephemeral camera memory buffer is cleared."""
+    status: str
+    cleared: bool
+    message: str
 
 class MonitorResponse(BaseModel):
     monitor_id: int
@@ -587,5 +651,284 @@ async def clear_ocr_cache(
         status="cleared",
         cleared=True,
         message="Ephemeral OCR observation cache successfully cleared.",
+    )
+
+
+# ==============================================================================
+# 3. Vision Session Ticket & Camera Transport Endpoints (AURA-803)
+# ==============================================================================
+
+@router.post(
+    "/ticket",
+    response_model=VisionTicketResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Issue single-use vision/camera session ticket",
+    description="Authenticate user and validate workspace membership before issuing a 60-second single-use ticket for WebSocket upgrade.",
+)
+async def create_vision_ticket(
+    body: VisionTicketRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session),
+) -> VisionTicketResponse:
+    """Issue short-lived single-use vision session ticket."""
+    # 1. Check workspace membership and authorization
+    await get_workspace_membership(workspace_id=body.workspace_id, user=current_user, db=db)
+
+    # 2. Check kill switch for workspace
+    if kill_switch.is_active(body.workspace_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Emergency Kill Switch is ACTIVE: Vision tickets cannot be issued.",
+        )
+
+    # 3. Issue single-use ticket
+    try:
+        ticket = await vision_ticket_service.issue_ticket(
+            user_id=current_user.id,
+            workspace_id=body.workspace_id,
+            purpose=body.purpose or "camera_stream",
+            ttl_seconds=body.ttl_seconds,
+        )
+    except AuthorizationError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except AuthenticationError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to issue vision ticket: {e}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to issue vision ticket")
+
+    return VisionTicketResponse(
+        ticket=ticket.ticket_token,
+        expires_in=int(ticket.expires_at - ticket.created_at),
+        workspace_id=ticket.workspace_id,
+        user_id=ticket.user_id,
+        created_at=ticket.created_at,
+        purpose=ticket.purpose,
+    )
+
+
+@router.websocket("/stream")
+async def vision_camera_stream(
+    websocket: WebSocket,
+    ticket: str = Query(..., description="Short-lived single-use vision ticket"),
+    workspace_id: Optional[uuid.UUID] = Query(None, description="Optional workspace UUID for tenant assertion"),
+):
+    """Authenticated real-time duplex camera frame ingestion WebSocket gateway (AURA-803).
+    
+    Framing: 26-byte header (>BBIQIII) + WebP image payload.
+    Rate Ceiling: 5.0 FPS hard limit (server-enforced).
+    Buffer: Depth-1 ephemeral memory buffer.
+    Kill Switch: Real-time session termination and buffer purge.
+    """
+    # 1. Validate & Atomically Consume Ticket before accepting WebSocket
+    consumed_ticket: Optional[VisionTicket] = None
+    try:
+        consumed_ticket = await vision_ticket_service.consume_ticket(
+            ticket_token=ticket,
+            expected_workspace_id=workspace_id,
+            expected_purpose="camera_stream",
+        )
+    except (AuthenticationError, AuthorizationError) as e:
+        logger.warning(f"Vision WebSocket connection rejected during ticket verification: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason=str(e))
+        return
+    except Exception as e:
+        logger.error(f"Unexpected error during vision ticket consumption: {e}")
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal ticket verification error")
+        return
+
+    # 2. Accept WebSocket Connection
+    await websocket.accept()
+
+    # 3. Kill-Switch Pre-flight Check
+    if kill_switch.is_active(consumed_ticket.workspace_id):
+        logger.warning(f"Vision WebSocket rejected: active kill switch on workspace {consumed_ticket.workspace_id}")
+        await websocket.send_json({"type": "kill_switch", "reason": "active_kill_switch_engaged"})
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Active kill-switch engaged")
+        return
+
+    # 4. Generate True 256-bit CSPRNG Session Nonce & Register CameraSession
+    raw_nonce, hex_nonce = vision_ticket_service.generate_session_nonce()
+    session = camera_vision_service.create_session(
+        user_id=consumed_ticket.user_id,
+        workspace_id=consumed_ticket.workspace_id,
+        session_nonce=hex_nonce,
+    )
+
+    try:
+        # 5. Send Initial Session Ready Frame
+        await websocket.send_json({
+            "type": "session_ready",
+            "session_id": session.session_id,
+            "workspace_id": str(consumed_ticket.workspace_id),
+            "user_id": str(consumed_ticket.user_id),
+            "session_nonce": hex_nonce,
+            "max_fps": MAX_CAMERA_FPS,
+            "default_fps": DEFAULT_CAMERA_FPS,
+            "header_size_bytes": FRAME_HEADER_SIZE,
+            "created_at": session.created_at,
+        })
+
+        # 6. Duplex Message Event Loop
+        while True:
+            # Check kill switch on every iteration
+            if kill_switch.is_active(consumed_ticket.workspace_id):
+                logger.warning(f"[CameraSession {session.session_id}] Terminating connection due to kill-switch engagement.")
+                camera_vision_service.clear_ephemeral_frame(str(consumed_ticket.workspace_id))
+                await websocket.send_json({"type": "kill_switch", "reason": "emergency_stop"})
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Kill switch engaged")
+                break
+
+            message = await websocket.receive()
+
+            # A. Binary Camera Frame Ingestion
+            if "bytes" in message and message["bytes"]:
+                raw_frame = message["bytes"]
+                try:
+                    accepted, reason, obs = camera_vision_service.ingest_frame(session.session_id, raw_frame)
+                    if accepted and obs:
+                        await websocket.send_json({
+                            "type": "frame_accepted",
+                            "sequence_number": obs.sequence_number,
+                            "timestamp_ns": obs.timestamp_ns,
+                            "width": obs.width,
+                            "height": obs.height,
+                            "size_bytes": obs.size_bytes,
+                        })
+                    else:
+                        await websocket.send_json({
+                            "type": "frame_dropped",
+                            "reason": reason or "rejected",
+                        })
+                except AuthorizationError as auth_err:
+                    logger.warning(f"[CameraSession {session.session_id}] Ingestion blocked by kill switch: {auth_err}")
+                    await websocket.send_json({"type": "kill_switch", "reason": "emergency_stop"})
+                    await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Kill switch engaged")
+                    break
+                except VisionProcessingError as frame_err:
+                    logger.warning(f"[CameraSession {session.session_id}] Invalid camera frame: {frame_err}")
+                    await websocket.send_json({"type": "error", "message": str(frame_err)})
+                    continue
+                except Exception as exc:
+                    logger.error(f"[CameraSession {session.session_id}] Unexpected error in frame ingestion: {exc}")
+                    await websocket.send_json({"type": "error", "message": "Frame processing error"})
+                    continue
+
+            # B. Text Control Frames
+            elif "text" in message and message["text"]:
+                try:
+                    import json
+                    data = json.loads(message["text"])
+                    msg_type = data.get("type", "")
+
+                    if msg_type == "ping":
+                        await websocket.send_json({"type": "pong", "timestamp": time.time()})
+                    elif msg_type == "stop":
+                        logger.info(f"[CameraSession {session.session_id}] Client requested graceful stop.")
+                        await websocket.send_json({"type": "camera_stopped", "reason": "client_requested"})
+                        break
+                    else:
+                        await websocket.send_json({"type": "ack", "received_type": msg_type})
+                except Exception as text_err:
+                    logger.warning(f"[CameraSession {session.session_id}] Malformed text control frame: {text_err}")
+                    await websocket.send_json({"type": "error", "message": "Malformed control JSON"})
+
+    except WebSocketDisconnect:
+        logger.info(f"[CameraSession {session.session_id}] WebSocket disconnected by client.")
+    except Exception as e:
+        logger.error(f"[CameraSession {session.session_id}] WebSocket error: {e}", exc_info=True)
+    finally:
+        camera_vision_service.close_session(session.session_id, reason="stream_ended")
+
+
+@router.get(
+    "/camera/latest",
+    response_model=CameraObservationResponse,
+    summary="Get latest cached camera observation without raw bytes",
+)
+async def get_latest_camera_observation(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+    include_preview: bool = Query(default=False, description="Whether to include downscaled base64 thumbnail"),
+) -> CameraObservationResponse:
+    """Retrieve metadata for the latest cached camera frame in volatile memory."""
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    if kill_switch.is_active(workspace_id=ws_id):
+        camera_vision_service.clear_ephemeral_frame(ws_id)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Emergency Kill Switch is ACTIVE.",
+        )
+
+    obs = camera_vision_service.get_latest_observation(workspace_id=ws_id)
+    if not obs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No ephemeral camera observation available in volatile memory.",
+        )
+
+    preview_b64 = None
+    if include_preview and obs.raw_bytes:
+        preview_b64 = base64.b64encode(obs.raw_bytes).decode("ascii")
+
+    return CameraObservationResponse(
+        frame_id=obs.frame_id,
+        workspace_id=obs.workspace_id,
+        session_id=obs.session_id,
+        source_id=obs.source_id,
+        sequence_number=obs.sequence_number,
+        timestamp_ns=obs.timestamp_ns,
+        width=obs.width,
+        height=obs.height,
+        format=obs.format,
+        size_bytes=obs.size_bytes,
+        received_at=obs.received_at,
+        preview_thumbnail_base64=preview_b64,
+    )
+
+
+@router.get(
+    "/camera/status",
+    response_model=CameraStatusResponse,
+    summary="Get camera streaming subsystem status and limits",
+)
+async def get_camera_status(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> CameraStatusResponse:
+    """Check camera transport subsystem availability, active sessions, and FPS limits."""
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    info = camera_vision_service.get_status(workspace_id=ws_id)
+
+    return CameraStatusResponse(
+        status=info["status"],
+        active_sessions_count=info["active_sessions_count"],
+        default_fps=info["default_fps"],
+        max_fps_ceiling=info["max_fps_ceiling"],
+        min_frame_interval_sec=info["min_frame_interval_sec"],
+        max_resolution=info["max_resolution"],
+        header_size_bytes=info["header_size_bytes"],
+        buffer_depth=info["buffer_depth"],
+        has_ephemeral_frame=info["has_ephemeral_frame"],
+        format=info["format"],
+    )
+
+
+@router.delete(
+    "/camera/cache",
+    response_model=CameraBufferClearResponse,
+    summary="Clear ephemeral camera observation cache",
+)
+async def clear_camera_cache(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> CameraBufferClearResponse:
+    """Purge ephemeral camera observation from volatile memory."""
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    camera_vision_service.clear_ephemeral_frame(workspace_id=ws_id)
+    return CameraBufferClearResponse(
+        status="cleared",
+        cleared=True,
+        message="Ephemeral camera observation cache successfully cleared.",
     )
 
