@@ -92,11 +92,13 @@
 
 
 
-### Phase 9: Governed Operating System & Hardware Automation (FUTURE)
-* **Milestone 9.1 (AURA-901):** Application Launch & Process Management Allowlist Engine.
-* **Milestone 9.2 (AURA-902):** System Settings & Hardware Telemetry (Volume, Brightness, Wi-Fi).
-* **Milestone 9.3 (AURA-903):** Governed GUI Automation (Window-Scoped PyAutoGUI + HITL).
-* **Milestone 9.4 (AURA-904):** Windows System Tray Controller & Physical Emergency Hotkey.
+### Phase 9: Governed Operating System & Hardware Automation (READY / PREFLIGHT COMPLETE)
+* **Milestone 9.1 (AURA-901):** Windows OS Control Foundation & Policy Boundary (`OSGuardService`, action taxonomy, sliding-window rate limiters, serialization lock).
+* **Milestone 9.2 (AURA-902):** Governed Application Launch & Process Control (Executable allowlist, LOLBins denial, PID+create_time verification, HMAC-SHA256 HITL tokens).
+* **Milestone 9.3 (AURA-903):** Governed Mouse & Keyboard Interaction (Coordinate safety layer, window-scoped bounds, stale observation guard $\le 5\text{s}$, PyAutoGUI adapter, failsafe corner).
+* **Milestone 9.4 (AURA-904):** System Telemetry & Hardware Control Boundary (Local read-only CPU/RAM/GPU/Storage telemetry, bounded volume & brightness $\le \pm 10\%$).
+* **Milestone 9.5 (AURA-905):** Windows System Tray Controller & Physical Emergency Hotkey (`pystray` tray indicator, Win32 `Ctrl+Alt+Shift+K` physical hotkey).
+* **Milestone 9.6 (AURA-906):** Phase 9 Integration, Kill-Switch Race Testing & Security Red Team (Cross-subsystem integration, kill-switch races, adversarial testing).
 
 ### Phase 10: Advanced Interactive Browser & Windows Boot Daemon (FUTURE)
 * **Milestone 10.1 (AURA-1001):** Interactive Browser Action Suite (`browser_click`, `browser_fill_form`).

@@ -108,14 +108,16 @@
 
 ---
 
-## 9. Phase 9: Governed OS & Hardware Control Automation (FUTURE)
+## 9. Phase 9: Governed OS & Hardware Control Automation (READY / PREFLIGHT COMPLETE)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **AURA-901** | Application Launch Allowlist Engine | Governed process execution allowlist with path verification and process tree monitoring. | AURA-106, AURA-204 | 5 pts (2 days) | PLANNED |
-| **AURA-902** | System Hardware & Setting Control | Read/set system volume, display brightness, and network status via native Windows APIs. | AURA-901 | 5 pts (2 days) | PLANNED |
-| **AURA-903** | Governed GUI Automation | Window-bounded PyAutoGUI mouse clicks, keystrokes, and mandatory HITL for destructive actions. | AURA-901, AURA-204 | 8 pts (3 days) | PLANNED |
-| **AURA-904** | Windows System Tray & Hotkey Guard | Background system tray icon, live status indicator, and physical global emergency hotkey. | AURA-901, AURA-507 | 5 pts (2 days) | PLANNED |
+| **AURA-901** | Windows OS Control Foundation & Policy Boundary | Core `OSGuardService`, action taxonomy definitions (`READ_ONLY`, `LOW_RISK_WRITE`, `MEDIUM_RISK_INTERACTION`, `HIGH_RISK_SYSTEM_ACTION`, `CRITICAL_ACTION`), Pydantic schemas, sliding-window rate limiters, single-worker serialization lock. | Phase 8, AURA-204 | 5 pts (2 days) | READY / PREFLIGHT COMPLETE |
+| **AURA-902** | Governed Application Launch & Process Control | Executable allowlist engine, LOLBins denial filter (`powershell`, `cmd`, `wscript`, etc.), `psutil` process inspector, PID + `create_time` termination verification, cryptographic HMAC-SHA256 HITL integration. | AURA-901 | 5 pts (2 days) | READY / PREFLIGHT COMPLETE |
+| **AURA-903** | Governed Mouse & Keyboard Interaction | Coordinate safety validator, active window bounding box checks, stale observation guard ($\le 5\text{s}$ TTL), PyAutoGUI secure adapter, shortcut allowlist, failsafe corner $(0,0)$. | AURA-901, AURA-801 | 8 pts (3 days) | READY / PREFLIGHT COMPLETE |
+| **AURA-904** | System Telemetry & Hardware Control Boundary | Read-only local CPU/RAM/GPU/Storage/Battery telemetry, bounded system volume and display brightness adjustments ($\le \pm 10\%$), Core Audio / WMI adapters. | AURA-901 | 5 pts (2 days) | READY / PREFLIGHT COMPLETE |
+| **AURA-905** | System Tray & Global Hotkey Control Plane | Python `pystray` system tray status indicator, Win32 `RegisterHotKey` physical `Ctrl+Alt+Shift+K` kill switch hotkey with sub-15ms trigger, state sync. | AURA-901, AURA-507 | 5 pts (2 days) | READY / PREFLIGHT COMPLETE |
+| **AURA-906** | Phase 9 Integration, Kill-Switch Race Testing & Red Team | Cross-subsystem integration testing, kill-switch vs active action race condition verification, prompt injection to OS action red-teaming, full regression suite. | AURA-902, 903, 904, 905 | 8 pts (3 days) | READY / PREFLIGHT COMPLETE |
 
 ---
 
