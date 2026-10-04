@@ -5,7 +5,8 @@ Provides:
 2. Active foreground window introspection (title, PID, process name, bounding rect) via Win32 API / ctypes.
 3. Windows Per-Monitor v2 DPI-aware coordinate normalization.
 4. Aspect-ratio-preserving in-memory downscaling (preferred max 1280x720, absolute max 1920x1080).
-5. Sub-millisecond screen delta detection (ImageChops normalized thumbnail diff, >= 5% threshold).
+5. Low-latency screen delta detection (~6 ms mean, ImageChops normalized thumbnail diff, >= 5% threshold).
+
 6. Volatile depth-1 ephemeral frame buffer with zero disk/database persistence.
 7. Adaptive capture rate limiter (0.5–1.0 FPS idle, 2.0–5.0 FPS active; 60 FPS unthrottled strictly prohibited).
 8. Authoritative global & workspace-scoped Emergency Kill Switch integration.

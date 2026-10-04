@@ -325,3 +325,267 @@ async def clear_ephemeral_buffer(
         status="cleared",
         message="Ephemeral vision frame buffer successfully purged from memory.",
     )
+
+
+# ---------------------------------------------------------------------------
+# OCR Schemas & Endpoints (Phase 8 / AURA-802)
+# ---------------------------------------------------------------------------
+
+class OCRBoundingBoxModel(BaseModel):
+    x: float
+    y: float
+    width: float
+    height: float
+    polygon: List[List[float]]
+    normalized_bbox: List[float]
+    coordinate_space: str = "captured_frame"
+
+
+class OCRTextRegionModel(BaseModel):
+    region_id: str
+    text: str
+    confidence: float
+    bbox: OCRBoundingBoxModel
+    line_number: int
+
+
+class OCRExtractRequest(BaseModel):
+    monitor_id: int = Field(default=1, description="Monitor ID to capture and extract text from")
+    force_refresh: bool = Field(default=False, description="Force OCR inference even if frame delta is below threshold")
+    image_base64: Optional[str] = Field(default=None, description="Optional raw base64 image bytes to process")
+
+
+class OCRExtractionResponse(BaseModel):
+    observation_id: str
+    workspace_id: Optional[str] = None
+    frame_id: Optional[str] = None
+    monitor_id: int
+    capture_timestamp_ns: int
+    ocr_timestamp_ns: int
+    processing_duration_ms: float
+    frame_dimensions: List[int]
+    region_count: int
+    text_regions: List[OCRTextRegionModel]
+    full_text: str
+    status: str
+    degraded: bool
+    untrusted_content_envelope: str
+    is_untrusted_content: bool = True
+    window_info: Optional[Dict[str, Any]] = None
+
+
+class OCRStatusResponse(BaseModel):
+    status: str
+    engine: str = "RapidOCR-ONNX"
+    rate_ceiling_fps: float = 1.0
+    ocr_max_fps: float = 1.0
+    ocr_min_interval_sec: float = 1.0
+    engine_initialized: bool = True
+    degraded: bool
+
+
+class OCRBufferClearResponse(BaseModel):
+    status: str = "cleared"
+    cleared: bool = True
+    message: str = "Ephemeral OCR observation cache successfully cleared."
+
+
+@router.post(
+    "/ocr/extract",
+    response_model=OCRExtractionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Extract structured local OCR text with bounding boxes",
+)
+async def extract_ocr_from_screen(
+    req: OCRExtractRequest,
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> OCRExtractionResponse:
+    """Perform local RapidOCR extraction on screen or image input with 1 Hz ceiling."""
+    from app.services.vision.ocr_service import continuous_ocr_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    if kill_switch.is_active(workspace_id=ws_id):
+        continuous_ocr_service.clear_ephemeral_observation()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Emergency Kill Switch is ACTIVE: OCR operation blocked.",
+        )
+
+    img_input = None
+    if req.image_base64:
+        try:
+            img_bytes = base64.b64decode(req.image_base64)
+            img_input = Image.open(io.BytesIO(img_bytes))
+        except Exception as decode_err:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid base64 image payload: {decode_err}",
+            )
+
+    try:
+        obs = continuous_ocr_service.extract_ocr(
+            image_input=img_input,
+            monitor_id=req.monitor_id,
+            force_refresh=req.force_refresh,
+            workspace_id=ws_id,
+        )
+    except AuthorizationError as auth_err:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(auth_err))
+    except EntityNotFoundError as not_found:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(not_found))
+    except Exception as exc:
+        logger.error(f"Failed to perform continuous OCR: {exc}", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OCR extraction failed.")
+
+    regions_model = [
+        OCRTextRegionModel(
+            region_id=r.region_id,
+            text=r.text,
+            confidence=r.confidence,
+            bbox=OCRBoundingBoxModel(
+                x=r.bbox.x,
+                y=r.bbox.y,
+                width=r.bbox.width,
+                height=r.bbox.height,
+                polygon=r.bbox.polygon,
+                normalized_bbox=r.bbox.normalized_bbox,
+                coordinate_space=r.bbox.coordinate_space,
+            ),
+            line_number=r.line_number,
+        )
+        for r in obs.text_regions
+    ]
+
+    return OCRExtractionResponse(
+        observation_id=obs.observation_id,
+        workspace_id=obs.workspace_id,
+        frame_id=obs.frame_id,
+        monitor_id=obs.monitor_id,
+        capture_timestamp_ns=obs.capture_timestamp_ns,
+        ocr_timestamp_ns=obs.ocr_timestamp_ns,
+        processing_duration_ms=obs.processing_duration_ms,
+        frame_dimensions=list(obs.frame_dimensions),
+        region_count=len(regions_model),
+        text_regions=regions_model,
+        full_text=obs.full_text,
+        status=obs.status.value,
+        degraded=obs.degraded,
+        untrusted_content_envelope=obs.untrusted_content_envelope,
+        is_untrusted_content=obs.is_untrusted_content,
+        window_info=obs.window_info,
+    )
+
+
+@router.get(
+    "/ocr/latest",
+    response_model=OCRExtractionResponse,
+    summary="Get latest cached OCR observation without re-triggering inference",
+)
+async def get_latest_ocr_observation(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> OCRExtractionResponse:
+    """Retrieve the latest cached ephemeral OCR observation from volatile memory."""
+    from app.services.vision.ocr_service import continuous_ocr_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    if kill_switch.is_active(workspace_id=ws_id):
+        continuous_ocr_service.clear_ephemeral_observation()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Emergency Kill Switch is ACTIVE.",
+        )
+
+    obs = continuous_ocr_service.get_latest_observation(workspace_id=ws_id)
+    if not obs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No ephemeral OCR observation available in volatile memory.",
+        )
+
+    regions_model = [
+        OCRTextRegionModel(
+            region_id=r.region_id,
+            text=r.text,
+            confidence=r.confidence,
+            bbox=OCRBoundingBoxModel(
+                x=r.bbox.x,
+                y=r.bbox.y,
+                width=r.bbox.width,
+                height=r.bbox.height,
+                polygon=r.bbox.polygon,
+                normalized_bbox=r.bbox.normalized_bbox,
+                coordinate_space=r.bbox.coordinate_space,
+            ),
+            line_number=r.line_number,
+        )
+        for r in obs.text_regions
+    ]
+
+    return OCRExtractionResponse(
+        observation_id=obs.observation_id,
+        workspace_id=obs.workspace_id,
+        frame_id=obs.frame_id,
+        monitor_id=obs.monitor_id,
+        capture_timestamp_ns=obs.capture_timestamp_ns,
+        ocr_timestamp_ns=obs.ocr_timestamp_ns,
+        processing_duration_ms=obs.processing_duration_ms,
+        frame_dimensions=list(obs.frame_dimensions),
+        region_count=len(regions_model),
+        text_regions=regions_model,
+        full_text=obs.full_text,
+        status=obs.status.value,
+        degraded=obs.degraded,
+        untrusted_content_envelope=obs.untrusted_content_envelope,
+        is_untrusted_content=obs.is_untrusted_content,
+        window_info=obs.window_info,
+    )
+
+
+@router.get(
+    "/ocr/status",
+    response_model=OCRStatusResponse,
+    summary="Get OCR subsystem operational and health status",
+)
+async def get_ocr_status(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> OCRStatusResponse:
+    """Check OCR engine availability and rate limits."""
+    from app.services.vision.ocr_service import continuous_ocr_service
+
+    ws_id = x_workspace_id or str(getattr(current_user, "default_workspace_id", ""))
+    is_killed = kill_switch.is_active(workspace_id=ws_id)
+    status_str = "kill_switched" if is_killed else continuous_ocr_service.status.value
+
+    return OCRStatusResponse(
+        status=status_str,
+        engine="RapidOCR-ONNX",
+        rate_ceiling_fps=1.0,
+        ocr_max_fps=1.0,
+        ocr_min_interval_sec=1.0,
+        engine_initialized=continuous_ocr_service._engine_available,
+        degraded=not continuous_ocr_service._engine_available,
+    )
+
+
+@router.delete(
+    "/ocr/cache",
+    response_model=OCRBufferClearResponse,
+    summary="Clear ephemeral OCR observation cache",
+)
+async def clear_ocr_cache(
+    current_user: User = Depends(get_current_user),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+) -> OCRBufferClearResponse:
+    """Purge ephemeral OCR observation from volatile memory."""
+    from app.services.vision.ocr_service import continuous_ocr_service
+
+    continuous_ocr_service.clear_ephemeral_observation()
+    return OCRBufferClearResponse(
+        status="cleared",
+        cleared=True,
+        message="Ephemeral OCR observation cache successfully cleared.",
+    )
+

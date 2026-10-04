@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary & Verified Test State
 
-AURA-801 introduces the native multi-monitor screen capture, active foreground window introspection, Per-Monitor v2 DPI-aware coordinate handling, adaptive sampling rate limiter, sub-millisecond screen delta detector, and depth-1 volatile ephemeral memory buffer.
+AURA-801 introduces the native multi-monitor screen capture, active foreground window introspection, Per-Monitor v2 DPI-aware coordinate handling, adaptive sampling rate limiter, low-latency screen delta detector (~6 ms mean), and depth-1 volatile ephemeral memory buffer.
 
 ### Verification Summary:
 ```text
@@ -36,7 +36,8 @@ Repository Working Tree:              CLEAN
 2. **Active Foreground Window Introspection:** Attaches the interactive desktop station (`OpenInputDesktop` / `SetThreadDesktop`) and queries Win32 `GetForegroundWindow()`, `GetWindowRect()`, `GetWindowTextW()`, `GetWindowThreadProcessId()`, and `psutil.Process(pid).name()`. Returns strictly read-only window metadata (`title`, `process_name`, `pid`, `bounds`, `is_maximized`, `monitor_id`).
 3. **Windows Per-Monitor v2 DPI Awareness:** Automatically configures `SetProcessDpiAwarenessContext(-4)` / `SetProcessDpiAwareness(2)` on initialization, ensuring coordinate accuracy across 100%, 125%, 150% scaling.
 4. **Proportional In-Memory Downscaling:** Downscales captured frames to preferred max $1280 \times 720$ (absolute ceiling $1920 \times 1080$) using bilinear interpolation without enlarging smaller frames or distorting aspect ratios.
-5. **Sub-Millisecond Screen Delta Detection:** Resizes frames to $64 \times 36$ grayscale thumbnails and computes normalized mean absolute pixel differences using `ImageChops.difference()`. Accurately flags `is_changed = True` only when $\Delta \ge 0.05$ (5% visual difference).
+5. **Low-Latency Screen Delta Detection (~6 ms mean):** Resizes frames to $64 \times 36$ grayscale thumbnails and computes normalized mean absolute pixel differences using `ImageChops.difference()`. Accurately flags `is_changed = True` only when $\Delta \ge 0.05$ (5% visual difference).
+
 6. **Volatile Depth-1 Ephemeral Frame Buffer:** New captures atomically overwrite and discard previous frames in volatile memory. Zero continuous video or image files are written to disk, PostgreSQL, or logs.
 7. **Adaptive Rate Limiter:** Background sampling loop enforces rate limits ($0.5$–$1.0$ FPS idle, $2.0$–$5.0$ FPS active task) with a hard maximum ceiling of $5.0$ FPS. Unthrottled 60 FPS is strictly prohibited.
 8. **Emergency Kill Switch Integration:** Dynamically validates `kill_switch.is_active(workspace_id=...)` on every capture tick. Instantly halts capture loops and clears all ephemeral buffers when engaged.

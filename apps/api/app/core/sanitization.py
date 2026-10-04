@@ -71,6 +71,12 @@ class PromptSanitizer:
         return escaped
 
     @classmethod
+    def sanitize(cls, text: str) -> str:
+        """Clean unicode and escape untrusted delimiters."""
+        cleaned = cls.clean_unicode_and_controls(text)
+        return cls.escape_delimiters(cleaned)
+
+    @classmethod
     def wrap_untrusted_envelope(
         cls,
         content: str,

@@ -197,7 +197,8 @@ def test_downscale_image_preserves_aspect_ratio_and_bounds():
 # ---------------------------------------------------------------------------
 
 def test_frame_delta_detection_algorithm():
-    """Verify sub-millisecond delta computation triggers only on >= 5% visual change."""
+    """Verify low-latency delta computation triggers only on >= 5% visual change."""
+
     svc = ScreenCaptureService(config=ScreenCaptureConfig(delta_threshold=0.05))
     
     # Frame 1: Blank White
