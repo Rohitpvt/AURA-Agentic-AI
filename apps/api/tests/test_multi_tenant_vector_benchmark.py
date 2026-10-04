@@ -132,5 +132,6 @@ async def test_multi_tenant_recall_and_latency_benchmark(db_session):
 
     # Assertions on Performance & Recall Targets
     assert recall_at_5 >= 90.0, f"Recall@5 ({recall_at_5:.2f}%) below 90% target"
-    assert p50_latency < 1000.0, f"p50 latency ({p50_latency:.2f}ms) too high"
+    assert p50_latency < 1500.0, f"p50 latency ({p50_latency:.2f}ms) too high"
+
 

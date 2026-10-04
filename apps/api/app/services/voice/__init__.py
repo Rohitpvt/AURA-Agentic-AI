@@ -21,6 +21,11 @@ from app.services.voice.session_manager import (
     VoiceTurn,
     voice_session_manager,
 )
+from app.services.voice.ticket_service import (
+    VoiceTicket,
+    VoiceTicketService,
+    voice_ticket_service,
+)
 
 __all__ = [
     "SileroVADService",
@@ -39,4 +44,7 @@ __all__ = [
     "VoiceTurn",
     "VoiceEvent",
     "voice_session_manager",
+    "VoiceTicket",
+    "VoiceTicketService",
+    "voice_ticket_service",
 ]

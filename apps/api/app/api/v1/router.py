@@ -21,6 +21,7 @@ from app.api.v1.endpoints.webhooks import router as webhooks_router
 from app.api.v1.endpoints.telegram import router as telegram_router
 from app.api.v1.endpoints.telemetry import router as telemetry_router
 from app.api.v1.endpoints.files import router as files_router
+from app.api.v1.endpoints.voice import router as voice_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -29,6 +30,7 @@ api_v1_router.include_router(health_router)
 api_v1_router.include_router(models_router)
 api_v1_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_v1_router.include_router(workspaces_router, prefix="/workspaces", tags=["workspaces"])
+api_v1_router.include_router(voice_router, prefix="/voice", tags=["voice"])
 api_v1_router.include_router(files_router, prefix="/files", tags=["files"])
 api_v1_router.include_router(memory_router, prefix="/memory", tags=["memory"])
 api_v1_router.include_router(providers_router, prefix="/providers", tags=["providers"])

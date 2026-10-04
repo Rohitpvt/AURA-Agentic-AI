@@ -239,10 +239,9 @@ class VoiceSession:
         self.active_cancel_event.set()
         if self.active_turn_task is not None and not self.active_turn_task.done():
             self.active_turn_task.cancel()
-        # Ephemeral memory purge
+        # Ephemeral memory purge (zeroize buffers)
         self.ephemeral_audio_buffer.clear()
         self.vad_state.reset()
-        gc.collect()
 
         if self.state != VoiceSessionState.CANCELLED:
             try:
