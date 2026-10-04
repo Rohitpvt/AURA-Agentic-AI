@@ -103,6 +103,14 @@ class Settings(BaseSettings):
     VOICE_VAD_HANGOVER_MS: int = Field(default=300, description="VAD speech hangover buffer in milliseconds")
     VOICE_TTS_MODEL: str = Field(default="en_US-lessac-medium", description="Piper-TTS ONNX model name")
     VOICE_TICKET_EXPIRE_SECONDS: int = Field(default=60, description="Short-lived voice WebSocket ticket TTL in seconds")
+    
+    # Phase 7: Static Multimodal Vision & Image Inspection (AURA-705)
+    VISION_DEFAULT_MODEL: str = Field(default="moondream", description="Default local VLM model: moondream, qwen2-vl:2b")
+    VISION_ALTERNATIVE_MODEL: str = Field(default="qwen2-vl:2b", description="Alternative local VLM model")
+    VISION_MAX_FILE_SIZE_BYTES: int = Field(default=10 * 1024 * 1024, description="Maximum image file size in bytes (10 MB)")
+    VISION_MAX_DIMENSION: int = Field(default=2048, description="Maximum image width/height before downscaling")
+    VISION_TIMEOUT_SECONDS: float = Field(default=15.0, description="Maximum vision inference timeout in seconds")
+    
     MODELS_CACHE_DIR: str = Field(default="./.cache/aura/models", description="Root cache directory for local open weights models")
 
     @property

@@ -20,6 +20,7 @@ from app.services.tools.file_tools import (
     execute_search_files,
     execute_summarize_document,
 )
+from app.services.tools.vision_tools import execute_image_inspect
 from app.services.tools.web_extract import execute_web_extract
 from app.services.tools.web_search import execute_web_search
 
@@ -257,6 +258,52 @@ BUILTIN_TOOLS: Dict[str, Dict[str, Any]] = {
             },
         },
         "handler": execute_search_files,
+    },
+    "image_inspect": {
+        "name": "image_inspect",
+        "display_name": "Inspect Image (Local VLM & OCR)",
+        "description": "Inspect a static workspace image using local VLM and OCR to extract detailed visual descriptions, object relationships, and visible text into an untrusted multimodal envelope.",
+        "category": "vision",
+        "risk_level": "low",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 30,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file_id": {"type": "string", "description": "Target workspace image file UUID"},
+                "prompt": {"type": "string", "description": "Optional question or visual focus prompt"},
+                "detail_level": {
+                    "type": "string",
+                    "enum": ["standard", "high", "low"],
+                    "default": "standard",
+                    "description": "Visual inspection detail level",
+                },
+                "model": {"type": "string", "description": "Optional model override (e.g. moondream, qwen2-vl:2b)"},
+            },
+            "required": ["file_id"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "file_id": {"type": "string"},
+                "filename": {"type": "string"},
+                "format": {"type": "string"},
+                "original_dimensions": {"type": "object"},
+                "processed_dimensions": {"type": "object"},
+                "size_bytes": {"type": "integer"},
+                "model_used": {"type": "string"},
+                "processing_time_ms": {"type": "number"},
+                "description": {"type": "string"},
+                "untrusted_content_envelope": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+                "security_flags": {"type": "array"},
+                "ocr_available": {"type": "boolean"},
+                "status": {"type": "string"},
+            },
+        },
+        "handler": execute_image_inspect,
     },
 }
 
