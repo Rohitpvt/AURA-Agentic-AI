@@ -291,6 +291,7 @@ async def test_governed_tools_registered_in_builtin_tools():
 async def test_governed_tools_execution_via_tool_registry():
     """Verify governed execution of all 4 vision tools through ToolRegistryService."""
     mock_db = AsyncMock()
+    mock_db.add = MagicMock()
     ws_id = uuid.uuid4()
 
     mock_db_tool = MagicMock()

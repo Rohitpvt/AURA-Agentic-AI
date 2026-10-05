@@ -32,11 +32,11 @@ async def execute_web_search(
     def _sync_search() -> List[Dict[str, Any]]:
         try:
             try:
-                from duckduckgo_search import DDGS
-            except ImportError:
                 from ddgs import DDGS
+            except ImportError:
+                from duckduckgo_search import DDGS
         except ImportError:
-            logger.warning("duckduckgo_search package is not available")
+            logger.warning("Neither ddgs nor duckduckgo_search package is available")
             return []
         try:
             with DDGS() as ddgs:
