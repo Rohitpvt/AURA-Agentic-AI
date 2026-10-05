@@ -27,6 +27,11 @@ from app.services.tools.vision_tools import (
     execute_inspect_current_screen,
     execute_query_visible_text,
 )
+from app.services.tools.os_tools import (
+    execute_inspect_processes,
+    execute_launch_application,
+    execute_terminate_process,
+)
 from app.services.tools.web_extract import execute_web_extract
 from app.services.tools.web_search import execute_web_search
 
@@ -478,6 +483,112 @@ BUILTIN_TOOLS: Dict[str, Dict[str, Any]] = {
             },
         },
         "handler": execute_query_visible_text,
+    },
+    "launch_application": {
+        "name": "launch_application",
+        "display_name": "Launch Application (Governed OS)",
+        "description": "Launch an allowlisted Windows application (e.g. notepad, calc, mspaint, write) with validated arguments strictly under deterministic policy governance.",
+        "category": "os_control",
+        "risk_level": "high",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 5,
+        "requires_approval": True,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "string",
+                    "description": "Allowlisted application identifier (notepad, calc, mspaint, write)",
+                },
+                "arguments": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of string arguments for the application",
+                },
+                "working_directory": {
+                    "type": "string",
+                    "description": "Optional working directory path (must be within authorized workspace)",
+                },
+            },
+            "required": ["application_id"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "application_id": {"type": "string"},
+                "display_name": {"type": "string"},
+                "executable_path": {"type": "string"},
+                "pid": {"type": "integer"},
+                "create_time": {"type": "number"},
+                "start_timestamp": {"type": "number"},
+                "arguments": {"type": "array"},
+                "working_directory": {"type": "string"},
+            },
+        },
+        "handler": execute_launch_application,
+    },
+    "inspect_processes": {
+        "name": "inspect_processes",
+        "display_name": "Inspect Processes (Read-Only)",
+        "description": "Query running processes, PIDs, names, creation times, CPU, and memory metrics safely without leaking environment secrets.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filter_name": {"type": "string", "description": "Optional process name substring to filter by"},
+                "pid": {"type": "integer", "description": "Optional specific PID to query"},
+                "limit": {"type": "integer", "default": 50, "description": "Maximum number of processes to return (1-100)"},
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "total_processes": {"type": "integer"},
+                "processes": {"type": "array"},
+            },
+        },
+        "handler": execute_inspect_processes,
+    },
+    "terminate_process": {
+        "name": "terminate_process",
+        "display_name": "Terminate Process (Governed OS)",
+        "description": "Terminate a validated non-system process with strict PID + creation_time identity verification to prevent PID reuse race conditions.",
+        "category": "os_control",
+        "risk_level": "high",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 5,
+        "requires_approval": True,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "integer", "description": "Process ID to terminate"},
+                "expected_creation_time": {"type": "number", "description": "Exact expected process creation timestamp from prior inspection"},
+                "expected_name": {"type": "string", "description": "Expected process executable name (e.g. notepad.exe)"},
+                "reason": {"type": "string", "description": "Reason for process termination"},
+            },
+            "required": ["pid", "expected_creation_time", "expected_name"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "integer"},
+                "process_name": {"type": "string"},
+                "create_time": {"type": "number"},
+                "termination_requested_at": {"type": "number"},
+                "termination_completed_at": {"type": "number"},
+                "outcome": {"type": "string"},
+            },
+        },
+        "handler": execute_terminate_process,
     },
 }
 

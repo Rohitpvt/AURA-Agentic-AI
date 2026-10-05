@@ -243,14 +243,19 @@ class OSPolicyEngine:
 
         # 2. Check executable path against LOLBins for application launches
         if action_type == OSActionType.APPLICATION_LAUNCH:
-            target = str(params.get("target") or params.get("executable") or "").strip().lower()
+            target = str(
+                params.get("application_id")
+                or params.get("target")
+                or params.get("executable")
+                or ""
+            ).strip().lower()
             if not target:
-                return "Application launch request missing 'target' executable path."
+                return "Application launch request missing 'application_id' or 'target' executable path."
 
             import os
             basename = os.path.basename(target).lower()
-            if basename in LOLBINS_DENYLIST:
-                return f"Prohibited binary '{basename}' is in the Windows LOLBins security denylist."
+            if basename in LOLBINS_DENYLIST or target in LOLBINS_DENYLIST:
+                return f"Prohibited binary '{target}' is in the Windows LOLBins security denylist."
 
         # 3. Check keyboard inputs for prohibited destructive commands
         if action_type == OSActionType.KEYBOARD_INPUT:
