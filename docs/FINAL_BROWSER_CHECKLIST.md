@@ -1,7 +1,7 @@
 # Release & Browser Verification Checklist (FINAL_BROWSER_CHECKLIST.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0.5 — Documentation Reconciliation & Consistency Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Pre-Release QA & End-to-End Browser Testing Protocol  
 
 ---
@@ -45,7 +45,7 @@
 ## 5. Sub-Agents, Memory & Skills
 
 - [ ] **Sub-Agent Pool:** Displays active worker cards (Research, Coding, Synthesis) with live token consumption progress bars.
-- [ ] **Memory Graph:** Renders extracted user preferences and facts; clicking "Delete" tombstones the fact and un-indexes from Honcho.
+- [ ] **Memory Graph:** Renders extracted user preferences and facts; clicking "Delete" tombstones the fact and cascades deletion in Cognitive Memory.
 - [ ] **Skill Editor:** Monaco editor renders `SKILL.md` with syntax highlighting, YAML frontmatter validation, and version history diffs.
 
 ---

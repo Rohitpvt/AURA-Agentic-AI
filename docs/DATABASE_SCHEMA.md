@@ -1,14 +1,14 @@
 # Database Schema Specification (DATABASE_SCHEMA.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Database Architecture & DDL Specification  
 
 ---
 
 ## 1. Schema Overview & Design Conventions
 
-* **Engine:** PostgreSQL 16+ with extensions: `uuid-ossp`, `pgcrypto`, `pgvector` (optional/integrated), and `btree_gist`.
+* **Engine:** PostgreSQL 16+ with extensions: `uuid-ossp`, `pgcrypto`, `pgvector` (0.7+), and `btree_gist`.
 * **Naming Conventions:** All tables, columns, and foreign keys are `snake_case`. Primary keys are typed `UUID` (`DEFAULT gen_random_uuid()`).
 * **Timestamp Standard:** All timestamps are `TIMESTAMPTZ` (UTC) with default `CURRENT_TIMESTAMP`.
 * **Soft Deletion Standard:** Sensitive entities implement `deleted_at TIMESTAMPTZ NULL`. Queries default to filtering `WHERE deleted_at IS NULL`.
@@ -30,6 +30,12 @@ erDiagram
     WORKSPACES ||--o{ AUDIT_LOGS : records
     WORKSPACES ||--o{ PROVIDER_CONFIGURATIONS : manages
     WORKSPACES ||--o{ CREDENTIALS : stores_encrypted
+    WORKSPACES ||--o{ MEMORY_RECORDS : stores_facts
+    WORKSPACES ||--o{ FILE_RECORDS : catalogs_files
+    WORKSPACES ||--o{ FILE_CHUNKS : indexes_vectors
+    WORKSPACES ||--o{ FILE_JOBS : tracks_jobs
+    WORKSPACES ||--o{ WEBHOOK_ENDPOINTS : registers_webhooks
+    WORKSPACES ||--o{ TELEGRAM_INTEGRATIONS : configures_bots
 
     PROVIDER_CONFIGURATIONS ||--o{ CREDENTIALS : authenticates_with
 
@@ -47,6 +53,15 @@ erDiagram
 
     TOOLS ||--o{ TOOL_PERMISSIONS : defines_access
     INTEGRATIONS ||--o{ TOOLS : provides
+
+    AUTOMATIONS ||--o{ AUTOMATION_EXECUTIONS : runs
+
+    WEBHOOK_ENDPOINTS ||--o{ WEBHOOK_DELIVERIES : receives
+
+    TELEGRAM_INTEGRATIONS ||--o{ TELEGRAM_PAIRINGS : pairs
+
+    FILE_RECORDS ||--o{ FILE_CHUNKS : splits_into
+    FILE_RECORDS ||--o{ FILE_JOBS : executes_jobs
 ```
 
 ---
@@ -583,6 +598,31 @@ CREATE INDEX ix_file_chunks_ws_file ON file_chunks(workspace_id, file_id);
 -- Operational AURA-603 HNSW & Full-Text Search Indexes
 CREATE INDEX idx_file_chunks_embedding_hnsw ON file_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64) WHERE embedding IS NOT NULL;
 CREATE INDEX idx_file_chunks_fts ON file_chunks USING gin (to_tsvector('english', chunk_text));
+
+-- File Jobs (Dedicated Persistent Authority for Asynchronous File Operations - Operationalized in AURA-604 / Migration 009)
+CREATE TABLE file_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+    file_id UUID REFERENCES file_records(id) ON DELETE CASCADE,
+    job_type VARCHAR(50) NOT NULL, -- 'file_extract', 'file_index', 'file_summary', 'file_reconcile'
+    status VARCHAR(50) NOT NULL DEFAULT 'queued', -- 'queued', 'processing', 'completed', 'failed', 'cancelled'
+    progress_pct INTEGER NOT NULL DEFAULT 0,
+    error_summary TEXT,
+    result_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX ix_file_jobs_workspace_id ON file_jobs(workspace_id);
+CREATE INDEX ix_file_jobs_file_id ON file_jobs(file_id);
+CREATE INDEX ix_file_jobs_job_type ON file_jobs(job_type);
+CREATE INDEX ix_file_jobs_status ON file_jobs(status);
+
+-- Partial Unique Index Enforcing Active Job Uniqueness per Workspace/File/JobType
+CREATE UNIQUE INDEX uq_active_file_job ON file_jobs (workspace_id, file_id, job_type) 
+WHERE status IN ('queued', 'processing');
 ```
 
 

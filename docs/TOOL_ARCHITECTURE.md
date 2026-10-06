@@ -1,7 +1,7 @@
 # Tool Architecture & Registry Specification (TOOL_ARCHITECTURE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Tool Execution & Extensibility Architecture  
 
 ---
@@ -154,5 +154,33 @@ Only explicit inspection queries are governed tools:
 | `query_visible_text` | Query Visible Screen / Window Text | `vision` | `low` | Executes targeted local OCR across the screen or ROI to extract text and bounding boxes. | `roi?: object`, `filter_query?: string` | Phase 8 |
 
 All vision inspection tools operate in read-only mode and output data strictly wrapped in `<untrusted_multimodal_content>` XML envelopes.
+
+---
+
+## 8. Governed Operating System & Hardware Automation Tools (Phase 9)
+
+Phase 9 introduces 18 governed OS and hardware control tools registered in the `ToolRegistryService` and routed strictly through `AgentToolBridge` $\rightarrow$ `OSPolicyEngine` $\rightarrow$ `OSGuardService` with single-worker serialization and sub-15ms kill switch abort:
+
+| Tool Name | Category | Risk Level | Description | Input Parameters | HITL Required? |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `launch_application` | `system` | `high` | Launch pre-approved Windows app from canonical allowlist. | `app_name: string`, `args?: List[str]` | Yes (HMAC Token) |
+| `inspect_processes` | `system` | `low` | Read-only process inspector returning safe name, PID, memory, CPU. | `filter_name?: string` | No (Auto) |
+| `terminate_process` | `system` | `critical` | Terminate process with PID + create_time verification and kernel protection. | `pid: int`, `create_time: float` | Yes (HMAC Token) |
+| `mouse_move` | `system` | `low` | Move cursor with coordinate safety clamping and stale TTL check. | `x: int`, `y: int`, `duration?: float` | No (Auto) |
+| `mouse_click` | `system` | `medium` | Governed click (left/right/double) at safe coordinates. | `x: int`, `y: int`, `button?: string` | No (Auto, Rate-limited) |
+| `mouse_drag` | `system` | `medium` | Governed mouse drag from start to end coordinates. | `start_x: int`, `start_y: int`, `end_x: int`, `end_y: int` | No (Auto, Rate-limited) |
+| `mouse_scroll` | `system` | `low` | Governed vertical/horizontal mouse scroll. | `clicks: int`, `x?: int`, `y?: int` | No (Auto) |
+| `type_text` | `system` | `medium` | Safe text typing with zero raw keystroke persistence in audit logs. | `text: string`, `interval?: float` | No (Auto, Rate-limited) |
+| `press_key` | `system` | `medium` | Press individual safe keyboard key from allowlist. | `key: string`, `presses?: int` | No (Auto) |
+| `keyboard_shortcut` | `system` | `medium` | Execute safe shortcut combination (e.g. `Ctrl+C`, `Ctrl+V`). | `keys: List[str]` | No (Auto) |
+| `get_system_telemetry` | `system` | `low` | Read-only telemetry: CPU %, RAM usage, storage, battery, display topology. | None | No (Auto) |
+| `get_hardware_capabilities` | `system` | `low` | Discover system hardware: GPU models, audio endpoints, display monitors. | None | No (Auto) |
+| `get_system_volume` | `system` | `low` | Query master system audio output volume and mute state via Core Audio. | None | No (Auto) |
+| `set_system_volume` | `system` | `high` | Bounded audio volume adjustment ($\le \pm 10\%$ step limit) with rollback. | `volume_level: int`, `is_relative?: bool` | Yes (HMAC Token) |
+| `get_display_brightness` | `system` | `low` | Query display brightness percentage via WMI monitor adapter. | `monitor_id?: string` | No (Auto) |
+| `set_display_brightness` | `system` | `high` | Bounded display brightness adjustment ($\le \pm 10\%$ step limit). | `brightness: int`, `monitor_id?: string` | Yes (HMAC Token) |
+| `clipboard_read` | `system` | `low` | Read system clipboard text with 4KB size cap and secret scrubbing. | None | No (Auto) |
+| `clipboard_write` | `system` | `high` | Governed clipboard write with 4KB size cap, NUL byte check, and scrubbing. | `text: string` | Yes (HMAC Token) |
+
 
 

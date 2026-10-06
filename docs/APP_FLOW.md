@@ -1,7 +1,7 @@
 # Application & Interaction Flows (APP_FLOW.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0.5 — Documentation Reconciliation & Consistency Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Canonical User & System Interaction Flows  
 
 ---
@@ -42,8 +42,8 @@ sequenceDiagram
     participant Web as Web Dashboard
     participant API as FastAPI Control Plane
     participant DB as PostgreSQL
-    participant Runtime as Hermes Runtime
-    participant Model as LiteLLM Gateway
+    participant Runtime as Agent Runtime
+    participant Model as Model Provider / Router
 
     User->>Web: Type Goal in Chat / Task Input
     Web->>API: POST /api/v1/tasks (goal, workspace_id)
@@ -91,9 +91,9 @@ sequenceDiagram
 ---
 
 ### Flow 5: Memory Recall, Ingestion & User Tombstoning
-1. **Pre-Turn Recall:** Context Assembler queries Honcho (hybrid BM25 + vector) + PostgreSQL active session messages. Filters out tombstoned facts and injects memory envelope into prompt.
-2. **Post-Turn Ingestion:** Background queue processes dialogue, extracts new facts, and updates Honcho peer representation asynchronously.
-3. **User Tombstoning:** User views fact in Memory Graph and clicks "Delete". System flags `is_tombstoned = TRUE` in PostgreSQL, deletes vector in Honcho, and injects a negative constraint into future context windows.
+1. **Pre-Turn Recall:** Context Assembler queries local Cognitive Memory (hybrid BM25 + FastEmbed vector cosine in PostgreSQL) + PostgreSQL active session messages. Filters out tombstoned facts and injects memory envelope into prompt.
+2. **Post-Turn Ingestion:** Background queue processes dialogue, extracts new facts, generates FastEmbed embeddings, and updates `memory_records` asynchronously.
+3. **User Tombstoning:** User views fact in Memory Graph and clicks "Delete". System flags `is_tombstoned = TRUE` in PostgreSQL, cascades tombstoning to memory provenance, and injects a negative constraint into future context windows.
 
 ---
 

@@ -1,7 +1,7 @@
 # System Architecture Specification (ARCHITECTURE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Core System Architecture  
 
 ---
@@ -31,7 +31,7 @@ The AURA architecture is structured into four primary logical tiers: **Ingress &
 |  +----------------------------------------------------------------------------------------------+  |
 |  | Orchestration & Task Manager (Job Queue Broker, Scheduler, Checkpoint Coordinator)          |  |
 |  +----------------------------------------------------------------------------------------------+  |
-|  | Memory Coordinator & Context Assembler (Postgres Query Builder + Honcho Semantic Connector)  |  |
+|  | Memory Coordinator & Context Assembler (Postgres Query Builder + FastEmbed Vector Connector)|  |
 |  +----------------------------------------------------------------------------------------------+  |
 |  | Tool & Skill Registry (Validation Engine, Secret Injector, Schema Exposer)                   |  |
 |  +----------------------------------------------------------------------------------------------+  |
@@ -84,14 +84,14 @@ AURA employs a two-tier hybrid memory topology:
 1. **System & Relational Memory (PostgreSQL):**
    * Manages absolute ground truth: Users, Workspaces, Sessions, Messages, Task definitions, Execution logs, Audit events, Skill definitions.
    * Performs structured filtering (e.g., retrieve messages for `session_id = X` within date range `Y` filtered by workspace `Z`).
-2. **Cognitive & Dialectical Memory (Honcho):**
-   * Acts as the agent's long-term social cognition layer.
+2. **Cognitive & Semantic Memory (PostgreSQL + pgvector + FastEmbed):**
+   * Acts as the agent's long-term social cognition and factual recall layer.
    * Extracts user traits, recurring goals, behavioral nuances, and domain-specific knowledge across disparate sessions.
-   * Exposes semantic similarity (vector) and lexical search (BM25) over user interactions.
+   * Exposes semantic similarity (HNSW vector cosine) and lexical search (PostgreSQL FTS / BM25) over user interactions.
 3. **Reconciliation Loop:**
    * Raw conversation turns are written synchronously to PostgreSQL.
-   * An asynchronous background worker extracts facts, summaries, and user modeling updates, pushing them to Honcho.
-   * Before every major planning turn, the Context Assembler queries Honcho for top-$K$ relevant memories and injects them into the prompt's memory envelope.
+   * An asynchronous background worker extracts facts, summaries, and user modeling updates, generating FastEmbed embeddings and persisting to `memory_records`.
+   * Before every major planning turn, the Context Assembler queries cognitive memory for top-$K$ relevant memories and injects them into the prompt's memory envelope.
 
 ---
 

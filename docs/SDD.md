@@ -1,7 +1,7 @@
 # Software Design Document (SDD)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** System Design Specification  
 
 ---
@@ -29,7 +29,7 @@ AURA is architected around a strict decoupled paradigm: the **Control Plane** (a
 |  +----------------------------------------------------------------------------------------------+  |
 |  | Task & Automation Orchestrator (Cron Scheduler, Webhook Ingress, Job Queues via pg_boss)     |  |
 |  +----------------------------------------------------------------------------------------------+  |
-|  | Context Assembly & Memory Router (PostgreSQL Application State <---> Honcho Social Cognition)|  |
+|  | Context Assembly & Memory Router (PostgreSQL Application State <---> FastEmbed Local Memory) |  |
 |  +----------------------------------------------------------------------------------------------+  |
 |  | Tool & Skill Registry (Schema Validation, Permission Scopes, Secret Injection Proxy)         |  |
 |  +----------------------------------------------------------------------------------------------+  |
@@ -38,7 +38,7 @@ AURA is architected around a strict decoupled paradigm: the **Control Plane** (a
                                                   | Structured Agent Payload (JSON Contract)
                                                   v
 +----------------------------------------------------------------------------------------------------+
-|                                   AURA AGENT RUNTIME (Hermes Engine)                                |
+|                                   AURA AGENT RUNTIME (Cognitive Engine)                            |
 |  +----------------------------------------------------------------------------------------------+  |
 |  | Supervisor / Planner Agent (Goal Decomposition, Dynamic DAG Generation, Step Validation)      |  |
 |  +----------------------------------------------------------------------------------------------+  |
@@ -59,7 +59,7 @@ AURA is architected around a strict decoupled paradigm: the **Control Plane** (a
 |  +------------------------------------------+  |  |  +------------------------------------------+  |
 |  | PostgreSQL 16 (State, Logs, RLS, Tasks)   |  |  |  | Model Context Protocol (MCP) Servers    |  |
 |  +------------------------------------------+  |  |  +------------------------------------------+  |
-|  | Honcho Memory Engine (User Modeling, KG) |  |  |  | Native Integrations (GitHub, Search, FS)|  |
+|  | Cognitive Memory (FastEmbed + pgvector)  |  |  |  | Native Integrations (GitHub, Search, FS)|  |
 |  +------------------------------------------+  |  |  +------------------------------------------+  |
 |  | Redis (Ephemeral Caching, SSE PubSub)    |  |  |  | Sandbox Runners (Containerized Code Exec)|  |
 |  +------------------------------------------+  |  |  +------------------------------------------+  |

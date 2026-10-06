@@ -1,7 +1,7 @@
 # Security & Threat Model Specification (SECURITY_MODEL.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Enterprise Security & Threat Mitigation Specification  
 
 ---
@@ -157,3 +157,25 @@ $$\text{Upload} \longrightarrow \text{Auth/Workspace Verify} \longrightarrow \te
 4. **Delete/Reindex Race Prevention:** If a file record is marked `delete_requested` or `deleted` during Stage 1 chunk/vector generation, Stage 2 transaction aborts and fails closed. Vectors can never be resurrected on a deleted file.
 5. **Memory Provenance & Tombstone Isolation:** Memory facts promoted from document chunks retain structured provenance (`file_id`, `chunk_id`, `chunk_index`, `workspace_id`). File deletion cascades tombstoning strictly scoped to `source_type = 'file_intelligence'` and matching `provenance.file_id`.
 6. **Telemetry & Log Privacy:** Chunk generation, indexing, retrieval, and purge events are logged to the SHA-256 tamper-evident ledger with opaque IDs and counts. Raw document text, user queries, and vector floats are never exposed in logs or telemetry spans.
+
+---
+
+## 9. Multimodal Voice & Vision Security Boundary (Phases 7 & 8)
+
+1. **Untrusted Spoken & Sensory Content:** All transcribed audio (Faster-Whisper) and OCR text (RapidOCR) are treated as untrusted external data and wrapped in `<untrusted_spoken_content>` or `<untrusted_multimodal_content>` XML envelopes. Spoken or visual directives cannot bypass `OSGuardService`, `PolicyEngine`, or HITL approval gates.
+2. **Ephemeral Sensing Invariant:** Camera video streams and screen captures reside in a depth-1 volatile in-memory ring buffer. No continuous frames are written to persistent disk storage or database tables.
+3. **Emergency Kill Switch Integration:** Triggering the emergency kill switch instantly aborts active audio streaming, active VLM inference, and purges all volatile sensory memory buffers in $<15\text{ ms}$.
+
+---
+
+## 10. Governed OS, Process & Hardware Automation Security Model (Phase 9)
+
+Phase 9 implements an enterprise-grade deterministic boundary (`OSGuardService`) governing host operating system interaction:
+
+1. **Deterministic Action Taxonomy & Risk Mapping:** 11 OS action types mapped to 5 risk tiers (`READ_ONLY`, `LOW_RISK_WRITE`, `MEDIUM_RISK_INTERACTION`, `HIGH_RISK_SYSTEM_ACTION`, `CRITICAL_ACTION`). High and Critical risk actions (e.g. process termination, application launch, volume/brightness modification, clipboard write) mandate HMAC-SHA256 HITL approvals with exact parameter hash binding.
+2. **Application Allowlist & LOLBins Denial Filter:** Application execution enforces a strict canonical allowlist (`notepad`, `calc`, `mspaint`, `write`) and permanently denylist 20 Windows Living-off-the-Land Binaries (LOLBins, including `powershell.exe`, `cmd.exe`, `wscript.exe`, `certutil.exe`, `reg.exe`, etc.). Shell metacharacters (`&`, `|`, `;`, `>`, `<`, `$`, `%`) and NUL bytes are rejected fail-closed.
+3. **TOCTOU Process Identity Verification:** Process inspection and termination require verifying PID and creation timestamp (`create_time` within $\pm 0.05\text{s}$) to prevent PID reuse attacks. Core OS processes and PID $\le 4$ kernel tasks are strictly protected from termination.
+4. **Coordinate Safety & Stale Observation Guard:** Mouse coordinates are clamped to physical display monitor boundaries and window bounds. Screen observations expire after $5.0\text{s}$ TTL to prevent blind clicking on outdated UI state.
+5. **Bounded Hardware & Clipboard Controls:** System volume and brightness adjustments are bounded to $\le \pm 10\%$ per step. Clipboard read/write is capped at 4,096 Unicode characters with automated secret scrubbing (JWT, API keys).
+6. **System Tray & Physical Emergency Hotkey:** Windows Tray runs in a dedicated STA GUI process with Named Mutex single-instance protection. Physical hotkey (`Ctrl+Alt+Shift+K`) executes Win32 `RegisterHotKey` with sub-15ms trigger and 300ms software debounce. IPC control uses Windows Named Pipes with 256-bit CSPRNG token authentication and strict command allowlisting.
+

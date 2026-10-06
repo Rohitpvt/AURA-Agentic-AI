@@ -1,7 +1,7 @@
 # Project Memory & Architectural Index (PROJECT_MEMORY.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 3.0.0  
-**Phase:** Phase 1 — Core Control Plane, Local DB, Memory, BYOK & Task Engine (COMPLETED)  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETED & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Living Architectural Knowledge Base  
 
 ---

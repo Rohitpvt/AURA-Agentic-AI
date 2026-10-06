@@ -1,7 +1,7 @@
 # Frontend Information Architecture & Design Specification (FRONTEND_ARCHITECTURE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Frontend UI/UX & Information Architecture  
 
 ---
@@ -35,7 +35,7 @@ The AURA Web Dashboard is structured as an authoritative Command Center represen
 | **3. Tasks & Plans** | Visual DAG execution graph showing plan steps, status badges (Pending, Executing, Verified, Failed), step outputs, and manual retry triggers. | Real-time WebSocket task progress + step checkpoint tree. |
 | **4. Automations** | Manage recurring Cron jobs, webhook endpoints, trigger schedules, delivery channels, and run histories. | Full CRUD over `automations` table + webhook secret generator. |
 | **5. Sub-Agents** | Live visualizer of active worker pool (Research, Coding, Analysis, Synthesis), assigned token budgets, and sub-task outputs. | Dynamic worker card grid with live token consumption progress bars. |
-| **6. Memory Graph** | Interactive visualization of Honcho user modeling, personal traits, project facts, with direct inline edit/tombstone capabilities. | Filterable data table + semantic network graph view. |
+| **6. Memory Graph** | Interactive visualization of Cognitive Memory, personal traits, project facts, with direct inline edit/tombstone capabilities. | Filterable data table + semantic network graph view. |
 | **7. File Intelligence** | Drag-and-drop universal file upload, document list, processing status, document preview, structural chunk inspector, and Q&A chat drawer. | Multi-part upload progress, TanStack Query `/api/v1/files`, SSE extraction status. |
 | **8. Skills Editor** | Markdown editor for `SKILL.md` packages, YAML metadata validator, version history diff viewer, and promotion review queue. | Monaco Editor / Markdown preview + SemVer release manager. |
 | **9. Tool Registry** | Interactive catalogue of registered tools, JSON Schema viewer, risk level badges, rate limit monitors, and manual test runners. | Schema introspection view with copyable parameter templates. |

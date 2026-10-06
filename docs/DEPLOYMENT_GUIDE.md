@@ -1,7 +1,7 @@
 # Production Deployment & Operations Guide (DEPLOYMENT_GUIDE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0.5 — Documentation Reconciliation & Consistency Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Enterprise Production Operations & Infrastructure  
 
 ---
@@ -29,8 +29,8 @@ In production, AURA is deployed across isolated network zones behind a hardened 
                  ▼                                                                ▼
 +---------------------------------+                             +---------------------------------+
 |  Agent Runtime & Sandboxes      |                             |  Persistence & Memory Cluster   |
-|  - Ephemeral Docker / Firejail  |                             |  - PostgreSQL 16 (HA + Backups) |
-|  - Worker Queue (pg_boss/Redis) |                             |  - Honcho Self-Hosted / Cloud   |
+|  - Ephemeral Docker / Firejail  |                             |  - PostgreSQL 16 (HA + pgvector)|
+|  - Worker Queue (pg_boss/Redis) |                             |  - FastEmbed In-Process Engine  |
 +---------------------------------+                             +---------------------------------+
 ```
 

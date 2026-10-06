@@ -1,9 +1,8 @@
 # Engineering Roadmap (ROADMAP.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 5.0.0  
-**Phase:** Phase 5 — Enterprise Observability, Sandbox Hardening & Release QA (PREFLIGHT CORRECTED)  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Phased Development Plan  
-
 ---
 
 ## 1. Master Engineering Roadmap Overview
@@ -20,7 +19,7 @@
 |  [PHASE 5: Observability, Hardening & Release QA] ===> COMPLETE & ACCEPTED                         |
 |  [PHASE 6: Universal File Intelligence & Memory]  ===> COMPLETE & ACCEPTED                         |
 |  ------------------------------------------------------------------------------------------------  |
-|  [PHASE 7: Real-Time Local Voice & Speech System] ===> PLANNED FUTURE (NOT STARTED)                |
+|  [PHASE 7: Real-Time Local Voice & Speech System] ===> COMPLETE & ACCEPTED                         |
 |  [PHASE 8: Live Screen & Multimodal Vision]       ===> COMPLETE & ACCEPTED                         |
 |  [PHASE 9: Governed OS & Hardware Automation]     ===> COMPLETE & ACCEPTED                         |
 |  [PHASE 10: Advanced Browser & Windows Daemon]    ===> PLANNED FUTURE (Interactive Web, Background)|

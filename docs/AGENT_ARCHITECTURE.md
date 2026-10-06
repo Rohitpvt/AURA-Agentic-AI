@@ -1,7 +1,7 @@
 # Agent Architecture & Runtime Specification (AGENT_ARCHITECTURE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 2.0.0  
-**Phase:** Phase 0.5 — Zero-Cost Architecture Reconciliation & Invariant Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Local Cognitive Runtime & Multi-Agent Architecture  
 
 ---

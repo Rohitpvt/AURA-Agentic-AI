@@ -1,7 +1,7 @@
 # Skill Architecture Specification (SKILL_ARCHITECTURE.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Procedural Learning & Skill Governance  
 
 ---
@@ -95,7 +95,7 @@ parameters:
 | `daily_executive_brief` | productivity | Gathers daily calendar events, unread high-priority emails, and GitHub issues to generate a synthesized morning briefing. | `get_calendar_events`, `fetch_unread_emails`, `github_list_issues`. |
 | `deep_research_topic` | research | Decomposes a research topic across multiple parallel sub-agents, conducts web search, synthesizes data, and produces a cited brief. | `web_search`, `read_web_page`, `write_file`. |
 | `repo_architecture_analysis` | development | Scans a software repository, generates component diagrams, analyzes code organization, and documents technical debt. | `list_dir`, `read_file`, `grep_search`. |
-| `meeting_prep_brief` | productivity | Analyzes participants and agenda for upcoming calendar events, retrieving past conversational notes and project facts. | `get_calendar_events`, `honcho_query_user`, `read_file`. |
+| `meeting_prep_brief` | productivity | Analyzes participants and agenda for upcoming calendar events, retrieving past conversational notes and project facts. | `get_calendar_events`, `query_cognitive_memory`, `read_file`. |
 | `weekly_review_synthesis` | productivity | Synthesizes all completed tasks, pending approvals, and project milestones across the past 7 days into an executive review. | `query_tasks`, `query_audit_logs`, `write_file`. |
 
 ---

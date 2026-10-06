@@ -1,7 +1,7 @@
 # API Specification (API_SPECIFICATION.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** REST, SSE & WebSocket Protocol Specification  
 
 ---
@@ -43,6 +43,11 @@
 | **Tasks** | `POST` | `/tasks/{id}/resume` | Deterministically resume task from verified checkpoint. | Member |
 | **Voice** | `POST` | `/voice/ticket` | Issue short-lived ticket for WebSocket voice stream. | Member |
 | **Voice** | `WS` | `/voice/stream` | Authenticated duplex binary audio & VAD stream. | Member (Ticket) |
+| **Vision** | `POST` | `/vision/ticket` | Issue short-lived ticket for WebSocket camera vision stream. | Member |
+| **Vision** | `WS` | `/vision/stream` | Authenticated duplex camera frame streaming (26-byte Big-Endian header). | Member (Ticket) |
+| **Vision** | `POST` | `/vision/ocr/screen` | Capture desktop and perform local RapidOCR text extraction. | Member |
+| **Vision** | `POST` | `/vision/ocr/window` | Crop active window and perform local RapidOCR text extraction. | Member |
+| **Vision** | `POST` | `/vision/vlm/query` | Inspect desktop or camera frame with local CPU VLM (Moondream2/Qwen2-VL). | Member |
 | **Approvals** | `GET` | `/approvals` | List pending Human-in-the-Loop approvals. | Member |
 | **Approvals** | `POST` | `/approvals/{id}/resolve` | Approve or Reject a tool execution token. | Admin / Owner |
 | **Tools** | `GET` | `/tools` | List registered tools and JSON schemas. | Member |
@@ -70,16 +75,17 @@
 | **Files** | `DELETE`| `/files/{id}` | Delete file, cascade purge chunks, and audit. | Member |
 | **Files** | `POST` | `/files/search` | Semantic hybrid search across workspace documents. | Member |
 | **Files** | `POST` | `/files/{id}/qa` | Document question answering & citation synthesis. | Member |
-
-
 | **Providers** | `GET` | `/providers` | List available model providers and routing modes. | Member |
 | **Providers** | `POST` | `/providers` | Configure a model provider (Ollama, Gemini BYOK). | Admin / Owner |
 | **Providers** | `PUT` | `/providers/{id}` | Update provider options and routing policy. | Admin / Owner |
 | **Credentials** | `POST` | `/credentials` | Securely enroll and encrypt a BYOK API key. | Admin / Owner |
 | **Credentials** | `GET` | `/credentials` | List registered key fingerprints & health. | Admin / Owner |
 | **Credentials** | `DELETE`| `/credentials/{id}` | Revoke and purge an encrypted credential. | Admin / Owner |
+| **Telemetry** | `GET` | `/telemetry/hardware` | Read-only host CPU, RAM, GPU, and battery telemetry. | Member |
 | **Audit** | `GET` | `/audit/logs` | Query tamper-evident audit ledger. | Admin / Owner |
-| **System** | `POST` | `/system/kill-switch` | Emergency circuit breaker to halt all runs. | Admin / Owner |
+| **System** | `POST` | `/system/kill-switch` | Emergency circuit breaker to halt all runs (<15ms). | Admin / Owner |
+| **System** | `POST` | `/system/kill-switch/reset` | Authenticated recovery reset after emergency abort. | Admin / Owner |
+| **System** | `GET` | `/system/kill-switch/status` | Read active kill-switch status and recovery state. | Member | |
 
 ---
 

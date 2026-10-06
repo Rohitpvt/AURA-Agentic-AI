@@ -1,7 +1,7 @@
 # Technology Stack & Ecosystem Specification (TECH_STACK.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 2.0.0  
-**Phase:** Phase 0.5 — Zero-Cost Architecture Reconciliation & Invariant Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Canonical Technology Decision & Ecosystem Matrix  
 
 ---
@@ -14,11 +14,18 @@ Every technology in the AURA Core stack is **100% free, open-source, and locally
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Local LLM Engine** | **Ollama** (or llama.cpp) | Latest (0.5+) | MIT / Open Source | **$0.00 / Local** | High-performance local GGUF model execution, GPU offloading (CUDA/ROCm/Metal), native OpenAI-compatible `/v1` endpoint, structured JSON mode. |
 | **Local LLM Models** | `qwen2.5:7b-instruct-q4_K_M` & `llama3.2:3b-instruct-q4_K_M` | Latest | Apache 2.0 / Llama Community | **$0.00 / Local** | Qwen 2.5 7B provides state-of-the-art local function calling and tool execution. Llama 3.2 3B fits entirely in 4GB VRAM for <50ms instant extraction. |
-| **Agent Runtime Substrate** | **Hermes Agent** (Nous Research) | Latest Stable | MIT / Apache 2.0 | **$0.00 / Local** | Procedural skill generation, persistent process execution, model-agnostic local routing via Ollama endpoint. |
+| **Agent Runtime Substrate** | **AURA-Native Cognitive Runtime** | Latest | MIT / Apache 2.0 | **$0.00 / Local** | Native modular execution engine, DAG decomposition, deterministic Observe-Decide-Act-Verify loops, and single-authoritative tool governance. |
 | **Database & Vector Store** | **PostgreSQL 16 + pgvector** | 16.x + pgvector 0.7+ | PostgreSQL License / Apache 2.0 | **$0.00 / Local** | Single unified engine for relational state, task checkpoints, and HNSW vector similarity search. Zero extra DB infrastructure. |
 | **Local Embeddings** | **FastEmbed** (`BAAI/bge-base-en-v1.5`, 768-dim) | Latest (Python) | Apache 2.0 | **$0.00 / Local** | Sub-10ms local embedding generation on CPU (ONNX Runtime, no intentional GPU allocation). No paid embedding API keys required. |
 | **Control Plane API** | **FastAPI / Python** | Python 3.12+, FastAPI 0.115+ | MIT | **$0.00 / Local** | Async concurrency, native Pydantic v2 validation, OpenAPI schema generation. |
 | **Web Research & Search** | **DuckDuckGo Search + SearXNG + Playwright** | Latest | MIT / AGPLv3 / Apache 2.0 | **$0.00 / Local** | Free, zero-API-key web search, metasearch aggregation, and local headless browser DOM extraction. |
+| **Document Parsers** | `pypdf`, `pdfplumber`, `docx`, `openpyxl`, `pptx`, `PyYAML` | Latest | MIT / BSD / Apache 2.0 | **$0.00 / Local** | In-process multi-format document extraction without macro execution, path traversal guards, and zip-bomb rejection. |
+| **Voice STT & VAD** | `faster-whisper` (CTranslate2) + `silero-vad` (ONNX) | Latest | MIT / Apache 2.0 | **$0.00 / Local** | Int8 CPU quantized speech-to-text and sub-1ms VAD turn detection with prompt-injection envelopes. |
+| **Voice TTS Synthesis** | `piper-tts` / `kokoro-onnx` | Latest | MIT / Apache 2.0 | **$0.00 / Local** | Low-latency local neural speech synthesis streaming (sub-250ms TTFA). |
+| **Screen Capture & OCR** | `mss`, `pygetwindow`, `rapidocr-onnxruntime` | Latest | MIT / Apache 2.0 | **$0.00 / Local** | Multi-monitor DPI-aware screen capture and local CPU ONNX OCR bounding-box extraction. |
+| **Local Vision VLM** | `moondream2` / `qwen2-vl:2b` | Latest | Apache 2.0 | **$0.00 / Local** | Zero-cost local CPU vision-language model for static image and live camera/screen inspection. |
+| **OS Control & Hardware** | `OSGuardService` (`pyautogui`, `psutil`, `pycaw`, `wmi`) | Latest | BSD / MIT / LGPL | **$0.00 / Local** | Coordinate safety layer, process TOCTOU verification, bounded volume/brightness steps, and clipboard governance. |
+| **System Tray & Hotkey** | `pystray`, `pywin32` (Win32 `RegisterHotKey`) | Latest | LGPL / PSF | **$0.00 / Local** | Dedicated STA GUI tray indicator, physical `Ctrl+Alt+Shift+K` sub-15ms kill switch, and authenticated Named Pipe IPC. |
 | **Job Queue & Scheduler** | **PostgreSQL Async Worker** (`FOR UPDATE SKIP LOCKED`) | Built-in | PostgreSQL License | **$0.00 / Local** | Transactional job dispatch directly in PostgreSQL. Zero external queue broker needed for personal OS. |
 | **Integration Boundary** | **Model Context Protocol (MCP)** | 2024-11-05 Spec | Open Standard | **$0.00 / Local** | Local `stdio` subprocess tool execution (GitHub, Filesystem, SQLite, Playwright). |
 | **Execution Sandboxing** | **Docker CE / Firejail** | 26+ / 0.9.72+ | Apache 2.0 / GPLv2 | **$0.00 / Local** | Unprivileged process isolation, read-only root filesystems, dropped capabilities. |

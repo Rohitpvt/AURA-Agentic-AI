@@ -1,7 +1,7 @@
 # Technical Requirements Document (TRD)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0.5 — Documentation Reconciliation & Consistency Audit  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Technical Requirements & Engineering Constraints  
 
 ---

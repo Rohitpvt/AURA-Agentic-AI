@@ -1,7 +1,7 @@
 # Observability & Tracing Specification (OBSERVABILITY.md)
 ## Project Name: AURA (Autonomous Universal Reactive Agent)
-**Document Version:** 1.0.0  
-**Phase:** Phase 0 — Architecture & Foundation  
+**Document Version:** 9.6.0  
+**Phase:** Phase 9 — Governed OS & Hardware Automation (COMPLETE & ACCEPTED) | Phase 1–9 Master Validated  
 **Classification:** Telemetry, Tracing & Audit Architecture  
 
 ---
@@ -14,12 +14,12 @@ Every cognitive run in AURA is captured as a hierarchical OpenTelemetry-compatib
 +====================================================================================================+
 | TRACE: Task Execution (TaskID: 4a12ec21..., UserGoal: "Audit Repository Security")                 |
 +====================================================================================================+
-  ├── SPAN 1: Context Assembly & Memory Recall (Duration: 85ms)
-  │   ├── Sub-span: Honcho Semantic Search (Vector top-k=5, BM25 top-k=5)
+  ├── SPAN 1: Context Assembly & Memory Recall (Duration: 45ms)
+  │   ├── Sub-span: FastEmbed Hybrid Search (Vector cosine top-k=5, Postgres FTS top-k=5)
   │   └── Sub-span: PostgreSQL Session History Hydration
   │
-  ├── SPAN 2: Supervisor Planning DAG Generation (Duration: 1.4s, Model: Claude 3.7 Sonnet)
-  │   ├── Token Usage: 850 in / 320 out (Cost: $0.0073)
+  ├── SPAN 2: Supervisor Planning DAG Generation (Duration: 1.2s, Model: qwen2.5:7b-instruct)
+  │   ├── Token Usage: 850 in / 320 out (Cost: $0.00 / Local)
   │   └── Output: 3 DAG Steps Generated
   │
   ├── SPAN 3: Step 1 Execution - Scan Directory (Duration: 420ms)
@@ -36,8 +36,8 @@ Every cognitive run in AURA is captured as a hierarchical OpenTelemetry-compatib
   │
   ├── SPAN 6: Step Verification & Post-Conditions Check (Duration: 650ms)
   │
-  └── SPAN 7: Memory Writeback & Telemetry Flush (Duration: 120ms)
-      ├── Sub-span: Honcho Memory Ingestion
+  └── SPAN 7: Memory Writeback & Telemetry Flush (Duration: 80ms)
+      ├── Sub-span: FastEmbed Memory Ingestion & Vector Indexing
       └── Sub-span: PostgreSQL Task State Transition to COMPLETED
 ```
 
