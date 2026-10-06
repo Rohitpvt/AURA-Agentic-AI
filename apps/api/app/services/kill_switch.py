@@ -123,6 +123,14 @@ class EmergencyKillSwitchService:
                 self._active_workspaces.clear()
         self._sync_to_disk(reason="State updated via set_active")
 
+    def activate(self, workspace_id: Optional[Any] = None, triggered_by: str = "system", reason: str = "") -> None:
+        """Convenience helper to activate kill switch."""
+        self.set_active(True, workspace_id=workspace_id)
+
+    def deactivate(self, workspace_id: Optional[Any] = None, reactivated_by: str = "system") -> None:
+        """Convenience helper to deactivate kill switch."""
+        self.set_active(False, workspace_id=workspace_id)
+
     async def trigger_emergency_kill(
         self,
         db: AsyncSession,

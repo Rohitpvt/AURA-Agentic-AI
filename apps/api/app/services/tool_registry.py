@@ -47,6 +47,17 @@ from app.services.tools.os_tools import (
 )
 from app.services.tools.web_extract import execute_web_extract
 from app.services.tools.web_search import execute_web_search
+from app.services.tools.browser_tools import (
+    execute_browser_navigate,
+    execute_browser_get_page_state,
+    execute_browser_screenshot,
+    execute_browser_click,
+    execute_browser_type,
+    execute_browser_select,
+    execute_browser_scroll,
+    execute_browser_press_key,
+    execute_browser_tab_manage,
+)
 
 
 # Built-in tool definitions and Python callables
@@ -1025,6 +1036,303 @@ BUILTIN_TOOLS: Dict[str, Dict[str, Any]] = {
         },
         "handler": execute_clipboard_write,
     },
+    "browser_navigate": {
+        "name": "browser_navigate",
+        "display_name": "Browser Navigate",
+        "description": "Navigate the sandboxed workspace browser to a verified URL with SSRF protection.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 30,
+        "rate_limit_per_minute": 30,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "HTTP or HTTPS URL to navigate to"},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+                "wait_until": {"type": "string", "description": "Wait condition (domcontentloaded, load, networkidle)", "default": "domcontentloaded"},
+                "timeout_ms": {"type": "integer", "description": "Navigation timeout in milliseconds", "default": 25000},
+            },
+            "required": ["url"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "url": {"type": "string"},
+                "final_url": {"type": "string"},
+                "title": {"type": "string"},
+                "status_code": {"type": "integer"},
+                "redirect_count": {"type": "integer"},
+                "duration_ms": {"type": "number"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_navigate,
+    },
+    "browser_get_page_state": {
+        "name": "browser_get_page_state",
+        "display_name": "Browser Get Page State",
+        "description": "Inspect active browser page, extract accessibility tree snapshot with numeric element IDs, and capture prompt-sanitized content.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+                "max_elements": {"type": "integer", "description": "Max accessibility tree nodes (10-200)", "default": 100},
+                "max_chars": {"type": "integer", "description": "Max characters of formatted observation (500-20000)", "default": 8000},
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string"},
+                "final_url": {"type": "string"},
+                "title": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "tabs_count": {"type": "integer"},
+                "viewport": {"type": "object"},
+                "axtree_formatted": {"type": "string"},
+                "text_content": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+                "captured_at": {"type": "string"},
+            },
+        },
+        "handler": execute_browser_get_page_state,
+    },
+    "browser_screenshot": {
+        "name": "browser_screenshot",
+        "display_name": "Browser Screenshot",
+        "description": "Capture a viewport or full-page PNG screenshot of the active browser tab without persisting to disk.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 30,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+                "full_page": {"type": "boolean", "description": "Whether to capture full scrollable page", "default": False},
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "format": {"type": "string"},
+                "size_bytes": {"type": "integer"},
+                "data_base64_preview": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_screenshot,
+    },
+    "browser_click": {
+        "name": "browser_click",
+        "display_name": "Browser Click Element",
+        "description": "Click an interactive element identified by its numeric ID from a fresh page observation.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "element_id": {"type": "integer", "description": "Numeric element ID from the active page observation AXTree"},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+                "click_count": {"type": "integer", "description": "Number of clicks (1, 2, or 3)", "default": 1},
+                "button": {"type": "string", "description": "Mouse button (left, right, middle)", "default": "left"},
+            },
+            "required": ["element_id"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "element_id": {"type": "integer"},
+                "role": {"type": "string"},
+                "name": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "url": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_click,
+    },
+    "browser_type": {
+        "name": "browser_type",
+        "display_name": "Browser Type Text",
+        "description": "Type text into an input field identified by its numeric ID from a fresh page observation.",
+        "category": "browser",
+        "risk_level": "medium",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "element_id": {"type": "integer", "description": "Numeric element ID from the active page observation AXTree"},
+                "text": {"type": "string", "description": "Text payload to type (max 2000 chars, no NUL bytes)"},
+                "clear_first": {"type": "boolean", "description": "Whether to clear existing field content before typing", "default": True},
+                "press_enter": {"type": "boolean", "description": "Whether to press Enter key after typing", "default": False},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+            },
+            "required": ["element_id", "text"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "element_id": {"type": "integer"},
+                "role": {"type": "string"},
+                "character_count": {"type": "integer"},
+                "is_sensitive": {"type": "boolean"},
+                "text_summary": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_type,
+    },
+    "browser_select": {
+        "name": "browser_select",
+        "display_name": "Browser Select Option",
+        "description": "Select an option from a dropdown or combobox element by numeric element ID.",
+        "category": "browser",
+        "risk_level": "medium",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "element_id": {"type": "integer", "description": "Numeric element ID of the select/combobox element"},
+                "value": {"type": "string", "description": "Option value or text label to select"},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+            },
+            "required": ["element_id", "value"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "element_id": {"type": "integer"},
+                "value": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_select,
+    },
+    "browser_scroll": {
+        "name": "browser_scroll",
+        "display_name": "Browser Scroll",
+        "description": "Scroll the viewport of the active browser page in a specified direction.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 10,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "direction": {"type": "string", "description": "Scroll direction (down, up, top, bottom)", "default": "down"},
+                "amount": {"type": "integer", "description": "Scroll amount in pixels (10-2000)", "default": 300},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "direction": {"type": "string"},
+                "amount": {"type": "integer"},
+                "tab_id": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_scroll,
+    },
+    "browser_press_key": {
+        "name": "browser_press_key",
+        "display_name": "Browser Press Key",
+        "description": "Send a governed keyboard key to the active browser page (e.g. Enter, Tab, Escape, Arrow keys).",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 10,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "key": {"type": "string", "description": "Allowed key: Enter, Tab, Escape, ArrowDown, ArrowUp, ArrowLeft, ArrowRight, PageDown, PageUp, Home, End, Backspace, Delete, Space"},
+                "tab_id": {"type": "string", "description": "Optional tab ID (defaults to active tab)"},
+            },
+            "required": ["key"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "key": {"type": "string"},
+                "tab_id": {"type": "string"},
+                "is_untrusted_content": {"type": "boolean"},
+            },
+        },
+        "handler": execute_browser_press_key,
+    },
+    "browser_tab_manage": {
+        "name": "browser_tab_manage",
+        "display_name": "Browser Tab Manage",
+        "description": "Manage browser tabs within the workspace context (create, switch, close, list) up to 4 tabs.",
+        "category": "browser",
+        "risk_level": "low",
+        "timeout_seconds": 15,
+        "rate_limit_per_minute": 30,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "description": "Action (create, switch, close, list)", "default": "list"},
+                "tab_id": {"type": "string", "description": "Target tab ID for switch or close"},
+                "url": {"type": "string", "description": "Optional URL to navigate to upon creating a tab"},
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "tab": {"type": "object"},
+                "tabs": {"type": "array"},
+                "closed_tab_id": {"type": "string"},
+                "total_tabs": {"type": "integer"},
+            },
+        },
+        "handler": execute_browser_tab_manage,
+    },
 }
 
 
@@ -1265,9 +1573,18 @@ class ToolRegistryService:
         # 3. Validate Input Arguments against JSON Schema
         validate_json_schema(tool.input_schema, request.arguments)
 
-        # 4. Human-In-The-Loop Approval Check for High/Critical Risk
+        # 4. Semantic Risk Evaluation & Human-In-The-Loop Approval Check
+        effective_risk_level = tool.risk_level
+        if tool.name.startswith("browser_"):
+            from app.services.browser.governance import browser_risk_classifier
+            effective_risk_level = browser_risk_classifier.evaluate_risk(
+                tool_name=tool.name,
+                arguments=request.arguments,
+                workspace_id=request.workspace_id,
+            )
+
         requires_approval = tool.requires_approval or (perm and perm.override_requires_approval)
-        if tool.risk_level in ["high", "critical"] or requires_approval:
+        if effective_risk_level in ["high", "critical"] or requires_approval:
             # Generate cryptographic approval token for HITL gate
             approval_payload = {
                 "workspace_id": str(request.workspace_id),
@@ -1281,11 +1598,11 @@ class ToolRegistryService:
             return ToolExecutionResponse(
                 success=False,
                 tool_name=tool.name,
-                risk_level=tool.risk_level,
+                risk_level=effective_risk_level,
                 execution_time_ms=0.0,
                 requires_hitl_approval=True,
                 approval_token=token,
-                error="Tool execution suspended: Human-in-the-Loop approval required for high-risk action",
+                error=f"Tool execution suspended: Human-in-the-Loop approval required for {effective_risk_level}-risk action",
             )
 
         # 5. Resolve Handler and Execute with Timeout & Telemetry Span
