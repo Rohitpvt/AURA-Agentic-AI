@@ -22,6 +22,7 @@ from app.services.os_guard.types import (
 )
 from app.services.os_guard.validators import (
     CoordinateSafetyValidator,
+    KeyboardInputValidator,
     PathValidator,
     ProcessIdentityValidator,
     PROTECTED_PROCESS_NAMES,
@@ -45,9 +46,11 @@ __all__ = [
     "PathValidator",
     "ProcessIdentityValidator",
     "CoordinateSafetyValidator",
+    "KeyboardInputValidator",
     "LOLBINS_DENYLIST",
     "PROTECTED_PROCESS_NAMES",
     "ACTION_RISK_MAP",
     "ACTION_PARTITION_MAP",
     "RATE_LIMIT_BUCKETS",
 ]
+

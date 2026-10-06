@@ -235,6 +235,13 @@ class OSGuardService:
         try:
             ws_id = uuid.UUID(request.workspace_id) if isinstance(request.workspace_id, str) else request.workspace_id
             clean_params = secret_redactor.redact_structure(request.parameters)
+
+            # Explicit privacy protection for typed text content
+            if "text" in clean_params:
+                typed_len = len(str(request.parameters.get("text", "")))
+                clean_params["text"] = "[REDACTED_TYPED_CONTENT]"
+                clean_params["typed_character_count"] = typed_len
+
             details = {
                 "action_id": request.action_id,
                 "action_type": request.action_type.value,

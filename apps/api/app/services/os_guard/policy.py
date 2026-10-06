@@ -63,6 +63,9 @@ ACTION_RISK_MAP: Dict[OSActionType, OSRiskTier] = {
     OSActionType.MOUSE_MOVE: OSRiskTier.MEDIUM_RISK_INTERACTION,
     OSActionType.MOUSE_CLICK: OSRiskTier.MEDIUM_RISK_INTERACTION,
     OSActionType.KEYBOARD_INPUT: OSRiskTier.MEDIUM_RISK_INTERACTION,
+    OSActionType.TYPE_TEXT: OSRiskTier.MEDIUM_RISK_INTERACTION,
+    OSActionType.PRESS_KEY: OSRiskTier.MEDIUM_RISK_INTERACTION,
+    OSActionType.KEYBOARD_SHORTCUT: OSRiskTier.MEDIUM_RISK_INTERACTION,
     OSActionType.CLIPBOARD_WRITE: OSRiskTier.MEDIUM_RISK_INTERACTION,
     OSActionType.APPLICATION_LAUNCH: OSRiskTier.HIGH_RISK_SYSTEM_ACTION,
     OSActionType.PROCESS_TERMINATE: OSRiskTier.HIGH_RISK_SYSTEM_ACTION,
@@ -78,6 +81,9 @@ ACTION_PARTITION_MAP: Dict[OSActionType, HostExecutionPartition] = {
     OSActionType.MOUSE_MOVE: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.MOUSE_CLICK: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.KEYBOARD_INPUT: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
+    OSActionType.TYPE_TEXT: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
+    OSActionType.PRESS_KEY: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
+    OSActionType.KEYBOARD_SHORTCUT: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.CLIPBOARD_WRITE: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.APPLICATION_LAUNCH: HostExecutionPartition.PRIVILEGED_HOST,
     OSActionType.PROCESS_TERMINATE: HostExecutionPartition.PRIVILEGED_HOST,
@@ -86,9 +92,12 @@ ACTION_PARTITION_MAP: Dict[OSActionType, HostExecutionPartition] = {
 
 # Sliding-Window Rate Limits (Operations per 60 Seconds)
 RATE_LIMIT_BUCKETS: Dict[str, int] = {
-    "mouse_click": 60,
     "mouse_move": 60,
+    "mouse_click": 30,
     "keyboard_input": 10,
+    "type_text": 10,
+    "press_key": 30,
+    "keyboard_shortcut": 10,
     "application_launch": 5,
     "process_terminate": 5,
     "hardware_control": 10,
@@ -236,7 +245,7 @@ class OSPolicyEngine:
         return True
 
     def _inspect_parameters(self, action_type: OSActionType, params: Dict[str, Any]) -> Optional[str]:
-        """Scan parameters for command injection, LOLBins, and prohibited flags."""
+        """Scan parameters for command injection, LOLBins, mouse safety, and keyboard security."""
         # 1. Prohibit shell=True or raw shell commands
         if params.get("shell") is True or params.get("use_shell") is True:
             return "Prohibited parameter 'shell=True' detected. Arbitrary shell execution is forbidden."
@@ -258,11 +267,86 @@ class OSPolicyEngine:
             if basename in LOLBINS_DENYLIST or target in LOLBINS_DENYLIST:
                 return f"Prohibited binary '{target}' is in the Windows LOLBins security denylist."
 
-        # 3. Check keyboard inputs for prohibited destructive commands
-        if action_type == OSActionType.KEYBOARD_INPUT:
-            shortcut = str(params.get("shortcut") or "").lower()
-            if "win" in shortcut or "cmd" in shortcut or "super" in shortcut:
-                return "System Windows key shortcuts are prohibited by safety policy."
+        # 3. Mouse Movement Parameter Inspection
+        if action_type == OSActionType.MOUSE_MOVE:
+            x = params.get("x")
+            y = params.get("y")
+            if x is None or y is None:
+                return "Mouse move request missing required 'x' or 'y' coordinates."
+            try:
+                x_int, y_int = int(x), int(y)
+            except (ValueError, TypeError):
+                return "Mouse move coordinates 'x' and 'y' must be valid integers."
+
+            duration = float(params.get("duration", 0.2))
+            coord_space = str(params.get("coordinate_space", "screen_desktop"))
+            obs_ts = params.get("observation_timestamp")
+            obs_float = float(obs_ts) if obs_ts is not None else None
+
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, err = CoordinateSafetyValidator.validate_mouse_move_parameters(
+                x=x_int,
+                y=y_int,
+                duration=duration,
+                coordinate_space=coord_space,
+                observation_timestamp=obs_float,
+            )
+            if not is_valid:
+                return err
+
+        # 4. Mouse Click Parameter Inspection
+        if action_type == OSActionType.MOUSE_CLICK:
+            x = params.get("x")
+            y = params.get("y")
+            if x is None or y is None:
+                return "Mouse click request missing required 'x' or 'y' coordinates."
+            try:
+                x_int, y_int = int(x), int(y)
+            except (ValueError, TypeError):
+                return "Mouse click coordinates 'x' and 'y' must be valid integers."
+
+            button = str(params.get("button", "left"))
+            clicks = int(params.get("clicks", 1))
+            coord_space = str(params.get("coordinate_space", "screen_desktop"))
+            obs_ts = params.get("observation_timestamp")
+            obs_float = float(obs_ts) if obs_ts is not None else None
+
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, err = CoordinateSafetyValidator.validate_mouse_click_parameters(
+                x=x_int,
+                y=y_int,
+                button=button,
+                clicks=clicks,
+                coordinate_space=coord_space,
+                observation_timestamp=obs_float,
+            )
+            if not is_valid:
+                return err
+
+        # 5. Keyboard Typing Parameter Inspection
+        if action_type in (OSActionType.TYPE_TEXT, OSActionType.KEYBOARD_INPUT) and "text" in params:
+            text = str(params.get("text", ""))
+            from app.services.os_guard.validators import KeyboardInputValidator
+            is_valid, err, _ = KeyboardInputValidator.validate_type_text(text)
+            if not is_valid:
+                return err
+
+        # 6. Keyboard Key Press Parameter Inspection
+        if action_type in (OSActionType.PRESS_KEY, OSActionType.KEYBOARD_INPUT) and "key" in params:
+            key = str(params.get("key", ""))
+            presses = int(params.get("presses", 1))
+            from app.services.os_guard.validators import KeyboardInputValidator
+            is_valid, _, err = KeyboardInputValidator.validate_press_key(key, presses)
+            if not is_valid:
+                return err
+
+        # 7. Keyboard Shortcut Parameter Inspection
+        if action_type in (OSActionType.KEYBOARD_SHORTCUT, OSActionType.KEYBOARD_INPUT) and ("shortcut" in params or "keys" in params):
+            shortcut = str(params.get("shortcut") or "+".join(params.get("keys", []))).lower()
+            from app.services.os_guard.validators import KeyboardInputValidator
+            is_valid, err, _ = KeyboardInputValidator.validate_keyboard_shortcut(shortcut)
+            if not is_valid:
+                return err
 
         return None
 

@@ -203,3 +203,328 @@ async def execute_terminate_process(
         raise AuthorizationError(f"Process termination failed: {resp.error or 'Action policy denied'}")
 
     return resp.result
+
+
+async def execute_move_mouse(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    hitl_token: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute move_mouse tool strictly through OSGuardService."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    x_val = args.get("x")
+    y_val = args.get("y")
+    if x_val is None or y_val is None:
+        raise ValidationError("Parameters 'x' and 'y' are required for move_mouse")
+
+    try:
+        x = int(x_val)
+        y = int(y_val)
+    except (ValueError, TypeError) as exc:
+        raise ValidationError("Coordinates 'x' and 'y' must be valid integers") from exc
+
+    duration = float(args.get("duration", 0.2))
+    monitor_id = int(args.get("monitor_id", 1))
+    coordinate_space = str(args.get("coordinate_space", "screen_desktop"))
+    obs_ts = args.get("observation_timestamp")
+    obs_float = float(obs_ts) if obs_ts is not None else None
+    expected_window_title = args.get("expected_window_title")
+
+    from app.services.os_guard.adapters import WindowsOSExecutionAdapter
+    from app.services.os_guard.os_guard_service import os_guard_service
+    from app.services.os_guard.types import (
+        OSActionLifecycleState,
+        OSActionRequest,
+        OSActionType,
+        PolicyDecisionType,
+    )
+
+    action_req = OSActionRequest(
+        workspace_id=str(workspace_id),
+        action_type=OSActionType.MOUSE_MOVE,
+        parameters={
+            "x": x,
+            "y": y,
+            "duration": duration,
+            "monitor_id": monitor_id,
+            "coordinate_space": coordinate_space,
+            "observation_timestamp": obs_float,
+            "expected_window_title": expected_window_title,
+        },
+        hitl_approval_token=hitl_token or args.get("hitl_approval_token"),
+    )
+
+    resp = await os_guard_service.execute_os_action(
+        request=action_req,
+        db=db,
+        adapter=WindowsOSExecutionAdapter(),
+    )
+
+    if resp.state == OSActionLifecycleState.WAITING_HITL or resp.policy_decision == PolicyDecisionType.REQUIRE_HITL:
+        return {
+            "status": "waiting_approval",
+            "action_id": resp.action_id,
+            "requires_hitl": True,
+            "message": resp.error or f"Mouse move to ({x}, {y}) requires human approval",
+        }
+
+    if resp.state != OSActionLifecycleState.COMPLETED or not resp.result:
+        raise AuthorizationError(f"Mouse move failed: {resp.error or 'Action policy denied'}")
+
+    return resp.result
+
+
+async def execute_click_mouse(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    hitl_token: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute click_mouse tool strictly through OSGuardService."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    x_val = args.get("x")
+    y_val = args.get("y")
+    if x_val is None or y_val is None:
+        raise ValidationError("Parameters 'x' and 'y' are required for click_mouse")
+
+    try:
+        x = int(x_val)
+        y = int(y_val)
+    except (ValueError, TypeError) as exc:
+        raise ValidationError("Coordinates 'x' and 'y' must be valid integers") from exc
+
+    button = str(args.get("button", "left")).lower().strip()
+    clicks = int(args.get("clicks", 1))
+    monitor_id = int(args.get("monitor_id", 1))
+    coordinate_space = str(args.get("coordinate_space", "screen_desktop"))
+    obs_ts = args.get("observation_timestamp")
+    obs_float = float(obs_ts) if obs_ts is not None else None
+    expected_window_title = args.get("expected_window_title")
+
+    from app.services.os_guard.adapters import WindowsOSExecutionAdapter
+    from app.services.os_guard.os_guard_service import os_guard_service
+    from app.services.os_guard.types import (
+        OSActionLifecycleState,
+        OSActionRequest,
+        OSActionType,
+        PolicyDecisionType,
+    )
+
+    action_req = OSActionRequest(
+        workspace_id=str(workspace_id),
+        action_type=OSActionType.MOUSE_CLICK,
+        parameters={
+            "x": x,
+            "y": y,
+            "button": button,
+            "clicks": clicks,
+            "monitor_id": monitor_id,
+            "coordinate_space": coordinate_space,
+            "observation_timestamp": obs_float,
+            "expected_window_title": expected_window_title,
+        },
+        hitl_approval_token=hitl_token or args.get("hitl_approval_token"),
+    )
+
+    resp = await os_guard_service.execute_os_action(
+        request=action_req,
+        db=db,
+        adapter=WindowsOSExecutionAdapter(),
+    )
+
+    if resp.state == OSActionLifecycleState.WAITING_HITL or resp.policy_decision == PolicyDecisionType.REQUIRE_HITL:
+        return {
+            "status": "waiting_approval",
+            "action_id": resp.action_id,
+            "requires_hitl": True,
+            "message": resp.error or f"Mouse click at ({x}, {y}) requires human approval",
+        }
+
+    if resp.state != OSActionLifecycleState.COMPLETED or not resp.result:
+        raise AuthorizationError(f"Mouse click failed: {resp.error or 'Action policy denied'}")
+
+    return resp.result
+
+
+async def execute_type_text(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    hitl_token: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute type_text tool strictly through OSGuardService."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    text = args.get("text")
+    if text is None:
+        raise ValidationError("Parameter 'text' is required for type_text")
+
+    text_str = str(text)
+    interval = float(args.get("interval", 0.01))
+    expected_window_title = args.get("expected_window_title")
+
+    from app.services.os_guard.adapters import WindowsOSExecutionAdapter
+    from app.services.os_guard.os_guard_service import os_guard_service
+    from app.services.os_guard.types import (
+        OSActionLifecycleState,
+        OSActionRequest,
+        OSActionType,
+        PolicyDecisionType,
+    )
+
+    action_req = OSActionRequest(
+        workspace_id=str(workspace_id),
+        action_type=OSActionType.TYPE_TEXT,
+        parameters={
+            "text": text_str,
+            "interval": interval,
+            "expected_window_title": expected_window_title,
+        },
+        hitl_approval_token=hitl_token or args.get("hitl_approval_token"),
+    )
+
+    resp = await os_guard_service.execute_os_action(
+        request=action_req,
+        db=db,
+        adapter=WindowsOSExecutionAdapter(),
+    )
+
+    if resp.state == OSActionLifecycleState.WAITING_HITL or resp.policy_decision == PolicyDecisionType.REQUIRE_HITL:
+        return {
+            "status": "waiting_approval",
+            "action_id": resp.action_id,
+            "requires_hitl": True,
+            "message": resp.error or "Keyboard typing requires human approval",
+        }
+
+    if resp.state != OSActionLifecycleState.COMPLETED or not resp.result:
+        raise AuthorizationError(f"Keyboard typing failed: {resp.error or 'Action policy denied'}")
+
+    return resp.result
+
+
+async def execute_press_key(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    hitl_token: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute press_key tool strictly through OSGuardService."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    key = args.get("key")
+    if not key:
+        raise ValidationError("Parameter 'key' is required for press_key")
+
+    key_str = str(key).strip().lower()
+    presses = int(args.get("presses", 1))
+    expected_window_title = args.get("expected_window_title")
+
+    from app.services.os_guard.adapters import WindowsOSExecutionAdapter
+    from app.services.os_guard.os_guard_service import os_guard_service
+    from app.services.os_guard.types import (
+        OSActionLifecycleState,
+        OSActionRequest,
+        OSActionType,
+        PolicyDecisionType,
+    )
+
+    action_req = OSActionRequest(
+        workspace_id=str(workspace_id),
+        action_type=OSActionType.PRESS_KEY,
+        parameters={
+            "key": key_str,
+            "presses": presses,
+            "expected_window_title": expected_window_title,
+        },
+        hitl_approval_token=hitl_token or args.get("hitl_approval_token"),
+    )
+
+    resp = await os_guard_service.execute_os_action(
+        request=action_req,
+        db=db,
+        adapter=WindowsOSExecutionAdapter(),
+    )
+
+    if resp.state == OSActionLifecycleState.WAITING_HITL or resp.policy_decision == PolicyDecisionType.REQUIRE_HITL:
+        return {
+            "status": "waiting_approval",
+            "action_id": resp.action_id,
+            "requires_hitl": True,
+            "message": resp.error or f"Key press '{key_str}' requires human approval",
+        }
+
+    if resp.state != OSActionLifecycleState.COMPLETED or not resp.result:
+        raise AuthorizationError(f"Key press failed: {resp.error or 'Action policy denied'}")
+
+    return resp.result
+
+
+async def execute_keyboard_shortcut(
+    workspace_id: uuid.UUID,
+    arguments: Optional[Dict[str, Any]] = None,
+    db: Optional[AsyncSession] = None,
+    hitl_token: Optional[str] = None,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Execute keyboard_shortcut tool strictly through OSGuardService."""
+    args = dict(arguments or {})
+    args.update(kwargs)
+
+    shortcut = args.get("shortcut")
+    keys = args.get("keys")
+    if not shortcut and not keys:
+        raise ValidationError("Parameter 'shortcut' or 'keys' is required for keyboard_shortcut")
+
+    shortcut_str = str(shortcut or "+".join(keys)).strip().lower()
+    expected_window_title = args.get("expected_window_title")
+
+    from app.services.os_guard.adapters import WindowsOSExecutionAdapter
+    from app.services.os_guard.os_guard_service import os_guard_service
+    from app.services.os_guard.types import (
+        OSActionLifecycleState,
+        OSActionRequest,
+        OSActionType,
+        PolicyDecisionType,
+    )
+
+    action_req = OSActionRequest(
+        workspace_id=str(workspace_id),
+        action_type=OSActionType.KEYBOARD_SHORTCUT,
+        parameters={
+            "shortcut": shortcut_str,
+            "expected_window_title": expected_window_title,
+        },
+        hitl_approval_token=hitl_token or args.get("hitl_approval_token"),
+    )
+
+    resp = await os_guard_service.execute_os_action(
+        request=action_req,
+        db=db,
+        adapter=WindowsOSExecutionAdapter(),
+    )
+
+    if resp.state == OSActionLifecycleState.WAITING_HITL or resp.policy_decision == PolicyDecisionType.REQUIRE_HITL:
+        return {
+            "status": "waiting_approval",
+            "action_id": resp.action_id,
+            "requires_hitl": True,
+            "message": resp.error or f"Keyboard shortcut '{shortcut_str}' requires human approval",
+        }
+
+    if resp.state != OSActionLifecycleState.COMPLETED or not resp.result:
+        raise AuthorizationError(f"Keyboard shortcut failed: {resp.error or 'Action policy denied'}")
+
+    return resp.result
+

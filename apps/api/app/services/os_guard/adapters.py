@@ -46,6 +46,26 @@ class WindowsOSExecutionAdapter(BaseOSExecutionAdapter):
             return await self._execute_process_terminate(action)
         elif action.action_type in (OSActionType.READ_ONLY, OSActionType.SYSTEM_TELEMETRY):
             return await self._execute_inspection_or_telemetry(action)
+        elif action.action_type == OSActionType.MOUSE_MOVE:
+            return await self._execute_mouse_move(action)
+        elif action.action_type == OSActionType.MOUSE_CLICK:
+            return await self._execute_mouse_click(action)
+        elif action.action_type == OSActionType.TYPE_TEXT:
+            return await self._execute_type_text(action)
+        elif action.action_type == OSActionType.PRESS_KEY:
+            return await self._execute_press_key(action)
+        elif action.action_type == OSActionType.KEYBOARD_SHORTCUT:
+            return await self._execute_keyboard_shortcut(action)
+        elif action.action_type == OSActionType.KEYBOARD_INPUT:
+            # Polymorphic dispatch based on parameters
+            if "text" in action.parameters:
+                return await self._execute_type_text(action)
+            elif "key" in action.parameters:
+                return await self._execute_press_key(action)
+            elif "shortcut" in action.parameters or "keys" in action.parameters:
+                return await self._execute_keyboard_shortcut(action)
+            else:
+                raise ValueError("KEYBOARD_INPUT request missing 'text', 'key', or 'shortcut' parameter.")
         else:
             raise NotImplementedError(f"Action type '{action.action_type.value}' is not implemented in WindowsOSExecutionAdapter.")
 
@@ -165,6 +185,188 @@ class WindowsOSExecutionAdapter(BaseOSExecutionAdapter):
             },
         }
 
+    async def _execute_mouse_move(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed mouse move using PyAutoGUI with failsafe protection."""
+        params = action.parameters
+        x = int(params["x"])
+        y = int(params["y"])
+        duration = float(params.get("duration", 0.2))
+        monitor_id = int(params.get("monitor_id", 1))
+
+        # Check expected window if specified
+        expected_title = params.get("expected_window_title")
+        if expected_title:
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, win_err, win_info = CoordinateSafetyValidator.validate_active_window(expected_title=expected_title)
+            if not is_valid:
+                raise RuntimeError(win_err)
+
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.05
+
+            # Execute move
+            pyautogui.moveTo(x, y, duration=duration)
+
+            return {
+                "status": "success",
+                "action": "mouse_move",
+                "x": x,
+                "y": y,
+                "duration": duration,
+                "monitor_id": monitor_id,
+            }
+        except Exception as e:
+            if "FailSafe" in type(e).__name__ or "failsafe" in str(e).lower():
+                raise RuntimeError("PyAutoGUI FailSafe triggered: Cursor moved to corner of screen for emergency abort.") from e
+            raise RuntimeError(f"Mouse movement execution failed: {e}") from e
+
+    async def _execute_mouse_click(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed mouse click using PyAutoGUI with failsafe protection."""
+        params = action.parameters
+        x = int(params["x"])
+        y = int(params["y"])
+        button = str(params.get("button", "left")).lower().strip()
+        clicks = int(params.get("clicks", 1))
+        monitor_id = int(params.get("monitor_id", 1))
+
+        # Check expected window if specified
+        expected_title = params.get("expected_window_title")
+        if expected_title:
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, win_err, win_info = CoordinateSafetyValidator.validate_active_window(expected_title=expected_title)
+            if not is_valid:
+                raise RuntimeError(win_err)
+
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.05
+
+            # Execute click
+            pyautogui.click(x=x, y=y, clicks=clicks, interval=0.1, button=button)
+
+            return {
+                "status": "success",
+                "action": "mouse_click",
+                "x": x,
+                "y": y,
+                "button": button,
+                "clicks": clicks,
+                "monitor_id": monitor_id,
+            }
+        except Exception as e:
+            if "FailSafe" in type(e).__name__ or "failsafe" in str(e).lower():
+                raise RuntimeError("PyAutoGUI FailSafe triggered: Cursor moved to corner of screen for emergency abort.") from e
+            raise RuntimeError(f"Mouse click execution failed: {e}") from e
+
+    async def _execute_type_text(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed keyboard text typing using PyAutoGUI with strict privacy guarantees."""
+        params = action.parameters
+        text = str(params.get("text", ""))
+        interval = float(params.get("interval", 0.01))
+
+        # Check expected window if specified
+        expected_title = params.get("expected_window_title")
+        if expected_title:
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, win_err, win_info = CoordinateSafetyValidator.validate_active_window(expected_title=expected_title)
+            if not is_valid:
+                raise RuntimeError(win_err)
+
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.05
+
+            # Type text
+            pyautogui.write(text, interval=interval)
+
+            # Return sanitized result — NEVER return the actual raw text!
+            return {
+                "status": "success",
+                "action": "type_text",
+                "typed_character_count": len(text),
+            }
+        except Exception as e:
+            if "FailSafe" in type(e).__name__ or "failsafe" in str(e).lower():
+                raise RuntimeError("PyAutoGUI FailSafe triggered: Cursor moved to corner of screen for emergency abort.") from e
+            raise RuntimeError(f"Keyboard typing execution failed: {e}") from e
+
+    async def _execute_press_key(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute single key press using PyAutoGUI with allowlist enforcement."""
+        params = action.parameters
+        key = str(params.get("key", "")).strip().lower()
+        presses = int(params.get("presses", 1))
+
+        # Check expected window if specified
+        expected_title = params.get("expected_window_title")
+        if expected_title:
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, win_err, win_info = CoordinateSafetyValidator.validate_active_window(expected_title=expected_title)
+            if not is_valid:
+                raise RuntimeError(win_err)
+
+        from app.services.os_guard.validators import KeyboardInputValidator
+        is_valid, canonical_key, err = KeyboardInputValidator.validate_press_key(key, presses)
+        if not is_valid:
+            raise ValueError(err)
+
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.05
+
+            pyautogui.press(canonical_key, presses=presses, interval=0.05)
+
+            return {
+                "status": "success",
+                "action": "press_key",
+                "key": canonical_key,
+                "presses": presses,
+            }
+        except Exception as e:
+            if "FailSafe" in type(e).__name__ or "failsafe" in str(e).lower():
+                raise RuntimeError("PyAutoGUI FailSafe triggered: Cursor moved to corner of screen for emergency abort.") from e
+            raise RuntimeError(f"Key press execution failed: {e}") from e
+
+    async def _execute_keyboard_shortcut(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute keyboard shortcut combination using PyAutoGUI with safe allowlist verification."""
+        params = action.parameters
+        shortcut = str(params.get("shortcut") or "+".join(params.get("keys", []))).strip().lower()
+
+        # Check expected window if specified
+        expected_title = params.get("expected_window_title")
+        if expected_title:
+            from app.services.os_guard.validators import CoordinateSafetyValidator
+            is_valid, win_err, win_info = CoordinateSafetyValidator.validate_active_window(expected_title=expected_title)
+            if not is_valid:
+                raise RuntimeError(win_err)
+
+        from app.services.os_guard.validators import KeyboardInputValidator
+        is_valid, err, keys_list = KeyboardInputValidator.validate_keyboard_shortcut(shortcut)
+        if not is_valid:
+            raise ValueError(err)
+
+        try:
+            import pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.05
+
+            pyautogui.hotkey(*keys_list)
+
+            return {
+                "status": "success",
+                "action": "keyboard_shortcut",
+                "shortcut": shortcut,
+                "keys": keys_list,
+            }
+        except Exception as e:
+            if "FailSafe" in type(e).__name__ or "failsafe" in str(e).lower():
+                raise RuntimeError("PyAutoGUI FailSafe triggered: Cursor moved to corner of screen for emergency abort.") from e
+            raise RuntimeError(f"Keyboard shortcut execution failed: {e}") from e
+
 
 class SafeMockOSExecutionAdapter(BaseOSExecutionAdapter):
     """Deterministic Mock Execution Adapter for Unit Testing and Safe Validation."""
@@ -229,12 +431,66 @@ class SafeMockOSExecutionAdapter(BaseOSExecutionAdapter):
                 "create_time": action.parameters.get("expected_create_time", 1728000000.0),
                 "outcome": "TERMINATED",
             }
-        elif action.action_type in (OSActionType.MOUSE_MOVE, OSActionType.MOUSE_CLICK):
+        elif action.action_type == OSActionType.MOUSE_MOVE:
             return {
                 "status": "success",
-                "coordinates": (action.parameters.get("x", 0), action.parameters.get("y", 0)),
+                "action": "mouse_move",
+                "x": int(action.parameters.get("x", 0)),
+                "y": int(action.parameters.get("y", 0)),
+                "duration": float(action.parameters.get("duration", 0.2)),
+                "monitor_id": int(action.parameters.get("monitor_id", 1)),
+            }
+        elif action.action_type == OSActionType.MOUSE_CLICK:
+            return {
+                "status": "success",
+                "action": "mouse_click",
+                "x": int(action.parameters.get("x", 0)),
+                "y": int(action.parameters.get("y", 0)),
+                "button": str(action.parameters.get("button", "left")),
+                "clicks": int(action.parameters.get("clicks", 1)),
+                "monitor_id": int(action.parameters.get("monitor_id", 1)),
+            }
+        elif action.action_type == OSActionType.TYPE_TEXT:
+            text = str(action.parameters.get("text", ""))
+            return {
+                "status": "success",
+                "action": "type_text",
+                "typed_character_count": len(text),
+            }
+        elif action.action_type == OSActionType.PRESS_KEY:
+            return {
+                "status": "success",
+                "action": "press_key",
+                "key": str(action.parameters.get("key", "enter")),
+                "presses": int(action.parameters.get("presses", 1)),
+            }
+        elif action.action_type == OSActionType.KEYBOARD_SHORTCUT:
+            return {
+                "status": "success",
+                "action": "keyboard_shortcut",
+                "shortcut": str(action.parameters.get("shortcut", "ctrl+c")),
+                "keys": action.parameters.get("keys", ["ctrl", "c"]),
             }
         elif action.action_type == OSActionType.KEYBOARD_INPUT:
+            if "text" in action.parameters:
+                return {
+                    "status": "success",
+                    "action": "type_text",
+                    "typed_character_count": len(str(action.parameters.get("text", ""))),
+                }
+            elif "key" in action.parameters:
+                return {
+                    "status": "success",
+                    "action": "press_key",
+                    "key": str(action.parameters.get("key", "enter")),
+                    "presses": int(action.parameters.get("presses", 1)),
+                }
+            elif "shortcut" in action.parameters:
+                return {
+                    "status": "success",
+                    "action": "keyboard_shortcut",
+                    "shortcut": str(action.parameters.get("shortcut", "ctrl+c")),
+                }
             return {
                 "status": "success",
                 "typed_length": len(str(action.parameters.get("text", ""))),
@@ -248,3 +504,4 @@ class SafeMockOSExecutionAdapter(BaseOSExecutionAdapter):
     def clear(self) -> None:
         """Clear recorded actions."""
         self.executed_actions.clear()
+
