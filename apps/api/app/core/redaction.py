@@ -57,7 +57,10 @@ class SecretRedactor:
         if isinstance(data, dict):
             new_dict = {}
             for k, v in data.items():
-                if isinstance(k, str) and k.lower() in cls.SENSITIVE_KEY_NAMES:
+                if isinstance(k, str) and (
+                    k.lower() in cls.SENSITIVE_KEY_NAMES
+                    or any(s in k.lower() for s in ("password", "secret", "token", "key", "credential", "auth"))
+                ):
                     new_dict[k] = "[REDACTED]"
                 else:
                     new_dict[k] = cls.redact_structure(v)

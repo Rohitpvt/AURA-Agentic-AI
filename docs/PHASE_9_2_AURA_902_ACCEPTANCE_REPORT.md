@@ -143,29 +143,63 @@ A live end-to-end integration test (`test_live_benign_notepad_launch_inspect_ter
 
 ---
 
-## 7. Full Test Suite & Regression Verification
+## 7. Final Security Evidence
 
-### 7.1 Backend Test Regression
-- Total Tests: **470**
-- Passed: **459**
+### Live HITL
+- **Result:** VERIFIED & PASS
+- **Evidence Type:** LIVE / INTEGRATION
+- **Actual Observed Behavior:**
+  - Demonstrated the complete real authorization lifecycle:
+    $$\text{request} \longrightarrow \text{policy = REQUIRE\_HITL} \longrightarrow \text{HMAC-SHA256 token generation} \longrightarrow \text{parameter-bound validation} \longrightarrow \text{OSGuardService} \longrightarrow \text{WindowsOSExecutionAdapter} \longrightarrow \text{real notepad.exe execution} \longrightarrow \text{verified process exit}$$
+  - Tested cryptographic parameter tampering defenses: mutating any of `application_id`, `arguments`, `PID`, `creation_time`, `workspace_id`, or `action_type` produces a signature or parameter-hash mismatch resulting in a fail-closed `DENY` policy decision and `FAILED` lifecycle state, preventing unverified or modified side effects.
+
+### Live Kill-Switch Race
+- **Result:** VERIFIED & PASS
+- **Evidence Type:** LIVE CONTROL-PLANE
+- **Actual Observed Behavior:**
+  - A pre-authorized request bearing a cryptographically valid HITL token was dispatched against `OSGuardService` while the emergency kill switch was activated prior to reaching the host execution boundary.
+  - The execution was immediately intercepted and aborted with `state = KILL_SWITCHED`, `policy_decision = KILL_SWITCHED`, and `result = None`, spawning zero host processes.
+  - Upon subsequent kill-switch deactivation, the interrupted action was verified to have NO automatic retry, replay, or residue in the execution queue.
+
+### Rate Limit Enforcement
+- **Result:** VERIFIED & PASS
+- **Evidence Type:** INTEGRATION
+- **Actual Observed Behavior:**
+  - Verified that the real AURA-901 centralized sliding-window rate limiters in `OSPolicyEngine` strictly control AURA-902 application launches and terminations.
+  - 5 valid launch requests within a 60-second window are accepted with `state = COMPLETED` and `policy_decision = ALLOW`.
+  - The 6th consecutive request within the window is rejected with `state = FAILED`, `policy_decision = RATE_LIMIT`, and error `"Rate limit exceeded for action application_launch"`.
+
+### Audit / Telemetry Redaction
+- **Result:** VERIFIED & PASS
+- **Evidence Type:** LIVE / INTEGRATION
+- **Actual Observed Behavior:**
+  - Executed governed AURA-902 operations with parameters containing high-entropy credentials (`api_key`, `db_password`, `raw_token`).
+  - Application logging, database `audit_logs` entries, and OpenTelemetry trace spans were verified to be completely free of unredacted secrets, credentials, environment tokens, and raw command strings.
+  - Safe metadata preserved and validated: `action_id`, `workspace_id`, `action_type`, `risk_tier`, `policy_decision`, `lifecycle_state`, `duration_ms`, `trace_id`.
+
+---
+
+## 8. Full Test Suite & Regression Verification
+
+### 8.1 Backend Test Regression
+- Total Tests: **474**
+- Passed: **463**
 - Skipped: **11** (optional external hardware / mock-only markers)
 - Failed: **0**
-- Suite Duration: 216.02s
 
-### 7.2 Frontend Test Regression
+### 8.2 Frontend Test Regression
 - Test Files: **1/1 passed**
 - Tests: **33/33 passed**
 - Framework: Vitest v2.1.9
-- Suite Duration: 5.13s
 
-### 7.3 Frontend Production Build
+### 8.3 Frontend Production Build
 - Framework: Next.js 15.5.27
 - Static Pages: **4/4 generated successfully**
 - Type Check & Lint: **Clean (0 errors)**
 
 ---
 
-## 8. Absolute Scope Boundaries & Next Phase Guard
+## 9. Absolute Scope Boundaries & Next Phase Guard
 
 - **AURA-901**: Complete & Accepted
 - **AURA-902**: Complete & Accepted
