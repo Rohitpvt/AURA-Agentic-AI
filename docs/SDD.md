@@ -202,3 +202,44 @@ AURA is architected around a strict decoupled paradigm: the **Control Plane** (a
    * Active Skill & Plan Definition: 15%
    * Conversation Turn History: 25%
    * Tool Schemas & Output Buffer: 25%
+
+---
+
+## 6. Phase 10 Subsystem Architecture (Preflight Specification)
+
+### 6.1 Advanced Interactive Browser Engine Architecture
+```
+[Agent Core / Planner]
+          │
+          ▼ (Governed Tool Invocation: e.g., browser_click)
+[AgentToolBridge -> ToolRegistryService]
+          │
+          ▼ (Risk Evaluation: READ / LOW / MEDIUM / HIGH / CRITICAL)
+[OSPolicyEngine / Risk Gate] ──(If HIGH/CRITICAL)──► [HMAC-SHA256 HITL Approval Drawer]
+          │ (Approved / Low-Risk)
+          ▼
+[PlaywrightBrowserManager]
+    ├── Isolated BrowserContext (per-workspace session, ephemeral storage)
+    ├── Multi-Tab Controller (max 4 concurrent tabs per workspace)
+    ├── AXTree & Semantic State Extractor (aria-labels, roles, numeric element IDs)
+    ├── Multi-Layer SSRF Guard (pre-nav, redirect, and subresource routing filters)
+    ├── Prompt Sanitizer (<untrusted_web_content> XML envelope wrapping)
+    └── Bounded Action Execution Engine (page.click, page.fill, page.goto with 15s/25s timeouts)
+```
+
+### 6.2 Windows Background Runtime Architecture
+```
+[Windows User Session (Interactive Session 1+)]
+    │
+    ├── [AuraDaemonSupervisor] (Watchdog, health heartbeat, least-privilege non-SYSTEM)
+    │         │
+    │         ├── Spawns & Monitors ──► [FastAPI Control Plane / Uvicorn Server]
+    │         └── Spawns & Monitors ──► [AURA-905 System Tray & Hotkey Process]
+    │
+    ├── [Win32 Session Change Listener] (`WM_WTSSESSION_CHANGE`)
+    │         ├── On WTS_SESSION_LOCK: Suspend camera, mic, screen, and OS interactions
+    │         └── On WTS_SESSION_UNLOCK: Resume listening upon user authentication
+    │
+    └── [Controlled Autostart Manager] (Registry HKCU Run Key, OFF by default, reversible)
+```
+

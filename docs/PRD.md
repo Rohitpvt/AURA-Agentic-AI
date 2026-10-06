@@ -82,12 +82,27 @@ AURA is an enterprise-grade **Personal Agentic AI Operating System** designed to
 * System shall support deterministic routing modes: `LOCAL_ONLY` (default), `BYOK_ONLY`, and `AUTO` (with automatic fallback to local Ollama upon cloud rate limit or network disruption).
 * System shall provide explicit cost and billing badges (`LOCAL_ZERO_COST`, `BYOK_FREE_TIER`, `BYOK_POTENTIALLY_BILLABLE`) and task-level token budgets.
 
+### FR-07: Advanced Governed Browser Automation (Phase 10 Preflight)
+* System shall support multimodal, interactive browser navigation, clicking, typing, scrolling, form filling, and tab management via local Playwright Chromium without paid third-party cloud browser services.
+* All extracted web content, DOM structures, and accessibility trees shall be treated as untrusted data and wrapped in `<untrusted_web_content>` containment envelopes with active prompt-injection detection.
+* Browser operations shall be governed under a 5-tier risk taxonomy with mandatory cryptographic HMAC-SHA256 Human-In-The-Loop (HITL) approval for consequential actions (submitting orders, modifying account settings, sensitive file downloads).
+* Web credentials shall be stored encrypted with AES-256-GCM and injected directly into browser contexts at the runtime boundary with zero model prompt exposure.
+* Browser downloads shall be isolated in sandboxed workspaces and ingested through the Phase 6 Universal File Registry pipeline with path-traversal and malware screening.
+
+### FR-08: Windows Background Runtime & Lifecycle Supervision (Phase 10 Preflight)
+* System shall provide a lightweight Windows user-session background supervisor (`AuraDaemonSupervisor`) operating under least-privilege user context (non-SYSTEM).
+* System shall monitor core service health (FastAPI, Ollama, database connections) with automatic crash recovery, exponential backoff, and state reconciliation (`StartupRecoverySweep`).
+* Background runtime shall detect workstation lock/unlock events via `WM_WTSSESSION_CHANGE`, suspending camera/microphone sensing and desktop interaction upon lock.
+* Background runtime shall integrate with the AURA-905 System Tray controller and support optional, explicit, user-reversible autostart (OFF by default).
+* System shall maintain unified kill-switch control across all background daemon processes, browser contexts, and worker tasks with sub-15ms abort propagation.
+
 ---
 
 ## 5. Non-Functional Requirements (NFR)
 
-* **NFR-01 (Zero Service Cost Invariant):** Total mandatory recurring API/SaaS/cloud cost for the entire core application must be exactly **$0.00**. BYOK cloud models are strictly optional.
+* **NFR-01 (Zero Service Cost Invariant):** Total mandatory recurring API/SaaS/cloud cost for the entire core application must be exactly **$0.00**. BYOK cloud models and external services are strictly optional.
 * **NFR-02 (Local Token Latency):** Local LLM inference on baseline hardware (AMD Ryzen 7 / RTX 3050 4GB) must deliver $\ge 15\text{ tokens/sec}$ on 7B models and $\ge 40\text{ tokens/sec}$ on 3B models.
 * **NFR-03 (Data Privacy):** Prompts, source code, documents, and memory records must remain 100% local by default; zero network telemetry sent to third-party AI companies.
 * **NFR-04 (Offline Operation):** System must be capable of executing internal tasks, memory recall, and code analysis with zero active internet connection in `LOCAL_ONLY` mode.
-* **NFR-05 (Zero Secret Leakage):** User-supplied BYOK credentials shall never be exposed to frontend JavaScript runtimes, browser storage, unencrypted databases, logs, or agent prompts.
+* **NFR-05 (Zero Secret Leakage):** User-supplied BYOK credentials and web session passwords shall never be exposed to frontend JavaScript runtimes, browser storage, unencrypted databases, logs, or agent prompts.
+
