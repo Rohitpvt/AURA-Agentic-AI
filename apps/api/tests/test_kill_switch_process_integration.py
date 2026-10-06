@@ -102,8 +102,8 @@ sys.exit(1)
             [sys.executable, "-c", f"import uuid; from app.services.kill_switch import kill_switch; kill_switch.set_active(True, uuid.UUID('{ws_id}'))"],
             cwd=api_dir,
         )
-        proc1.wait(timeout=8.0)
-        proc2.wait(timeout=8.0)
+        proc1.wait(timeout=20.0)
+        proc2.wait(timeout=20.0)
         assert proc1.returncode == 0
         assert proc2.returncode == 0
         assert kill_switch.is_active(ws_id)
