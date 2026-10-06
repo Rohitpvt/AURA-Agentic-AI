@@ -26,6 +26,13 @@ from app.services.browser.governance import (
     browser_risk_classifier,
 )
 
+from app.services.browser.file_transfer import (
+    BrowserFileTransferService,
+    browser_file_transfer_service,
+    sanitize_url_provenance,
+    is_sensitive_file,
+)
+
 __all__ = [
     "BrowserState",
     "TabInfo",
@@ -49,4 +56,8 @@ __all__ = [
     "freshness_store",
     "action_budget_manager",
     "browser_risk_classifier",
+    "BrowserFileTransferService",
+    "browser_file_transfer_service",
+    "sanitize_url_provenance",
+    "is_sensitive_file",
 ]

@@ -345,6 +345,13 @@ class BrowserRiskClassifier:
         if tool_name in ["browser_save_session", "browser_restore_session"]:
             return "medium"
 
+        # 8. File Transfer Tools (AURA-1004)
+        if tool_name == "browser_download_file":
+            return "medium"
+
+        if tool_name == "browser_upload_file":
+            return "medium"
+
         # Default fallback
         return "low"
 

@@ -704,3 +704,94 @@ async def execute_browser_restore_session(
         "is_untrusted_content": True,
     }
 
+
+async def execute_browser_download_file(
+    workspace_id: uuid.UUID,
+    url: Optional[str] = None,
+    click_element_id: Optional[int] = None,
+    tab_id: Optional[str] = None,
+    suggested_filename: Optional[str] = None,
+    task_id: Optional[str] = None,
+    user_id: Optional[uuid.UUID] = None,
+    ip_address: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Download a file from URL or interactive click into quarantine and register with Phase 6 File Intake."""
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_download_file")
+
+    from app.services.browser.file_transfer import browser_file_transfer_service
+
+    if db is not None:
+        return await browser_file_transfer_service.download_file(
+            db=db,
+            workspace_id=workspace_id,
+            url=url,
+            click_element_id=click_element_id,
+            tab_id=tab_id,
+            suggested_filename=suggested_filename,
+            task_id=task_id,
+            user_id=user_id,
+            ip_address=ip_address,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            return await browser_file_transfer_service.download_file(
+                db=session,
+                workspace_id=workspace_id,
+                url=url,
+                click_element_id=click_element_id,
+                tab_id=tab_id,
+                suggested_filename=suggested_filename,
+                task_id=task_id,
+                user_id=user_id,
+                ip_address=ip_address,
+            )
+
+
+async def execute_browser_upload_file(
+    workspace_id: uuid.UUID,
+    file_id: str,
+    element_id: Optional[int] = None,
+    selector: Optional[str] = None,
+    tab_id: Optional[str] = None,
+    task_id: Optional[str] = None,
+    user_id: Optional[uuid.UUID] = None,
+    ip_address: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Upload an authorized workspace file into an active browser file input element."""
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_upload_file")
+
+    from app.services.browser.file_transfer import browser_file_transfer_service
+
+    if db is not None:
+        return await browser_file_transfer_service.upload_file(
+            db=db,
+            workspace_id=workspace_id,
+            file_id=file_id,
+            element_id=element_id,
+            selector=selector,
+            tab_id=tab_id,
+            task_id=task_id,
+            user_id=user_id,
+            ip_address=ip_address,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            return await browser_file_transfer_service.upload_file(
+                db=session,
+                workspace_id=workspace_id,
+                file_id=file_id,
+                element_id=element_id,
+                selector=selector,
+                tab_id=tab_id,
+                task_id=task_id,
+                user_id=user_id,
+                ip_address=ip_address,
+            )
+
+

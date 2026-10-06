@@ -145,7 +145,7 @@ class PlaywrightBrowserEngine:
                 )
 
             raw_context = await browser.new_context(
-                accept_downloads=False,
+                accept_downloads=True,
                 java_script_enabled=True,
                 ignore_https_errors=False,
                 permissions=[],

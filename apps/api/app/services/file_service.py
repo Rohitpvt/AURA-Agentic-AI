@@ -309,6 +309,165 @@ class FileService:
                 logger.error(f"FileService: Unexpected error during upload: {str(e)}", exc_info=True)
             raise
 
+    async def intake_staged_file(
+        self,
+        db: AsyncSession,
+        workspace_id: uuid.UUID,
+        staged_path: Path,
+        original_filename: str,
+        user_id: Optional[uuid.UUID] = None,
+        source_url: Optional[str] = None,
+        declared_mime: Optional[str] = None,
+        provenance_metadata: Optional[Dict[str, Any]] = None,
+        ip_address: Optional[str] = None,
+    ) -> FileUploadResponse:
+        """Intake an already-staged file (e.g. from browser quarantine), screen, deduplicate, and register."""
+        safe_name, ext = self.sanitize_filename(original_filename)
+        file_id = uuid.uuid4()
+
+        if not staged_path.exists() or not staged_path.is_file():
+            raise ValidationError(f"Staged file does not exist: {staged_path}")
+
+        total_bytes = staged_path.stat().st_size
+        if total_bytes == 0:
+            if staged_path.exists():
+                staged_path.unlink(missing_ok=True)
+            raise ValidationError("Downloaded file is empty (0 bytes)")
+
+        if total_bytes > self.MAX_UPLOAD_BYTES:
+            if staged_path.exists():
+                staged_path.unlink(missing_ok=True)
+            raise ValidationError(
+                f"File size exceeds maximum upload limit of 50 MB ({self.MAX_UPLOAD_BYTES} bytes)"
+            )
+
+        sha256 = hashlib.sha256()
+        header_sample = bytearray()
+        with open(staged_path, "rb") as f_in:
+            while True:
+                chunk = f_in.read(self.CHUNK_SIZE)
+                if not chunk:
+                    break
+                sha256.update(chunk)
+                if len(header_sample) < 512:
+                    needed = 512 - len(header_sample)
+                    header_sample.extend(chunk[:needed])
+
+        content_hash = sha256.hexdigest()
+        mime_type, security_flags = self.detect_and_screen_file(
+            bytes(header_sample), declared_mime or "application/octet-stream", ext
+        )
+
+        # Check for intra-workspace duplicate
+        stmt_dupe = select(FileRecord).where(
+            FileRecord.workspace_id == workspace_id,
+            FileRecord.sha256_hash == content_hash,
+            FileRecord.deleted_at.is_(None),
+            FileRecord.status != FileStatus.DELETED.value,
+        )
+        res_dupe = await db.execute(stmt_dupe)
+        existing = res_dupe.scalars().first()
+
+        if existing:
+            logger.info(
+                f"FileService: Content-duplicate detected for staged file {file_id} matching existing file {existing.id}"
+            )
+            if staged_path.exists():
+                staged_path.unlink(missing_ok=True)
+
+            await audit_ledger.record_event(
+                db=db,
+                workspace_id=workspace_id,
+                actor_type="user" if user_id else "system",
+                actor_id=str(user_id) if user_id else "system",
+                action="file.duplicate_detected",
+                resource_type="file",
+                resource_id=str(existing.id),
+                details={
+                    "original_filename": original_filename,
+                    "existing_file_id": str(existing.id),
+                    "sha256_hash": content_hash,
+                    "size_bytes": total_bytes,
+                    "source_url": source_url,
+                },
+                ip_address=ip_address,
+            )
+
+            resp = self._to_record_response(existing)
+            return FileUploadResponse(
+                file=resp,
+                is_duplicate=True,
+                message="File with identical content already registered in workspace",
+            )
+
+        # Move to canonical storage destination: {workspace_root}/files/{file_id}/{safe_name}
+        storage_rel_path = f"files/{file_id}/{safe_name}"
+        final_path = filesystem_guard.validate_and_resolve_path(workspace_id, storage_rel_path)
+        final_path.parent.mkdir(parents=True, exist_ok=True)
+
+        shutil.move(str(staged_path), str(final_path))
+
+        initial_status = (
+            FileStatus.QUARANTINED.value
+            if any("SUSPICIOUS" in f for f in security_flags)
+            else FileStatus.UPLOADED.value
+        )
+
+        merged_meta = {
+            "intake_timestamp": datetime.now(timezone.utc).isoformat(),
+            "source_type": "browser_download",
+            "source_url": source_url,
+            "client_declared_mime": declared_mime,
+        }
+        if provenance_metadata:
+            merged_meta.update(provenance_metadata)
+
+        record = FileRecord(
+            id=file_id,
+            workspace_id=workspace_id,
+            uploaded_by=user_id,
+            original_filename=original_filename,
+            safe_filename=safe_name,
+            mime_type=mime_type,
+            file_extension=ext,
+            size_bytes=total_bytes,
+            sha256_hash=content_hash,
+            storage_path=storage_rel_path,
+            status=initial_status,
+            metadata_=merged_meta,
+            security_flags=security_flags,
+        )
+        db.add(record)
+        await db.commit()
+        await db.refresh(record)
+
+        await audit_ledger.record_event(
+            db=db,
+            workspace_id=workspace_id,
+            actor_type="user" if user_id else "system",
+            actor_id=str(user_id) if user_id else "system",
+            action="file.downloaded",
+            resource_type="file",
+            resource_id=str(file_id),
+            details={
+                "original_filename": original_filename,
+                "safe_filename": safe_name,
+                "size_bytes": total_bytes,
+                "sha256_hash": content_hash,
+                "mime_type": mime_type,
+                "security_flags": security_flags,
+                "source_url": source_url,
+            },
+            ip_address=ip_address,
+        )
+
+        resp = self._to_record_response(record)
+        return FileUploadResponse(
+            file=resp,
+            is_duplicate=False,
+            message="File downloaded, screened, and registered successfully",
+        )
+
     async def get_file(
         self,
         db: AsyncSession,
