@@ -105,7 +105,7 @@ class CoreAudioVolumeAdapter:
         enumerator = comtypes.client.CreateObject(CLSID_MMDeviceEnumerator, interface=IMMDeviceEnumerator)
         endpoint = enumerator.GetDefaultAudioEndpoint(0, 1)  # eRender=0, eMultimedia=1
         interface = endpoint.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        return ctypes.cast(interface, POINTER(IAudioEndpointVolume))
+        return interface.QueryInterface(IAudioEndpointVolume)
 
     @classmethod
     def get_volume(cls) -> Dict[str, Any]:
@@ -133,12 +133,6 @@ class CoreAudioVolumeAdapter:
                 "supported": False,
                 "error": str(exc),
             }
-        finally:
-            if _HAS_COM_AUDIO:
-                try:
-                    comtypes.CoUninitialize()
-                except Exception:
-                    pass
 
     @classmethod
     def set_volume(
@@ -215,12 +209,6 @@ class CoreAudioVolumeAdapter:
         except Exception as exc:
             logger.error(f"CoreAudioVolumeAdapter: Volume adjustment failed: {exc}")
             raise RuntimeError(f"Volume adjustment failed: {exc}") from exc
-        finally:
-            if _HAS_COM_AUDIO:
-                try:
-                    comtypes.CoUninitialize()
-                except Exception:
-                    pass
 
 
 class WmiDisplayBrightnessAdapter:
