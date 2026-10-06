@@ -1,10 +1,14 @@
-"""
-Phase 1 to Phase 9 Master Benchmark: Performance & Latency Across All Subsystems (N=100 Trials).
-"""
-import pytest
+import asyncio
+import os
+import sys
 import time
 import statistics
 import uuid
+
+# Path setup
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+import pytest
 
 from app.core.security import create_access_token, verify_password, get_password_hash, compute_sha256_hash, sign_approval_payload, verify_approval_signature
 from app.core.redaction import SecretRedactor
@@ -97,3 +101,7 @@ async def test_benchmark_master_phase01_to_phase09():
     print("\n--- MASTER BENCHMARK RESULTS (N=100) ---")
     for k, v in results.items():
         print(f"{k:25s}: Mean = {v['mean']:.4f} ms, P95 = {v['p95']:.4f} ms")
+
+
+if __name__ == "__main__":
+    asyncio.run(test_benchmark_master_phase01_to_phase09())
