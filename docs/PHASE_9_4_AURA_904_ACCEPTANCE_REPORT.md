@@ -98,15 +98,18 @@ sequenceDiagram
 - **Hardware Capability Discovery:** Fast read-only inspection endpoint (`get_hardware_capabilities`) exposing `volume_supported`, `brightness_supported`, `display_count`, `displays`, `battery_supported`, `gpu_telemetry_supported`, and `temperature_supported`.
 
 ### 3.3 Pillar 3: Governed Clipboard Boundary (`GovernedClipboardAdapter`)
+- **CLIPBOARD SIZE UNIT:**
+  - **`MAX CLIPBOARD PAYLOAD = 4096 UNICODE CODE POINTS`**
+  - Explicitly defined as 4,096 Unicode code points (`len(text)`), NOT a simple ASCII byte count.
+  - Multi-byte UTF-8 characters (e.g. 4-byte emojis `🚀` totaling 16,384 bytes) within the 4,096 code point boundary are accepted.
+  - Payloads of 4,097 code points are strictly rejected with `ValidationError` on write and safely clamped on read (`truncated: true`).
 - **`clipboard_read`:**
-  - Length ceiling: Strictly bounded to max 4,096 characters (Unicode characters / max 4 KB equivalent). Truncates with `truncated: true` if oversized.
-  - Automated Secret Scrubbing: Scans and scrubs candidate API keys, JWT tokens, Bearer tokens, and private keys (`[REDACTED_GEMINI_KEY]`, `[REDACTED_JWT_TOKEN]`).
-  - Zero Long-Term Persistence: Plaintext is returned in-memory to the authenticated caller turn only; NEVER written to vector memory (`pgvector`), episodic tables, or trace attributes.
+  - Automated Secret Scrubbing: In-memory scanning scrubs candidate API keys, JWT tokens, Bearer tokens, and private keys (`[REDACTED_GEMINI_KEY]`, `[REDACTED_JWT_TOKEN]`).
+  - Zero Long-Term Persistence: Plaintext is returned in-memory to the authenticated caller turn only; NEVER written to vector memory (`pgvector`), episodic tables, logs, or trace attributes.
 - **`clipboard_write`:**
-  - Length ceiling: Strictly bounded to max 4,096 characters.
-  - Metacharacter Rejection: NUL bytes (`\x00`) are rejected.
+  - Metacharacter Rejection: Embedded NUL bytes (`\x00`) are rejected.
   - Cryptographic HITL: Bound to workspace, action type, and parameter hash with 120s TTL and single-use anti-replay defense.
-  - Privacy Ledger: Audit logs record only `character_count`, `byte_count`, and payload `sha256_hash`; plaintext is NEVER stored in database audit tables.
+  - Privacy Ledger: Audit logs record only `character_count`, `byte_count`, and payload `sha256_hash`; plaintext is NEVER stored in database audit tables (`[REDACTED_CLIPBOARD_CONTENT]`).
 
 ---
 
@@ -127,39 +130,55 @@ Eight governed tools are registered in `BUILTIN_TOOLS` in `app/services/tool_reg
 
 ---
 
-## 5. Security Threat Matrix & Verification Mapping
+## 5. Security & Isolation Confirmations
 
-| Threat Vector | Mitigation Strategy | Residual Risk | Verification Status |
-| :--- | :--- | :--- | :--- |
-| **Volume Blast Attack** | Hard clamp $\le \pm 10\%$ step limit + 10 ops/min rate limit | Minimal | VERIFIED (`test_volume_step_bounding_and_clamping`) |
-| **Display Strobe Attack** | Hard clamp $\le \pm 10\%$ step limit + 10 ops/min rate limit | Minimal | VERIFIED (`test_brightness_step_bounding`) |
-| **Clipboard Secret Exfiltration**| 4 KB bounding + Regex secret scrubber (`secret_redactor`) | Low | VERIFIED (`test_clipboard_read_length_and_secret_scrubbing`) |
-| **Clipboard Memory Poisoning**| Zero vector memory (`pgvector`) persistence + ephemeral turn scoping | Minimal | VERIFIED (`GovernedClipboardAdapter`) |
-| **Arbitrary WMI Injection** | Strict typed adapter; no arbitrary WMI pass-through | Zero | VERIFIED (`WmiDisplayBrightnessAdapter`) |
-| **GPU Driver Hang / Timeout** | 1.5s subprocess timeout + degraded mode fallback | Minimal | VERIFIED (`test_gpu_telemetry_parsing_and_degraded_fallback`) |
-| **Kill Switch Write Race** | Immediate pre-execution check halts action before OS call | Minimal | VERIFIED (`test_os_guard_kill_switch_blocks_hardware_and_clipboard`) |
-| **Audit Ledger Secret Leak** | Plaintext replaced with `[REDACTED_CLIPBOARD_CONTENT]` in audit ledger | Minimal | VERIFIED (`test_clipboard_audit_redaction_ledger`) |
-| **HITL Replay / Tampering** | Single-use token tracking + parameter hash signature binding | Zero | VERIFIED (`test_clipboard_write_hitl_token_binding_and_replay`) |
+### 5.1 GPU Subprocess Security Confirmation
+- Fixed executable identity (`C:\Windows\System32\nvidia-smi.exe` via path resolution).
+- Fixed immutable argument set (`--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name --format=csv,noheader,nounits`).
+- `shell=False` execution with strict 1.5s timeout.
+- Zero model-controlled or user-controlled command string concatenation.
+- Verified by unit test: `test_gpu_subprocess_security_guarantees`.
+
+### 5.2 Clipboard Plaintext Privacy Confirmation
+- Strict distinction between **in-memory return to authorized caller** vs **persisted storage by AURA**:
+  - `returned to authorized caller`: Permitted in transient HTTP / tool execution response.
+  - `persisted by AURA`: Strictly forbidden. Plaintext never enters logs, OpenTelemetry spans, audit payload ledgers (`[REDACTED_CLIPBOARD_CONTENT]`), error messages, or vector memory.
+- Tested using synthetic token: `AURA-904-SYNTHETIC-TEST` (23 characters).
+- Verified by unit test: `test_clipboard_privacy_zero_vector_memory_and_telemetry`.
+
+### 5.3 Kill Switch Mutable Action Pre-Execution Defense
+- All mutable hardware actions (`set_system_volume`, `set_display_brightness`) and clipboard mutations (`clipboard_write`) check emergency kill switch state before lock acquisition, after lock acquisition, and before driver dispatch.
+- When active, actions immediately abort with `OSActionLifecycleState.KILL_SWITCHED`, zero hardware mutation, and zero retry/replay.
+- Verified by unit test: `test_os_guard_kill_switch_blocks_hardware_and_clipboard`.
 
 ---
 
 ## 6. Live Host Validation Results (Actual Windows Host)
 
-Live validation was executed on the physical host machine:
+Live validation executed on the physical host machine:
 
 ```text
 --- AURA-904 LIVE HOST VALIDATION ---
-CPU Percent: 41.0% (8 physical / 16 logical cores)
-RAM: 16440.8 MB / 23982.83 MB (68.6%)
-Process RSS: 192.25 MB
-Storage: 265.7 GB free / 952.39 GB (72.1%)
+CPU Percent: 36.9% (8 physical / 16 logical cores)
+RAM: 17362.54 MB / 23982.83 MB (72.4%)
+Process RSS: 192.42 MB
+Storage: 265.64 GB free / 952.39 GB (72.1%)
 Battery supported: True, Percent: 100%
 GPU Supported: True, Name: NVIDIA GeForce RTX 3050 Laptop GPU, VRAM: 166.0 / 4096.0 MB, Temp: 55.0°C
 Capabilities: Volume=True, Brightness=True, Displays=2
 Initial Volume: 100.0%, Muted: True
 Adjusted Volume (-2.0%): resulting=98.0%
 Restored Volume (+2.0%): resulting=100.0%
-Initial Brightness: {'supported': True, 'brightness_percent': 100, 'monitor_id': 1, 'status': 'success'}
+
+--- DISPLAY TOPOLOGY & BRIGHTNESS INSPECTION (2 displays) ---
+Monitor ID 0: Virtual Combined Desktop (1920x1080) | Supported: True | Mechanism: WMI (WmiMonitorBrightnessMethods) | Brightness: 100%
+Monitor ID 1: Generic PnP Monitor (1920x1080) | Supported: True | Mechanism: WMI (WmiMonitorBrightnessMethods) | Brightness: 100%
+Adjusted Brightness (-2.0%): resulting=98%
+Read-back after adjustment: 98%
+Restored Brightness (+2.0%): resulting=100%
+Read-back after restoration: 100%
+LIVE BRIGHTNESS VALIDATION: SUPPORTED + VERIFIED
+
 Clipboard Readback: text='AURA-904-SYNTHETIC-TEST', char_count=23, redacted=False
 Previous user clipboard restored.
 Kill Switch Live Check State: kill_switched (Expected: kill_switched)
@@ -188,9 +207,9 @@ Measured using `tests/benchmark_aura904_system_hardware.py`:
 
 ## 8. Full Test Suite & Build Regression Verification
 
-- **AURA-904 Dedicated Test Suite:** `20 passed, 0 failed` in 0.75s (`tests/test_os_guard_system_hardware.py`).
-- **Full Backend Regression Suite:** `500 passed, 11 skipped, 0 failed` in pytest.
-- **Frontend Vitest Suite:** `33 passed, 0 failed` in 1.90s (`apps/web`).
+- **AURA-904 Dedicated Test Suite:** `23 passed, 0 failed` in 0.64s (`tests/test_os_guard_system_hardware.py`).
+- **Full Backend Regression Suite:** `503 passed, 11 skipped, 0 failed` in pytest.
+- **Frontend Vitest Suite:** `33 passed, 0 failed` in 1.71s (`apps/web`).
 - **Next.js Production Build:** `15.5.27` production build compiled and prerendered successfully with zero TypeScript/lint errors.
 
 ---

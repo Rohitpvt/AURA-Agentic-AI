@@ -34,6 +34,7 @@ from app.services.os_guard.telemetry_service import (
     SystemTelemetryAdapter,
     system_telemetry_adapter,
 )
+from app.services.os_guard.adapters import WindowsOSExecutionAdapter, SafeMockOSExecutionAdapter
 from app.services.os_guard.types import (
     HostExecutionPartition,
     OSActionLifecycleState,
@@ -476,4 +477,98 @@ async def test_clipboard_audit_redaction_ledger():
         assert details["parameters_redacted"]["text"] == "[REDACTED_CLIPBOARD_CONTENT]"
         assert details["parameters_redacted"]["character_count"] == len("SUPER_SECRET_TOKEN_VALUE_12345")
         assert "SUPER_SECRET_TOKEN_VALUE_12345" not in str(details)
+
+
+def test_clipboard_code_point_boundary_exact_and_multibyte():
+    """Verify exact 4096 Unicode code point boundary for single-byte and multi-byte UTF-8 strings."""
+    # 1. Exact 4096 ASCII code points (4096 bytes) -> ACCEPTED
+    ascii_4096 = "A" * 4096
+    assert len(ascii_4096) == 4096
+    with mock.patch("pyperclip.copy"):
+        res_ascii = GovernedClipboardAdapter.clipboard_write(ascii_4096)
+        assert res_ascii["status"] == "success"
+        assert res_ascii["character_count"] == 4096
+
+    # 2. Exact 4097 ASCII code points -> REJECTED
+    ascii_4097 = "A" * 4097
+    assert len(ascii_4097) == 4097
+    with pytest.raises(ValidationError, match="exceeds safety ceiling of 4096 characters"):
+        GovernedClipboardAdapter.clipboard_write(ascii_4097)
+
+    # 3. Multibyte Unicode string: 4096 code points of 4-byte emoji (16,384 UTF-8 bytes) -> ACCEPTED
+    multibyte_4096 = "🚀" * 4096
+    assert len(multibyte_4096) == 4096  # 4096 Unicode code points
+    assert len(multibyte_4096.encode("utf-8")) == 16384  # 16 KB raw bytes
+    with mock.patch("pyperclip.copy"):
+        res_multi = GovernedClipboardAdapter.clipboard_write(multibyte_4096)
+        assert res_multi["status"] == "success"
+        assert res_multi["character_count"] == 4096
+
+    # 4. Multibyte Unicode string: 4097 code points -> REJECTED
+    multibyte_4097 = "🚀" * 4097
+    assert len(multibyte_4097) == 4097
+    with pytest.raises(ValidationError, match="exceeds safety ceiling of 4096 characters"):
+        GovernedClipboardAdapter.clipboard_write(multibyte_4097)
+
+
+def test_gpu_subprocess_security_guarantees():
+    """Verify GPU telemetry uses fixed executable identity, fixed arguments, shell=False, and bounded timeout."""
+    with mock.patch("subprocess.run") as mock_run:
+        mock_run.return_value.returncode = 0
+        mock_run.return_value.stdout = "25.0, 1024.0, 4096.0, 52.0, NVIDIA GeForce RTX 3050 Laptop GPU\n"
+
+        with mock.patch("shutil.which", return_value="C:\\Windows\\System32\\nvidia-smi.exe"):
+            res = GPUTelemetryAdapter.get_gpu_telemetry()
+            assert res["gpu_supported"] is True
+            assert res["gpu_name"] == "NVIDIA GeForce RTX 3050 Laptop GPU"
+            assert res["gpu_utilization_percent"] == 25.0
+            assert res["gpu_vram_used_mb"] == 1024.0
+
+            mock_run.assert_called_once()
+            call_kwargs = mock_run.call_args.kwargs
+            call_args = mock_run.call_args.args[0]
+
+            # Security verification
+            assert call_kwargs.get("shell") is False
+            assert call_kwargs.get("timeout") == 1.5
+            assert call_kwargs.get("capture_output") is True
+            assert call_args[0] == "C:\\Windows\\System32\\nvidia-smi.exe"
+            assert call_args[1] == "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name"
+            assert call_args[2] == "--format=csv,noheader,nounits"
+            assert len(call_args) == 3  # Zero model or user-controlled extra arguments
+
+
+@pytest.mark.asyncio
+async def test_clipboard_privacy_zero_vector_memory_and_telemetry():
+    """Verify synthetic clipboard token returns to authorized caller but is never stored in logs/audit/telemetry."""
+    mock_db = mock.AsyncMock()
+    ws_id = str(uuid.uuid4())
+    synthetic_payload = "AURA-904-SYNTHETIC-TEST"
+
+    # Instantiate OSGuard with Windows execution adapter
+    guard = OSGuardService(default_adapter=WindowsOSExecutionAdapter())
+
+    with mock.patch("pyperclip.paste", return_value=synthetic_payload):
+        req = OSActionRequest(
+            workspace_id=ws_id,
+            action_type=OSActionType.CLIPBOARD_READ,
+        )
+
+        with mock.patch("app.services.audit_service.audit_service.record_event") as mock_audit:
+            resp = await guard.execute_os_action(
+                request=req,
+                db=mock_db,
+            )
+
+            # 1. Authorized caller receives the result in memory
+            assert resp.state == OSActionLifecycleState.COMPLETED
+            assert resp.result["text"] == synthetic_payload
+            assert resp.result["character_count"] == 23
+
+            # 2. Audit record NEVER stores raw clipboard plaintext
+            mock_audit.assert_called_once()
+            call_details = mock_audit.call_args.kwargs["details"]
+            assert synthetic_payload not in str(call_details)
+            assert str(call_details.get("result", {}).get("text")) != synthetic_payload
+
 

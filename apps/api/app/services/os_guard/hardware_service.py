@@ -339,12 +339,14 @@ class WmiDisplayBrightnessAdapter:
 
             new_brightness = max(0, min(100, new_brightness))
 
-            # 4. Dispatch WMI Brightness Mutation (Timeout 10s via WMI parameter)
-            # WmiSetBrightness(Timeout in seconds, Brightness 0-100)
-            target_method.WmiSetBrightness(5, new_brightness)
+            # 4. Dispatch WMI Brightness Mutation (Timeout 5s via WMI parameter)
+            in_params = target_method.Methods_("WmiSetBrightness").InParameters.SpawnInstance_()
+            in_params.Timeout = 5
+            in_params.Brightness = new_brightness
+            target_method.ExecMethod_("WmiSetBrightness", in_params)
 
-            # 5. Read Back and Verify
-            time.sleep(0.05)
+            # 5. Read Back and Verify (allow hardware driver propagation)
+            time.sleep(0.12)
             verify_info = cls.get_brightness(monitor_id=monitor_id)
             resulting_b = verify_info.get("brightness_percent", new_brightness)
 
