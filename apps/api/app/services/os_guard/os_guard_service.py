@@ -236,11 +236,15 @@ class OSGuardService:
             ws_id = uuid.UUID(request.workspace_id) if isinstance(request.workspace_id, str) else request.workspace_id
             clean_params = secret_redactor.redact_structure(request.parameters)
 
-            # Explicit privacy protection for typed text content
+            # Explicit privacy protection for typed text content and clipboard payload
             if "text" in clean_params:
-                typed_len = len(str(request.parameters.get("text", "")))
-                clean_params["text"] = "[REDACTED_TYPED_CONTENT]"
-                clean_params["typed_character_count"] = typed_len
+                payload_len = len(str(request.parameters.get("text", "")))
+                if request.action_type == OSActionType.CLIPBOARD_WRITE:
+                    clean_params["text"] = "[REDACTED_CLIPBOARD_CONTENT]"
+                    clean_params["character_count"] = payload_len
+                else:
+                    clean_params["text"] = "[REDACTED_TYPED_CONTENT]"
+                    clean_params["typed_character_count"] = payload_len
 
             details = {
                 "action_id": request.action_id,

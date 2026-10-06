@@ -69,7 +69,7 @@ ACTION_RISK_MAP: Dict[OSActionType, OSRiskTier] = {
     OSActionType.CLIPBOARD_WRITE: OSRiskTier.MEDIUM_RISK_INTERACTION,
     OSActionType.APPLICATION_LAUNCH: OSRiskTier.HIGH_RISK_SYSTEM_ACTION,
     OSActionType.PROCESS_TERMINATE: OSRiskTier.HIGH_RISK_SYSTEM_ACTION,
-    OSActionType.HARDWARE_CONTROL: OSRiskTier.HIGH_RISK_SYSTEM_ACTION,
+    OSActionType.HARDWARE_CONTROL: OSRiskTier.LOW_RISK_WRITE,
 }
 
 # Host Execution Partition Mapping
@@ -85,9 +85,9 @@ ACTION_PARTITION_MAP: Dict[OSActionType, HostExecutionPartition] = {
     OSActionType.PRESS_KEY: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.KEYBOARD_SHORTCUT: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.CLIPBOARD_WRITE: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
+    OSActionType.HARDWARE_CONTROL: HostExecutionPartition.HOST_REQUIRED_GOVERNED,
     OSActionType.APPLICATION_LAUNCH: HostExecutionPartition.PRIVILEGED_HOST,
     OSActionType.PROCESS_TERMINATE: HostExecutionPartition.PRIVILEGED_HOST,
-    OSActionType.HARDWARE_CONTROL: HostExecutionPartition.PRIVILEGED_HOST,
 }
 
 # Sliding-Window Rate Limits (Operations per 60 Seconds)
@@ -100,8 +100,10 @@ RATE_LIMIT_BUCKETS: Dict[str, int] = {
     "keyboard_shortcut": 10,
     "application_launch": 5,
     "process_terminate": 5,
+    "system_telemetry": 60,
     "hardware_control": 10,
-    "clipboard_write": 30,
+    "clipboard_read": 30,
+    "clipboard_write": 10,
     "default": 60,
 }
 
@@ -143,8 +145,22 @@ class OSPolicyEngine:
         self.rate_limiter = SlidingWindowRateLimiter()
         self._consumed_hitl_tokens: Set[str] = set()
 
-    def get_risk_tier(self, action_type: OSActionType) -> OSRiskTier:
-        """Deterministically map action type to risk tier."""
+    def get_risk_tier(self, action_type: OSActionType, parameters: Optional[Dict[str, Any]] = None) -> OSRiskTier:
+        """Deterministically map action type and parameters to risk tier."""
+        if action_type == OSActionType.HARDWARE_CONTROL and parameters:
+            ctrl = str(parameters.get("control_type") or parameters.get("action") or "").lower().strip()
+            if ctrl in ("get_volume", "get_brightness", "get_capabilities", "get_hardware_capabilities"):
+                return OSRiskTier.READ_ONLY
+            elif ctrl in ("set_volume", "set_brightness", "set_system_volume", "set_display_brightness"):
+                step = parameters.get("relative_step_percent")
+                if step is not None:
+                    try:
+                        if abs(float(step)) > 10.0:
+                            return OSRiskTier.HIGH_RISK_SYSTEM_ACTION
+                    except (ValueError, TypeError):
+                        return OSRiskTier.HIGH_RISK_SYSTEM_ACTION
+                return OSRiskTier.LOW_RISK_WRITE
+
         return ACTION_RISK_MAP.get(action_type, OSRiskTier.CRITICAL_ACTION)
 
     def get_partition(self, action_type: OSActionType) -> HostExecutionPartition:
@@ -157,7 +173,7 @@ class OSPolicyEngine:
         autonomy_level: int = 3,
     ) -> PolicyDecisionResult:
         """Evaluate action against deterministic policy rules, rate limits, and HITL authorization."""
-        risk_tier = self.get_risk_tier(request.action_type)
+        risk_tier = self.get_risk_tier(request.action_type, request.parameters)
         partition = self.get_partition(request.action_type)
 
         # 1. Reject Forbidden Partition
@@ -347,6 +363,78 @@ class OSPolicyEngine:
             is_valid, err, _ = KeyboardInputValidator.validate_keyboard_shortcut(shortcut)
             if not is_valid:
                 return err
+
+        # 8. Hardware Control Parameter Inspection
+        if action_type == OSActionType.HARDWARE_CONTROL:
+            ctrl = str(params.get("control_type") or params.get("action") or "").lower().strip()
+            allowed_controls = {
+                "get_volume", "set_volume", "get_system_volume", "set_system_volume",
+                "get_brightness", "set_brightness", "get_display_brightness", "set_display_brightness",
+                "get_capabilities", "get_hardware_capabilities",
+            }
+            if not ctrl:
+                return "Hardware control request missing 'control_type' or 'action' parameter."
+            if ctrl not in allowed_controls:
+                return f"Hardware control '{ctrl}' is not supported. Allowed: {sorted(list(allowed_controls))}"
+
+            # Volume adjustment bounds check
+            if ctrl in ("set_volume", "set_system_volume"):
+                rel_step = params.get("relative_step_percent")
+                if rel_step is not None:
+                    try:
+                        step_val = float(rel_step)
+                        if abs(step_val) > 10.0:
+                            return f"Relative volume step {step_val:+.1f}% exceeds safety ceiling of +/-10.0%."
+                    except (ValueError, TypeError):
+                        return "Parameter 'relative_step_percent' must be a valid number."
+
+                tgt_vol = params.get("target_volume_percent")
+                if tgt_vol is not None:
+                    try:
+                        tgt_val = float(tgt_vol)
+                        if tgt_val < 0.0 or tgt_val > 100.0:
+                            return f"Target volume {tgt_val:.1f}% is out of bounds (0.0% to 100.0%)."
+                    except (ValueError, TypeError):
+                        return "Parameter 'target_volume_percent' must be a valid number."
+
+            # Brightness adjustment bounds check
+            if ctrl in ("set_brightness", "set_display_brightness"):
+                rel_step = params.get("relative_step_percent")
+                if rel_step is not None:
+                    try:
+                        step_val = float(rel_step)
+                        if abs(step_val) > 10.0:
+                            return f"Relative brightness step {step_val:+.1f}% exceeds safety ceiling of +/-10.0%."
+                    except (ValueError, TypeError):
+                        return "Parameter 'relative_step_percent' must be a valid number."
+
+                tgt_b = params.get("target_brightness_percent")
+                if tgt_b is not None:
+                    try:
+                        tgt_b_val = int(tgt_b)
+                        if tgt_b_val < 0 or tgt_b_val > 100:
+                            return f"Target brightness {tgt_b_val}% is out of bounds (0% to 100%)."
+                    except (ValueError, TypeError):
+                        return "Parameter 'target_brightness_percent' must be a valid integer."
+
+                mon_id = params.get("monitor_id")
+                if mon_id is not None:
+                    try:
+                        m_int = int(mon_id)
+                        if m_int < 1:
+                            return f"Invalid monitor_id {m_int}. Must be >= 1."
+                    except (ValueError, TypeError):
+                        return "Parameter 'monitor_id' must be a valid integer."
+
+        # 9. Clipboard Write Parameter Inspection
+        if action_type == OSActionType.CLIPBOARD_WRITE:
+            text = params.get("text")
+            if text is None or not isinstance(text, str):
+                return "Clipboard write payload 'text' is required and must be a string."
+            if len(text) > 4096:
+                return f"Clipboard payload length ({len(text)} characters) exceeds safety ceiling of 4096 characters."
+            if "\x00" in text:
+                return "NUL byte ('\\x00') detected in clipboard payload. Injection prohibited."
 
         return None
 

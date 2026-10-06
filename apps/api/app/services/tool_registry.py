@@ -29,11 +29,19 @@ from app.services.tools.vision_tools import (
 )
 from app.services.tools.os_tools import (
     execute_click_mouse,
+    execute_clipboard_read,
+    execute_clipboard_write,
+    execute_get_display_brightness,
+    execute_get_hardware_capabilities,
+    execute_get_system_telemetry,
+    execute_get_system_volume,
     execute_inspect_processes,
     execute_keyboard_shortcut,
     execute_launch_application,
     execute_move_mouse,
     execute_press_key,
+    execute_set_display_brightness,
+    execute_set_system_volume,
     execute_terminate_process,
     execute_type_text,
 )
@@ -762,6 +770,261 @@ BUILTIN_TOOLS: Dict[str, Dict[str, Any]] = {
         },
         "handler": execute_keyboard_shortcut,
     },
+    "get_system_telemetry": {
+        "name": "get_system_telemetry",
+        "display_name": "Get System Telemetry (Read-Only)",
+        "description": "Query comprehensive local system metrics: CPU, RAM, Process RSS, GPU, VRAM, Storage, Battery, and Display Topology.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "cpu": {"type": "object"},
+                "ram": {"type": "object"},
+                "storage": {"type": "object"},
+                "battery": {"type": "object"},
+                "gpu": {"type": "object"},
+                "temperature": {"type": "object"},
+                "displays": {"type": "object"},
+            },
+        },
+        "handler": execute_get_system_telemetry,
+    },
+    "get_hardware_capabilities": {
+        "name": "get_hardware_capabilities",
+        "display_name": "Get Hardware Capabilities (Read-Only)",
+        "description": "Inspect which hardware controls (volume, brightness, battery, GPU telemetry) are supported on this Windows host.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "volume_supported": {"type": "boolean"},
+                "brightness_supported": {"type": "boolean"},
+                "display_count": {"type": "integer"},
+                "displays": {"type": "array"},
+                "battery_supported": {"type": "boolean"},
+                "gpu_telemetry_supported": {"type": "boolean"},
+                "temperature_supported": {"type": "boolean"},
+            },
+        },
+        "handler": execute_get_hardware_capabilities,
+    },
+    "get_system_volume": {
+        "name": "get_system_volume",
+        "display_name": "Get System Volume (Read-Only)",
+        "description": "Read the current master system audio volume percentage (0-100%) and mute state via Windows Core Audio.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "volume_percent": {"type": "number"},
+                "volume_scalar": {"type": "number"},
+                "is_muted": {"type": "boolean"},
+                "supported": {"type": "boolean"},
+            },
+        },
+        "handler": execute_get_system_volume,
+    },
+    "set_system_volume": {
+        "name": "set_system_volume",
+        "display_name": "Set System Volume (Governed OS)",
+        "description": "Adjust master system audio volume with bounded steps (max +/-10%) or toggle mute via Windows Core Audio.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 10,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "relative_step_percent": {
+                    "type": "number",
+                    "description": "Relative percentage volume step (strictly clamped between -10.0 and +10.0)",
+                },
+                "target_volume_percent": {
+                    "type": "number",
+                    "description": "Absolute target volume percentage (0.0 to 100.0, step clamped)",
+                },
+                "mute": {
+                    "type": "boolean",
+                    "description": "Optional mute state toggle (true = muted, false = unmuted)",
+                },
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "previous_volume_percent": {"type": "number"},
+                "current_volume_percent": {"type": "number"},
+                "is_muted": {"type": "boolean"},
+                "delta_percent": {"type": "number"},
+                "rollback_available": {"type": "boolean"},
+            },
+        },
+        "handler": execute_set_system_volume,
+    },
+    "get_display_brightness": {
+        "name": "get_display_brightness",
+        "display_name": "Get Display Brightness (Read-Only)",
+        "description": "Query the current brightness percentage for a target display monitor via Windows WMI / DDC-CI.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 60,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "monitor_id": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Target monitor ID index (1-based)",
+                },
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "brightness_percent": {"type": "integer"},
+                "monitor_id": {"type": "integer"},
+                "supported": {"type": "boolean"},
+            },
+        },
+        "handler": execute_get_display_brightness,
+    },
+    "set_display_brightness": {
+        "name": "set_display_brightness",
+        "display_name": "Set Display Brightness (Governed OS)",
+        "description": "Adjust monitor brightness with bounded steps (max +/-10%) via Windows WMI / DDC-CI.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 10,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "monitor_id": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Target monitor ID index (1-based)",
+                },
+                "relative_step_percent": {
+                    "type": "number",
+                    "description": "Relative percentage brightness step (strictly clamped between -10.0 and +10.0)",
+                },
+                "target_brightness_percent": {
+                    "type": "integer",
+                    "description": "Absolute target brightness percentage (0 to 100)",
+                },
+            },
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "monitor_id": {"type": "integer"},
+                "previous_brightness_percent": {"type": "integer"},
+                "current_brightness_percent": {"type": "integer"},
+                "delta_percent": {"type": "integer"},
+                "rollback_available": {"type": "boolean"},
+            },
+        },
+        "handler": execute_set_display_brightness,
+    },
+    "clipboard_read": {
+        "name": "clipboard_read",
+        "display_name": "Read Clipboard (Governed OS)",
+        "description": "Read text from the host clipboard (bounded to 4096 chars) with automated secret scrubbing (API keys, JWTs). Never persisted.",
+        "category": "os_control",
+        "risk_level": "low",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 30,
+        "requires_approval": False,
+        "is_allowed_in_background": True,
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "text": {"type": "string"},
+                "character_count": {"type": "integer"},
+                "original_length": {"type": "integer"},
+                "truncated": {"type": "boolean"},
+                "redacted": {"type": "boolean"},
+            },
+        },
+        "handler": execute_clipboard_read,
+    },
+    "clipboard_write": {
+        "name": "clipboard_write",
+        "display_name": "Write Clipboard (Governed OS)",
+        "description": "Write bounded text (max 4096 chars) to the host clipboard with cryptographic HITL approval. Plaintext is never logged in audit.",
+        "category": "os_control",
+        "risk_level": "medium",
+        "timeout_seconds": 5,
+        "rate_limit_per_minute": 10,
+        "requires_approval": False,
+        "is_allowed_in_background": False,
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "Text payload to write to the clipboard (max 4096 chars, no NUL bytes)",
+                },
+            },
+            "required": ["text"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "status": {"type": "string"},
+                "action": {"type": "string"},
+                "character_count": {"type": "integer"},
+                "byte_count": {"type": "integer"},
+                "sha256_hash": {"type": "string"},
+            },
+        },
+        "handler": execute_clipboard_write,
+    },
 }
 
 
@@ -1150,3 +1413,4 @@ class ToolRegistryService:
 
 
 tool_registry = ToolRegistryService()
+tool_registry_service = tool_registry

@@ -46,6 +46,12 @@ class WindowsOSExecutionAdapter(BaseOSExecutionAdapter):
             return await self._execute_process_terminate(action)
         elif action.action_type in (OSActionType.READ_ONLY, OSActionType.SYSTEM_TELEMETRY):
             return await self._execute_inspection_or_telemetry(action)
+        elif action.action_type == OSActionType.HARDWARE_CONTROL:
+            return await self._execute_hardware_control(action)
+        elif action.action_type == OSActionType.CLIPBOARD_READ:
+            return await self._execute_clipboard_read(action)
+        elif action.action_type == OSActionType.CLIPBOARD_WRITE:
+            return await self._execute_clipboard_write(action)
         elif action.action_type == OSActionType.MOUSE_MOVE:
             return await self._execute_mouse_move(action)
         elif action.action_type == OSActionType.MOUSE_CLICK:
@@ -175,15 +181,68 @@ class WindowsOSExecutionAdapter(BaseOSExecutionAdapter):
                 "processes": proc_list,
             }
 
-        # Otherwise system telemetry
-        return {
-            "status": "success",
-            "telemetry": {
-                "cpu_percent": psutil.cpu_percent(interval=0.0),
-                "ram_percent": psutil.virtual_memory().percent,
-                "disk_free_gb": round(psutil.disk_usage(os.path.abspath(os.sep)).free / (1024.0**3), 2),
-            },
-        }
+        if action.parameters.get("query_type") in ("hardware_capabilities", "get_capabilities", "get_hardware_capabilities") or "capabilities" in params:
+            from app.services.os_guard.hardware_service import capability_discovery_service
+            return capability_discovery_service.get_hardware_capabilities()
+
+        # Comprehensive system & hardware telemetry
+        from app.services.os_guard.telemetry_service import system_telemetry_adapter
+        return system_telemetry_adapter.get_system_telemetry()
+
+    async def _execute_hardware_control(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed hardware controls (master volume, display brightness, capability discovery)."""
+        from app.services.os_guard.hardware_service import (
+            capability_discovery_service,
+            core_audio_volume_adapter,
+            wmi_display_brightness_adapter,
+        )
+
+        params = action.parameters
+        ctrl = str(params.get("control_type") or params.get("action") or "").lower().strip()
+
+        if ctrl in ("get_volume", "get_system_volume"):
+            return core_audio_volume_adapter.get_volume()
+        elif ctrl in ("set_volume", "set_system_volume"):
+            rel_step = params.get("relative_step_percent")
+            step_float = float(rel_step) if rel_step is not None else None
+            tgt_vol = params.get("target_volume_percent")
+            tgt_float = float(tgt_vol) if tgt_vol is not None else None
+            mute_val = params.get("mute")
+            mute_bool = bool(mute_val) if mute_val is not None else None
+            return core_audio_volume_adapter.set_volume(
+                relative_step_percent=step_float,
+                target_volume_percent=tgt_float,
+                mute=mute_bool,
+            )
+        elif ctrl in ("get_brightness", "get_display_brightness"):
+            mon_id = int(params.get("monitor_id", 1))
+            return wmi_display_brightness_adapter.get_brightness(monitor_id=mon_id)
+        elif ctrl in ("set_brightness", "set_display_brightness"):
+            mon_id = int(params.get("monitor_id", 1))
+            rel_step = params.get("relative_step_percent")
+            step_float = float(rel_step) if rel_step is not None else None
+            tgt_b = params.get("target_brightness_percent")
+            tgt_int = int(tgt_b) if tgt_b is not None else None
+            return wmi_display_brightness_adapter.set_brightness(
+                monitor_id=mon_id,
+                relative_step_percent=step_float,
+                target_brightness_percent=tgt_int,
+            )
+        elif ctrl in ("get_capabilities", "get_hardware_capabilities"):
+            return capability_discovery_service.get_hardware_capabilities()
+        else:
+            raise ValueError(f"Unsupported hardware control type: '{ctrl}'")
+
+    async def _execute_clipboard_read(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed clipboard read with secret redaction and length ceiling."""
+        from app.services.os_guard.clipboard_service import governed_clipboard_adapter
+        return governed_clipboard_adapter.clipboard_read()
+
+    async def _execute_clipboard_write(self, action: OSActionRequest) -> Dict[str, Any]:
+        """Execute governed clipboard write with NUL rejection and length bounding."""
+        from app.services.os_guard.clipboard_service import governed_clipboard_adapter
+        text = str(action.parameters.get("text", ""))
+        return governed_clipboard_adapter.clipboard_write(text=text)
 
     async def _execute_mouse_move(self, action: OSActionRequest) -> Dict[str, Any]:
         """Execute governed mouse move using PyAutoGUI with failsafe protection."""
@@ -430,6 +489,82 @@ class SafeMockOSExecutionAdapter(BaseOSExecutionAdapter):
                 "process_name": action.parameters.get("expected_name", "app.exe"),
                 "create_time": action.parameters.get("expected_create_time", 1728000000.0),
                 "outcome": "TERMINATED",
+            }
+        elif action.action_type == OSActionType.HARDWARE_CONTROL:
+            params = action.parameters
+            ctrl = str(params.get("control_type") or params.get("action") or "").lower().strip()
+            if ctrl in ("get_volume", "get_system_volume"):
+                return {
+                    "status": "success",
+                    "volume_scalar": 0.50,
+                    "volume_percent": 50.0,
+                    "is_muted": False,
+                    "supported": True,
+                }
+            elif ctrl in ("set_volume", "set_system_volume"):
+                step = float(params.get("relative_step_percent") or 0.0)
+                new_vol = max(0.0, min(100.0, 50.0 + step))
+                return {
+                    "status": "success",
+                    "previous_volume_percent": 50.0,
+                    "previous_muted": False,
+                    "current_volume_percent": new_vol,
+                    "current_volume_scalar": round(new_vol / 100.0, 4),
+                    "is_muted": bool(params.get("mute", False)),
+                    "delta_percent": step,
+                    "rollback_available": True,
+                }
+            elif ctrl in ("get_brightness", "get_display_brightness"):
+                return {
+                    "supported": True,
+                    "brightness_percent": 80,
+                    "monitor_id": int(params.get("monitor_id", 1)),
+                    "status": "success",
+                }
+            elif ctrl in ("set_brightness", "set_display_brightness"):
+                step = float(params.get("relative_step_percent") or 0.0)
+                new_b = max(0, min(100, int(80 + step)))
+                return {
+                    "status": "success",
+                    "monitor_id": int(params.get("monitor_id", 1)),
+                    "previous_brightness_percent": 80,
+                    "current_brightness_percent": new_b,
+                    "delta_percent": int(step),
+                    "rollback_available": True,
+                }
+            elif ctrl in ("get_capabilities", "get_hardware_capabilities"):
+                return {
+                    "status": "success",
+                    "volume_supported": True,
+                    "brightness_supported": True,
+                    "display_count": 1,
+                    "displays": [{"monitor_id": 1, "name": "Mock Display", "brightness_supported": True}],
+                    "battery_supported": True,
+                    "gpu_telemetry_supported": True,
+                    "temperature_supported": True,
+                }
+            return {
+                "status": "success",
+                "action": "hardware_control",
+                "control_type": ctrl,
+            }
+        elif action.action_type == OSActionType.CLIPBOARD_READ:
+            return {
+                "status": "success",
+                "text": "mock clipboard content",
+                "character_count": 22,
+                "original_length": 22,
+                "truncated": False,
+                "redacted": False,
+            }
+        elif action.action_type == OSActionType.CLIPBOARD_WRITE:
+            text = str(action.parameters.get("text", ""))
+            return {
+                "status": "success",
+                "action": "clipboard_write",
+                "character_count": len(text),
+                "byte_count": len(text.encode("utf-8")),
+                "sha256_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             }
         elif action.action_type == OSActionType.MOUSE_MOVE:
             return {

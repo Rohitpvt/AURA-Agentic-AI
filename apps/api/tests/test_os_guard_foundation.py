@@ -111,7 +111,7 @@ def test_deterministic_risk_classification():
     assert engine.get_risk_tier(OSActionType.CLIPBOARD_WRITE) == OSRiskTier.MEDIUM_RISK_INTERACTION
     assert engine.get_risk_tier(OSActionType.APPLICATION_LAUNCH) == OSRiskTier.HIGH_RISK_SYSTEM_ACTION
     assert engine.get_risk_tier(OSActionType.PROCESS_TERMINATE) == OSRiskTier.HIGH_RISK_SYSTEM_ACTION
-    assert engine.get_risk_tier(OSActionType.HARDWARE_CONTROL) == OSRiskTier.HIGH_RISK_SYSTEM_ACTION
+    assert engine.get_risk_tier(OSActionType.HARDWARE_CONTROL) == OSRiskTier.LOW_RISK_WRITE
 
 
 def test_host_execution_partitioning():
@@ -122,7 +122,7 @@ def test_host_execution_partitioning():
     assert engine.get_partition(OSActionType.MOUSE_CLICK) == HostExecutionPartition.HOST_REQUIRED_GOVERNED
     assert engine.get_partition(OSActionType.APPLICATION_LAUNCH) == HostExecutionPartition.PRIVILEGED_HOST
     assert engine.get_partition(OSActionType.PROCESS_TERMINATE) == HostExecutionPartition.PRIVILEGED_HOST
-    assert engine.get_partition(OSActionType.HARDWARE_CONTROL) == HostExecutionPartition.PRIVILEGED_HOST
+    assert engine.get_partition(OSActionType.HARDWARE_CONTROL) == HostExecutionPartition.HOST_REQUIRED_GOVERNED
 
 
 # ==============================================================================

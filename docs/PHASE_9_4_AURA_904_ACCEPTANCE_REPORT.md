@@ -1,0 +1,215 @@
+# PHASE 9.4 AURA-904 ACCEPTANCE REPORT: SYSTEM TELEMETRY, HARDWARE CONTROLS & GOVERNED CLIPBOARD
+
+**Milestone:** AURA-904 — System Telemetry & Hardware Control Boundary  
+**Phase:** Phase 9 (Governed Operating System & Hardware Control Automation)  
+**Date:** October 6, 2026  
+**Status:** COMPLETE & ACCEPTED  
+**Host Platform:** Windows 11 Home (AMD Ryzen 7 4800H 8-Core/16-Thread, 24 GB RAM, NVIDIA GeForce RTX 3050 Laptop GPU 4 GB VRAM)  
+**Baseline Commits:** `2acf30e` (AURA-903), `d42c3ca` (AURA-904 Preflight)  
+
+---
+
+## 1. Executive Summary & Canonical Scope Reconciliation
+
+AURA-904 delivers the foundational system telemetry, governed hardware adjustments, and bounded host clipboard access plane for AURA under strict deterministic governance and zero cloud cost ($0.00 zero-cost floor).
+
+The canonical scope is partitioned strictly into three pillars:
+```text
+AURA-904
+├── PILLAR 1: Read-Only System & Hardware Telemetry
+│   ├── CPU Utilization (Total, per-core, physical/logical counts) via psutil
+│   ├── System RAM & Process RSS Memory via psutil
+│   ├── Storage Utilization (Total, free, percentage) via psutil
+│   ├── Battery & AC Power State via psutil.sensors_battery()
+│   ├── GPU Utilization, VRAM (Used/Total), and Temperature via local nvidia-smi
+│   └── Display Topology reused from AURA-801 ScreenCaptureService
+├── PILLAR 2: Governed Hardware Controls
+│   ├── Master System Audio Volume (get_system_volume, set_system_volume <= +/-10% step)
+│   ├── Display Brightness Control (get_display_brightness, set_display_brightness <= +/-10% step)
+│   └── Hardware Capability Discovery (get_hardware_capabilities)
+└── PILLAR 3: Governed Clipboard Boundary
+    ├── clipboard_read (bounded <= 4096 chars, automated secret scrubbing, zero vector memory persistence)
+    └── clipboard_write (bounded <= 4096 chars, NUL byte rejection, HMAC-SHA256 HITL, zero plaintext audit logging)
+```
+
+All generic execution hatches (`device_control`, `win32_call`, `wmi_query`, `execute_hardware`) remain permanently **FORBIDDEN** and hard-blocked.
+
+---
+
+## 2. Architecture & Governance Pipeline
+
+All AURA-904 operations route strictly through the unified governance pipeline:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Agent as Agent / Subagent / MCP
+    participant Bridge as AgentToolBridge
+    participant Registry as ToolRegistryService
+    participant Policy as OSPolicyEngine
+    participant Guard as OSGuardService
+    participant Adapter as System / Hardware / Clipboard Adapter
+    participant Host as Windows 11 Host Hardware
+    participant Audit as AuditService
+
+    Agent->>Bridge: Call Tool (e.g. get_system_telemetry, set_system_volume)
+    Bridge->>Registry: execute_tool(request)
+    Registry->>Guard: execute_os_action(OSActionRequest)
+    Guard->>Guard: Acquire Concurrency Lock & Probe Kill Switch
+    Guard->>Policy: evaluate_action(request, autonomy_level)
+    alt HITL Required & Missing
+        Policy-->>Guard: REQUIRE_HITL
+        Guard-->>Registry: WAITING_HITL
+    else Policy Allowed / Authorized
+        Policy-->>Guard: ALLOW
+        Guard->>Adapter: execute_validated_action(request)
+        Adapter->>Host: Typed Bounded OS/Driver Call
+        Host-->>Adapter: Raw Telemetry / Snapshot Result
+        Adapter-->>Guard: Sanitized Result (Redacted, Bounded)
+        Guard->>Audit: record_event(redacted_details)
+        Guard-->>Registry: COMPLETED (OSActionResponse)
+        Registry-->>Bridge: ToolExecutionResponse
+        Bridge-->>Agent: Governed Result
+    end
+```
+
+---
+
+## 3. Subsystem Implementation Specifications
+
+### 3.1 Pillar 1: System & GPU Telemetry (`SystemTelemetryAdapter` & `GPUTelemetryAdapter`)
+- **CPU & RAM:** Native `psutil` sampling providing aggregate CPU %, per-core CPU array, physical/logical processor counts, total RAM (24 GB), used RAM, available RAM, and AURA process RSS memory.
+- **Storage:** Bounded root partition capacity, available space, and percentage used with zero arbitrary filesystem traversal.
+- **Battery:** Probed via `psutil.sensors_battery()`. On desktop hosts without batteries, returns `battery_supported: false` with null readings without raising exceptions.
+- **GPU & VRAM Telemetry:** Safe local query to `nvidia-smi` using non-shell `subprocess.run` with a hard 1.5-second timeout and fixed argument set (`--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name --format=csv,noheader,nounits`).
+- **Degraded Fallback:** If `nvidia-smi` is not installed or returns an error, returns `gpu_supported: false` gracefully.
+- **Privacy Invariants:** Telemetry responses NEVER expose running process command-line arguments, environment variables, credentials, or user secrets.
+
+### 3.2 Pillar 2: Governed Hardware Controls (`CoreAudioVolumeAdapter` & `WmiDisplayBrightnessAdapter`)
+- **Master Audio Volume:** Uses Windows Core Audio COM interface `IAudioEndpointVolume` via `comtypes` / `ctypes`.
+  - Bounded Relative Adjustment: Strictly clamped to $-10.0\% \le \text{step} \le +10.0\%$.
+  - Large step attempts ($>10\%$) or large target jumps are hard-rejected with deterministic validation errors.
+  - Supports explicit mute and unmute toggle.
+  - Pre-action snapshot is captured prior to mutation for read-back verification and rollback.
+- **Display Brightness:** Uses Windows WMI `WmiMonitorBrightness` and `WmiMonitorBrightnessMethods` in the `root\wmi` namespace.
+  - Display validation: Target monitor ID is validated against AURA-801 display topology.
+  - Bounded Adjustment: Strictly clamped to $\le \pm 10\%$ per action.
+  - Graceful Fallback: External monitors lacking WMI/DDC-CI support raise `BrightnessControlNotSupportedError` / degraded status without crashing.
+- **Hardware Capability Discovery:** Fast read-only inspection endpoint (`get_hardware_capabilities`) exposing `volume_supported`, `brightness_supported`, `display_count`, `displays`, `battery_supported`, `gpu_telemetry_supported`, and `temperature_supported`.
+
+### 3.3 Pillar 3: Governed Clipboard Boundary (`GovernedClipboardAdapter`)
+- **`clipboard_read`:**
+  - Length ceiling: Strictly bounded to max 4,096 characters (Unicode characters / max 4 KB equivalent). Truncates with `truncated: true` if oversized.
+  - Automated Secret Scrubbing: Scans and scrubs candidate API keys, JWT tokens, Bearer tokens, and private keys (`[REDACTED_GEMINI_KEY]`, `[REDACTED_JWT_TOKEN]`).
+  - Zero Long-Term Persistence: Plaintext is returned in-memory to the authenticated caller turn only; NEVER written to vector memory (`pgvector`), episodic tables, or trace attributes.
+- **`clipboard_write`:**
+  - Length ceiling: Strictly bounded to max 4,096 characters.
+  - Metacharacter Rejection: NUL bytes (`\x00`) are rejected.
+  - Cryptographic HITL: Bound to workspace, action type, and parameter hash with 120s TTL and single-use anti-replay defense.
+  - Privacy Ledger: Audit logs record only `character_count`, `byte_count`, and payload `sha256_hash`; plaintext is NEVER stored in database audit tables.
+
+---
+
+## 4. Governed Tool Registry Catalog
+
+Eight governed tools are registered in `BUILTIN_TOOLS` in `app/services/tool_registry.py` and routed through `AgentToolBridge`:
+
+| Tool Name | Display Name | Category | Risk Tier | Rate Limit | HITL Rule |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `get_system_telemetry` | Get System Telemetry | `os_control` | `READ_ONLY` | 60 ops/min | Autonomous (L1–L5) |
+| `get_hardware_capabilities`| Get Hardware Capabilities | `os_control` | `READ_ONLY` | 60 ops/min | Autonomous (L1–L5) |
+| `get_system_volume` | Get System Volume | `os_control` | `READ_ONLY` | 60 ops/min | Autonomous (L1–L5) |
+| `set_system_volume` | Set System Volume | `os_control` | `LOW_RISK_WRITE` | 10 ops/min | Autonomous (L2–L5) |
+| `get_display_brightness` | Get Display Brightness | `os_control` | `READ_ONLY` | 60 ops/min | Autonomous (L1–L5) |
+| `set_display_brightness` | Set Display Brightness | `os_control` | `LOW_RISK_WRITE` | 10 ops/min | Autonomous (L2–L5) |
+| `clipboard_read` | Read Clipboard | `os_control` | `READ_ONLY` | 30 ops/min | Autonomous (L2–L5) |
+| `clipboard_write` | Write Clipboard | `os_control` | `MEDIUM_RISK_INTERACTION` | 10 ops/min | HITL at L0–L2; Autonomous at L3–L5 |
+
+---
+
+## 5. Security Threat Matrix & Verification Mapping
+
+| Threat Vector | Mitigation Strategy | Residual Risk | Verification Status |
+| :--- | :--- | :--- | :--- |
+| **Volume Blast Attack** | Hard clamp $\le \pm 10\%$ step limit + 10 ops/min rate limit | Minimal | VERIFIED (`test_volume_step_bounding_and_clamping`) |
+| **Display Strobe Attack** | Hard clamp $\le \pm 10\%$ step limit + 10 ops/min rate limit | Minimal | VERIFIED (`test_brightness_step_bounding`) |
+| **Clipboard Secret Exfiltration**| 4 KB bounding + Regex secret scrubber (`secret_redactor`) | Low | VERIFIED (`test_clipboard_read_length_and_secret_scrubbing`) |
+| **Clipboard Memory Poisoning**| Zero vector memory (`pgvector`) persistence + ephemeral turn scoping | Minimal | VERIFIED (`GovernedClipboardAdapter`) |
+| **Arbitrary WMI Injection** | Strict typed adapter; no arbitrary WMI pass-through | Zero | VERIFIED (`WmiDisplayBrightnessAdapter`) |
+| **GPU Driver Hang / Timeout** | 1.5s subprocess timeout + degraded mode fallback | Minimal | VERIFIED (`test_gpu_telemetry_parsing_and_degraded_fallback`) |
+| **Kill Switch Write Race** | Immediate pre-execution check halts action before OS call | Minimal | VERIFIED (`test_os_guard_kill_switch_blocks_hardware_and_clipboard`) |
+| **Audit Ledger Secret Leak** | Plaintext replaced with `[REDACTED_CLIPBOARD_CONTENT]` in audit ledger | Minimal | VERIFIED (`test_clipboard_audit_redaction_ledger`) |
+| **HITL Replay / Tampering** | Single-use token tracking + parameter hash signature binding | Zero | VERIFIED (`test_clipboard_write_hitl_token_binding_and_replay`) |
+
+---
+
+## 6. Live Host Validation Results (Actual Windows Host)
+
+Live validation was executed on the physical host machine:
+
+```text
+--- AURA-904 LIVE HOST VALIDATION ---
+CPU Percent: 41.0% (8 physical / 16 logical cores)
+RAM: 16440.8 MB / 23982.83 MB (68.6%)
+Process RSS: 192.25 MB
+Storage: 265.7 GB free / 952.39 GB (72.1%)
+Battery supported: True, Percent: 100%
+GPU Supported: True, Name: NVIDIA GeForce RTX 3050 Laptop GPU, VRAM: 166.0 / 4096.0 MB, Temp: 55.0°C
+Capabilities: Volume=True, Brightness=True, Displays=2
+Initial Volume: 100.0%, Muted: True
+Adjusted Volume (-2.0%): resulting=98.0%
+Restored Volume (+2.0%): resulting=100.0%
+Initial Brightness: {'supported': True, 'brightness_percent': 100, 'monitor_id': 1, 'status': 'success'}
+Clipboard Readback: text='AURA-904-SYNTHETIC-TEST', char_count=23, redacted=False
+Previous user clipboard restored.
+Kill Switch Live Check State: kill_switched (Expected: kill_switched)
+--- LIVE VALIDATION COMPLETED SUCCESSFULLY ---
+```
+
+---
+
+## 7. Performance Microbenchmarks ($N=100$ Trials)
+
+Measured using `tests/benchmark_aura904_system_hardware.py`:
+
+| Operation | Min (ms) | Mean (ms) | P50 (ms) | P95 (ms) | P99 (ms) | Max (ms) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU & RAM Telemetry Query** | 0.1199 | **0.2793** | 0.2166 | 0.6359 | 1.4866 | 1.4866 |
+| **GPU & VRAM Telemetry Query** | 47.1274 | **61.6278** | 62.3815 | 68.1366 | 77.6358 | 77.6358 |
+| **Storage Telemetry Query** | 0.0233 | **0.0376** | 0.0345 | 0.0666 | 0.1997 | 0.1997 |
+| **Hardware Capability Discovery**| 76.8438 | **91.6338** | 92.3958 | 104.0549 | 221.7824 | 221.7824 |
+| **Clipboard Read & Scrubbing** | 0.0175 | **0.0200** | 0.0178 | 0.0276 | 0.1035 | 0.1035 |
+| **Clipboard Write & Hashing** | 0.0066 | **0.0088** | 0.0069 | 0.0092 | 0.1316 | 0.1316 |
+| **Governed OSGuard Overhead** | 0.3859 | **0.5257** | 0.4844 | 0.7531 | 1.0850 | 1.0850 |
+
+*Target Acceptance Check:* Mean OSGuard governance overhead is **0.5257 ms**, well beneath the $<1.0\text{ms}$ latency budget.
+
+---
+
+## 8. Full Test Suite & Build Regression Verification
+
+- **AURA-904 Dedicated Test Suite:** `20 passed, 0 failed` in 0.75s (`tests/test_os_guard_system_hardware.py`).
+- **Full Backend Regression Suite:** `500 passed, 11 skipped, 0 failed` in pytest.
+- **Frontend Vitest Suite:** `33 passed, 0 failed` in 1.90s (`apps/web`).
+- **Next.js Production Build:** `15.5.27` production build compiled and prerendered successfully with zero TypeScript/lint errors.
+
+---
+
+## 9. Conclusion & Authoritative State
+
+AURA-904 (System Telemetry, Hardware Controls & Governed Clipboard) is **COMPLETE & ACCEPTED**.
+
+```text
+PHASE 8 = COMPLETE & ACCEPTED
+
+AURA-901 = COMPLETE & ACCEPTED
+AURA-902 = COMPLETE & ACCEPTED
+AURA-903 = COMPLETE & ACCEPTED
+AURA-904 = COMPLETE & ACCEPTED
+
+AURA-905 = NOT STARTED
+AURA-906 = NOT STARTED
+PHASE 10 = NOT STARTED
+```
+
+**Explicit authorization is required before AURA-905.**
