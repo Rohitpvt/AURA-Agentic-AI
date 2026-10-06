@@ -51,9 +51,14 @@ class WindowsOSExecutionAdapter(BaseOSExecutionAdapter):
 
     async def _execute_application_launch(self, action: OSActionRequest) -> Dict[str, Any]:
         """Launch an allowlisted Windows application with sanitized arguments."""
-        app_id = str(action.parameters.get("application_id") or action.parameters.get("target") or "").strip().lower()
-        args = action.parameters.get("arguments") or []
-        working_dir = action.parameters.get("working_directory")
+        app_id = str(
+            action.parameters.get("application_id")
+            or action.parameters.get("app_id")
+            or action.parameters.get("target")
+            or ""
+        ).strip().lower()
+        args = action.parameters.get("arguments") or action.parameters.get("args") or []
+        working_dir = action.parameters.get("working_directory") or action.parameters.get("cwd")
         workspace_root = action.parameters.get("workspace_root")
 
         # 1. Validate Launch Request via Application Registry

@@ -19,7 +19,7 @@ from typing import Any, Dict, FrozenSet, Optional, Set
 import uuid
 
 from app.core.config import settings
-from app.core.security import compute_sha256_hash, verify_approval_signature
+from app.core.security import compute_sha256_hash, sign_approval_payload, verify_approval_signature
 from app.services.os_guard.types import (
     HostExecutionPartition,
     OSActionRequest,
@@ -245,12 +245,13 @@ class OSPolicyEngine:
         if action_type == OSActionType.APPLICATION_LAUNCH:
             target = str(
                 params.get("application_id")
+                or params.get("app_id")
                 or params.get("target")
                 or params.get("executable")
                 or ""
             ).strip().lower()
             if not target:
-                return "Application launch request missing 'application_id' or 'target' executable path."
+                return "Application launch request missing 'application_id' or 'app_id' or 'target' executable path."
 
             import os
             basename = os.path.basename(target).lower()
@@ -325,6 +326,26 @@ class OSPolicyEngine:
 
         except Exception as e:
             return False, f"Token decoding error: {e}"
+
+    def generate_hitl_approval_token(
+        self,
+        action_type: OSActionType,
+        workspace_id: str,
+        parameters: Dict[str, Any],
+        ttl_seconds: int = 120,
+    ) -> str:
+        """Generate a valid parameter-bound HMAC-SHA256 HITL approval token."""
+        param_hash = compute_sha256_hash(json.dumps(parameters, sort_keys=True, separators=(",", ":")))
+        payload = {
+            "workspace_id": workspace_id,
+            "action_type": action_type.value,
+            "param_hash": param_hash,
+            "expires_at": time.time() + ttl_seconds,
+            "nonce": str(uuid.uuid4()),
+        }
+        sig = sign_approval_payload(payload)
+        payload["signature"] = sig
+        return json.dumps(payload)
 
     def reset_consumed_tokens(self) -> None:
         """Reset consumed tokens set (for testing purposes)."""
