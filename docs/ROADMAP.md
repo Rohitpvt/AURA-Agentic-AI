@@ -21,8 +21,8 @@
 |  [PHASE 6: Universal File Intelligence & Memory]  ===> COMPLETE & ACCEPTED                         |
 |  ------------------------------------------------------------------------------------------------  |
 |  [PHASE 7: Real-Time Local Voice & Speech System] ===> PLANNED FUTURE (NOT STARTED)                |
-|  [PHASE 8: Live Screen & Multimodal Vision]       ===> PLANNED FUTURE (Desktop OCR, Window Capture)|
-|  [PHASE 9: Governed OS & Hardware Automation]     ===> PLANNED FUTURE (App Launch, System Control) |
+|  [PHASE 8: Live Screen & Multimodal Vision]       ===> COMPLETE & ACCEPTED                         |
+|  [PHASE 9: Governed OS & Hardware Automation]     ===> COMPLETE & ACCEPTED                         |
 |  [PHASE 10: Advanced Browser & Windows Daemon]    ===> PLANNED FUTURE (Interactive Web, Background)|
 +====================================================================================================+
 ```
@@ -92,13 +92,13 @@
 
 
 
-### Phase 9: Governed Operating System & Hardware Automation (IN PROGRESS)
+### Phase 9: Governed Operating System & Hardware Automation (COMPLETE & ACCEPTED)
 * **Milestone 9.1 (AURA-901):** Windows OS Control Foundation & Policy Boundary (`OSGuardService`, action taxonomy, sliding-window rate limiters, serialization lock) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.2 (AURA-902):** Governed Application Launch & Process Control (Executable allowlist, LOLBins denial, PID+create_time verification, HMAC-SHA256 HITL tokens) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.3 (AURA-903):** Governed Mouse & Keyboard Interaction (Coordinate safety layer, window-scoped bounds, stale observation guard $\le 5\text{s}$, PyAutoGUI adapter, failsafe corner, typing privacy zero raw text leakage) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.4 (AURA-904):** System Telemetry & Hardware Control Boundary (Local read-only CPU/RAM/GPU/Storage/Battery telemetry, bounded volume & brightness $\le \pm 10\%$, governed clipboard boundary $\le 4\text{KB}$) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.5 (AURA-905):** Windows System Tray Controller & Physical Emergency Hotkey (Dedicated STA GUI process, `Shell_NotifyIcon` dynamic indicator, session Named Mutex, Win32 `Ctrl+Alt+Shift+K` physical hotkey with sub-15ms trigger, sensing privacy status, token-authenticated IPC, zero hidden persistence) — **COMPLETED & ACCEPTED**.
-* **Milestone 9.6 (AURA-906):** Phase 9 Integration, Kill-Switch Race Testing & Security Red Team (Cross-subsystem integration, kill-switch races, adversarial testing).
+* **Milestone 9.6 (AURA-906):** Phase 9 Integration, Kill-Switch Race Testing & Security Red Team (Cross-subsystem integration, 10 deterministic micro-races, 20 red-team attack vectors, live host validation, sub-15ms kill switch verification) — **COMPLETED & ACCEPTED**.
 
 ### Phase 10: Advanced Interactive Browser & Windows Boot Daemon (FUTURE)
 * **Milestone 10.1 (AURA-1001):** Interactive Browser Action Suite (`browser_click`, `browser_fill_form`).

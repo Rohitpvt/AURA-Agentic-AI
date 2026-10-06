@@ -108,7 +108,7 @@
 
 ---
 
-## 9. Phase 9: Governed OS & Hardware Control Automation (IN PROGRESS)
+## 9. Phase 9: Governed OS & Hardware Control Automation (COMPLETED & ACCEPTED)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -117,7 +117,7 @@
 | **AURA-903** | Governed Mouse & Keyboard Interaction | Coordinate safety validator, active window bounding box checks, stale observation guard ($\le 5\text{s}$ TTL), PyAutoGUI secure adapter, shortcut allowlist, failsafe corner $(0,0)$, typing privacy zero raw text leakage. | AURA-901, AURA-801 | 8 pts (3 days) | **COMPLETED & ACCEPTED** |
 | **AURA-904** | System Telemetry & Hardware Control Boundary | Read-only local CPU/RAM/GPU/Storage/Battery telemetry, bounded system volume and display brightness adjustments ($\le \pm 10\%$), Core Audio / WMI adapters, governed clipboard boundary ($\le 4\text{KB}$, scrubbed). | AURA-901 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
 | **AURA-905** | System Tray & Global Hotkey Control Plane | Dedicated Windows STA GUI process, `Shell_NotifyIcon` dynamic tray indicator, session Named Mutex, Win32 `RegisterHotKey` physical `Ctrl+Alt+Shift+K` kill switch with sub-15ms dual-path trigger, 300ms debounce, sensing privacy indicators, token-authenticated IPC client, zero hidden persistence. | AURA-901, AURA-507 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
-| **AURA-906** | Phase 9 Integration, Kill-Switch Race Testing & Red Team | Cross-subsystem integration testing, kill-switch vs active action race condition verification, prompt injection to OS action red-teaming, full regression suite. | AURA-902, 903, 904, 905 | 8 pts (3 days) | PLANNED |
+| **AURA-906** | Phase 9 Integration, Kill-Switch Race Testing & Red Team | Cross-subsystem integration testing, 10 deterministic micro-races with async sync barriers, 20 red-team attack vectors, live Windows host validation, sub-15ms kill switch verification, full regression suite. | AURA-902, 903, 904, 905 | 8 pts (3 days) | **COMPLETED & ACCEPTED** |
 
 ---
 
