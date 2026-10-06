@@ -335,6 +335,16 @@ class BrowserRiskClassifier:
 
             return "low"
 
+        # 7. Credential & Session Vault Tools (AURA-1003)
+        if tool_name == "browser_inject_credential":
+            return "high"
+
+        if tool_name == "browser_list_credentials":
+            return "low"
+
+        if tool_name in ["browser_save_session", "browser_restore_session"]:
+            return "medium"
+
         # Default fallback
         return "low"
 

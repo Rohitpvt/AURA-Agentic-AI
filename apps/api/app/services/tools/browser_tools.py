@@ -487,3 +487,213 @@ async def execute_browser_tab_manage(
             "tabs": [t.model_dump() for t in tabs],
             "total_tabs": len(tabs),
         }
+
+
+# ==============================================================================
+# AURA-1003: Encrypted Web Session & Credential Injection Tools
+# ==============================================================================
+
+async def execute_browser_list_credentials(
+    workspace_id: uuid.UUID,
+    target_origin: Optional[str] = None,
+    task_id: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """List non-sensitive credential metadata available for the workspace.
+    
+    Zero plaintext passwords, API keys, or session tokens are ever returned.
+    """
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_list_credentials")
+
+    from app.services.browser.vault import web_vault_service
+
+    if db is not None:
+        creds = await web_vault_service.list_credentials(
+            db=db,
+            workspace_id=workspace_id,
+            target_origin=target_origin,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            creds = await web_vault_service.list_credentials(
+                db=session,
+                workspace_id=workspace_id,
+                target_origin=target_origin,
+            )
+
+    return {
+        "status": "success",
+        "action": "list_credentials",
+        "credentials": creds,
+        "total": len(creds),
+    }
+
+
+async def execute_browser_inject_credential(
+    workspace_id: uuid.UUID,
+    credential_id: str,
+    tab_id: Optional[str] = None,
+    username_element_id: Optional[int] = None,
+    password_element_id: Optional[int] = None,
+    submit_form: bool = False,
+    task_id: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Inject stored credentials directly into active webpage fields via Playwright-native boundary.
+    
+    Plaintext secrets never flow back into agent context, logs, or return dictionary.
+    """
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_inject_credential")
+
+    try:
+        cred_uuid = uuid.UUID(str(credential_id))
+    except Exception as e:
+        raise ValidationError(f"Invalid credential_id UUID format: {credential_id}") from e
+
+    from app.services.browser.vault import web_vault_service
+
+    if db is not None:
+        res = await web_vault_service.inject_credential_into_tab(
+            db=db,
+            workspace_id=workspace_id,
+            credential_id=cred_uuid,
+            tab_id=tab_id,
+            username_element_id=username_element_id,
+            password_element_id=password_element_id,
+            submit_form=submit_form,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            res = await web_vault_service.inject_credential_into_tab(
+                db=session,
+                workspace_id=workspace_id,
+                credential_id=cred_uuid,
+                tab_id=tab_id,
+                username_element_id=username_element_id,
+                password_element_id=password_element_id,
+                submit_form=submit_form,
+            )
+
+    # Invalidate cached observations since page/form state changed
+    freshness_store.invalidate(workspace_id, tab_id or res.get("tab_id"))
+    return res
+
+
+async def execute_browser_save_session(
+    workspace_id: uuid.UUID,
+    session_name: str = "default",
+    tab_id: Optional[str] = None,
+    task_id: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Capture and encrypt active browser storage state (cookies/session) into WebSessionState."""
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_save_session")
+
+    ws_ctx = await browser_engine.get_or_create_workspace_context(workspace_id)
+    target_tab_id = tab_id or ws_ctx.active_tab_id
+    if not target_tab_id:
+        raise ValidationError("No active tab open to save session state from")
+
+    page = ws_ctx.get_page(target_tab_id)
+    current_url = page.url or "about:blank"
+    if current_url.startswith("about:"):
+        raise ValidationError("Cannot capture session state from a blank or internal browser page")
+
+    storage_state = await ws_ctx.context.storage_state()
+
+    from app.services.browser.vault import web_vault_service, normalize_origin
+
+    origin = normalize_origin(current_url)
+
+    if db is not None:
+        saved_meta = await web_vault_service.save_session_state(
+            db=db,
+            workspace_id=workspace_id,
+            session_name=session_name,
+            target_origin=origin,
+            storage_state=storage_state,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            saved_meta = await web_vault_service.save_session_state(
+                db=session,
+                workspace_id=workspace_id,
+                session_name=session_name,
+                target_origin=origin,
+                storage_state=storage_state,
+            )
+
+    return {
+        "status": "success",
+        "action": "save_session",
+        "session_id": saved_meta["session_id"],
+        "session_name": session_name,
+        "target_origin": origin,
+        "is_untrusted_content": True,
+    }
+
+
+async def execute_browser_restore_session(
+    workspace_id: uuid.UUID,
+    session_name: str = "default",
+    tab_id: Optional[str] = None,
+    target_origin: Optional[str] = None,
+    task_id: Optional[str] = None,
+    db: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """Restore and decrypt stored browser session state into the active Playwright context."""
+    _check_kill_switch(workspace_id)
+    action_budget_manager.consume_action(workspace_id, task_id, "browser_restore_session")
+
+    ws_ctx = await browser_engine.get_or_create_workspace_context(workspace_id)
+    target_tab_id = tab_id or ws_ctx.active_tab_id
+    if not target_tab_id:
+        raise ValidationError("No active tab open to restore session state into")
+
+    page = ws_ctx.get_page(target_tab_id)
+    current_url = page.url or "about:blank"
+
+    from app.services.browser.vault import web_vault_service, normalize_origin
+
+    resolved_origin = normalize_origin(target_origin or current_url)
+
+    if db is not None:
+        state = await web_vault_service.get_session_state(
+            db=db,
+            workspace_id=workspace_id,
+            target_origin=resolved_origin,
+            session_name=session_name,
+        )
+    else:
+        from app.db.session import async_session_factory
+        async with async_session_factory() as session:
+            state = await web_vault_service.get_session_state(
+                db=session,
+                workspace_id=workspace_id,
+                target_origin=resolved_origin,
+                session_name=session_name,
+            )
+
+    if not state:
+        raise EntityNotFoundError("WebSessionState", f"No active session '{session_name}' found for origin '{resolved_origin}'")
+
+    # Add cookies to context
+    cookies = state.get("cookies", [])
+    if cookies:
+        await ws_ctx.context.add_cookies(cookies)
+
+    return {
+        "status": "success",
+        "action": "restore_session",
+        "session_name": session_name,
+        "target_origin": resolved_origin,
+        "cookies_restored_count": len(cookies),
+        "is_untrusted_content": True,
+    }
+

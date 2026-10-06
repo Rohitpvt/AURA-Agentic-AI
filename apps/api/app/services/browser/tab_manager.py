@@ -35,6 +35,10 @@ class WorkspaceBrowserContext:
         return self._is_closed
 
     @property
+    def context(self) -> "BrowserContext":
+        return self._context
+
+    @property
     def active_tab_id(self) -> Optional[str]:
         return self._active_tab_id
 

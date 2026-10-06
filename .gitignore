@@ -65,7 +65,7 @@ yarn-error.log*
 # FastEmbed / ONNX Cache / Local Model Weights
 .cache/
 fastembed_cache/
-models/
+/models/
 
 # Database & Storage
 *.sqlite
