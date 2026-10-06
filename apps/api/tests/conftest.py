@@ -90,3 +90,12 @@ async def async_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, 
 async def client(async_client: AsyncClient) -> AsyncClient:
     """Alias for async_client."""
     return async_client
+
+
+@pytest.fixture(autouse=True)
+def reset_global_kill_switch():
+    """Ensure kill switch is inactive before and after every test."""
+    from app.services.kill_switch import kill_switch
+    kill_switch.set_active(False)
+    yield
+    kill_switch.set_active(False)

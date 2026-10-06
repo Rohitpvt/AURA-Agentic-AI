@@ -40,7 +40,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await file_job_service.recover_stuck_jobs(session)
         await task_recovery_service.startup_recovery_sweep(session)
 
+    from app.tray.ipc import AuraNamedPipeServer
+    import platform
+    ipc_server = AuraNamedPipeServer()
+    if not settings.is_testing and platform.system() == "Windows":
+        await ipc_server.start()
+
     yield
+
+    if not settings.is_testing and platform.system() == "Windows":
+        await ipc_server.stop()
 
     if not settings.is_testing:
         await telegram_daemon.stop()
