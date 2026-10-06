@@ -659,9 +659,16 @@ async def execute_browser_restore_session(
     page = ws_ctx.get_page(target_tab_id)
     current_url = page.url or "about:blank"
 
-    from app.services.browser.vault import web_vault_service, normalize_origin
+    from app.services.browser.vault import web_vault_service, normalize_origin, validate_origin_match
 
     resolved_origin = normalize_origin(target_origin or current_url)
+
+    # Origin / Phishing Guard: Prevent restoring session into mismatching active page
+    if current_url and not current_url.startswith("about:"):
+        if not validate_origin_match(resolved_origin, current_url, allow_subdomains=True):
+            raise AuthorizationError(
+                f"Phishing/Origin mismatch: Session bound to '{resolved_origin}' cannot be restored into active page origin '{current_url}'"
+            )
 
     if db is not None:
         state = await web_vault_service.get_session_state(
