@@ -34,6 +34,12 @@ class TrayIPCCommand(str, Enum):
     GET_PRIVACY_STATE = "get_privacy_state"
     GET_TELEMETRY = "get_telemetry"
     SHUTDOWN_TRAY = "shutdown_tray"
+    START_BACKEND = "start_backend"
+    STOP_BACKEND = "stop_backend"
+    RESTART_BACKEND = "restart_backend"
+    GET_AUTOSTART_STATUS = "get_autostart_status"
+    SET_AUTOSTART = "set_autostart"
+    GET_DAEMON_STATUS = "get_daemon_status"
 
 
 class PrivacySensingState(BaseModel):

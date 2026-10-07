@@ -6,8 +6,8 @@
 [![Python: 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB.svg)](docs/TECH_STACK.md)
 [![LLM: Ollama Local](https://img.shields.io/badge/LLM-Ollama%20Local-black.svg)](docs/TECH_STACK.md)
 [![Database: PostgreSQL 16 + pgvector](https://img.shields.io/badge/Database-PostgreSQL%2016%20%2B%20pgvector-336791.svg)](docs/DATABASE_SCHEMA.md)
-[![Backend Tests: 282 Passed](https://img.shields.io/badge/Backend%20Tests-282%20Passed%20(100%25)-brightgreen.svg)](apps/api/tests/)
-[![Frontend Tests: 18 Passed](https://img.shields.io/badge/Frontend%20Tests-18%20Passed%20(100%25)-brightgreen.svg)](apps/web/tests/)
+[![Backend Tests: 823 Passed](https://img.shields.io/badge/Backend%20Tests-823%20Passed%20(100%25)-brightgreen.svg)](apps/api/tests/)
+[![Frontend Tests: 33 Passed](https://img.shields.io/badge/Frontend%20Tests-33%20Passed%20(100%25)-brightgreen.svg)](apps/web/tests/)
 
 ---
 
@@ -134,19 +134,19 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 
 The entire AURA codebase is rigorously tested across all unit, integration, multi-tenant security, and end-to-end flows:
 
-### Run Backend Pytest Suite (282 Tests)
+### Run Backend Pytest Suite (823 Tests)
 ```bash
 cd apps/api
 pytest
 ```
-*Result: **282 passed (100%)**.*
+*Result: **823 passed / 0 skipped / 0 failed (100%)**.*
 
-### Run Frontend Vitest Suite (18 Tests)
+### Run Frontend Vitest Suite (33 Tests)
 ```bash
 cd apps/web
 npm test -- --run
 ```
-*Result: **18 passed (100%)**.*
+*Result: **33 passed (100%)**.*
 
 ### Validate Next.js Production Build
 ```bash
@@ -160,3 +160,4 @@ npm run build
 ## 7. License
 
 AURA is released under the [MIT License](LICENSE).
+

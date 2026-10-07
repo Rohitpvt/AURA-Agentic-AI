@@ -187,11 +187,13 @@ def test_status_report_secret_sanitization(temp_state_dir, mock_kill_switch):
 
 
 def test_static_audit_no_unauthorized_persistence():
-    """Verify that app/daemon contains NO registry persistence, Task Scheduler, or Windows Service installation."""
+    """Verify that app/daemon contains NO hidden persistence, Task Scheduler, HKLM, or Windows Service installation."""
     daemon_dir = Path(__file__).resolve().parent.parent / "app" / "daemon"
     for py_file in daemon_dir.glob("*.py"):
         content = py_file.read_text(encoding="utf-8")
-        assert "winreg" not in content, f"Unauthorized winreg import in {py_file}"
         assert "CreateService" not in content, f"Unauthorized service installation API in {py_file}"
         assert "TaskScheduler" not in content, f"Unauthorized Task Scheduler API in {py_file}"
-        assert "CurrentVersion\\Run" not in content, f"Unauthorized Registry Run key in {py_file}"
+        assert "HKEY_LOCAL_MACHINE" not in content, f"Unauthorized HKLM persistence in {py_file}"
+        if py_file.name != "autostart.py":
+            assert "winreg" not in content, f"Unauthorized winreg import in {py_file}"
+            assert "CurrentVersion\\Run" not in content, f"Unauthorized Registry Run key in {py_file}"

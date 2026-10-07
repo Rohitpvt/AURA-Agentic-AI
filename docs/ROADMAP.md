@@ -99,12 +99,12 @@
 * **Milestone 9.5 (AURA-905):** Windows System Tray Controller & Physical Emergency Hotkey (Dedicated STA GUI process, `Shell_NotifyIcon` dynamic indicator, session Named Mutex, Win32 `Ctrl+Alt+Shift+K` physical hotkey with sub-15ms trigger, sensing privacy status, token-authenticated IPC, zero hidden persistence) — **COMPLETED & ACCEPTED**.
 * **Milestone 9.6 (AURA-906):** Phase 9 Integration, Kill-Switch Race Testing & Security Red Team (Cross-subsystem integration, 10 deterministic micro-races, 20 red-team attack vectors, live host validation, sub-15ms kill switch verification) — **COMPLETED & ACCEPTED**.
 
-### Phase 10: Advanced Browser Automation & Windows Background Runtime (PREFLIGHT ARCHITECTED)
-* **Milestone 10.1 (AURA-1001):** Advanced Headless & Interactive Browser Engine (Playwright Lifecycle, Multi-Tab Management, AXTree Snapshot & Multimodal State Representation) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.2 (AURA-1002):** Governed Browser Interaction Tools & Risk Policy (`browser_navigate`, `browser_click`, `browser_type`, `browser_select`, `browser_scroll`, `browser_state`, HITL integration) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.3 (AURA-1003):** Encrypted Web Session & Credential Injection Vault (AES-256-GCM Cookie/Session Store, Zero-Prompt Credential Proxy) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.4 (AURA-1004):** Governed Browser Download & Upload Pipeline (Sandboxed Download Intake, Phase 6 File Intake Linkage, Upload Isolation) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.5 (AURA-1005):** Windows User-Session Background Daemon & Watchdog Supervisor (Lifecycle, Health Monitoring, Crash Recovery, Least Privilege) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.6 (AURA-1006):** Session Awareness, Tray Integration & Controlled Autostart (Lock/Unlock Detection, AURA-905 Tray State Extension, Reversible Autostart Toggle) — **PREFLIGHT SPECIFIED**.
-* **Milestone 10.7 (AURA-1007):** Phase 10 Master Integration, Security Threat Red-Teaming & Live Validation (Micro-races, 25-vector threat audit, live Windows 11 acceptance) — **PREFLIGHT SPECIFIED**.
+### Phase 10: Advanced Browser Automation & Windows Background Runtime (IN PROGRESS)
+* **Milestone 10.1 (AURA-1001):** Advanced Headless & Interactive Browser Engine (Playwright Lifecycle, Multi-Tab Management, AXTree Snapshot & Multimodal State Representation) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.2 (AURA-1002):** Governed Browser Interaction Tools & Risk Policy (`browser_navigate`, `browser_click`, `browser_type`, `browser_select`, `browser_scroll`, `browser_state`, HITL integration) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.3 (AURA-1003):** Encrypted Web Session & Credential Injection Vault (AES-256-GCM Cookie/Session Store, Zero-Prompt Credential Proxy) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.4 (AURA-1004):** Governed Browser Download & Upload Pipeline (Sandboxed Download Intake, Phase 6 File Intake Linkage, Upload Isolation) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.5 (AURA-1005):** Windows User-Session Background Daemon & Watchdog Supervisor (Lifecycle, Health Monitoring, Crash Recovery, Least Privilege) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.6 (AURA-1006):** Session Awareness, Tray Integration & Controlled Autostart (Interactive Session Awareness, WTSRegisterSessionNotification, Tray Lifecycle & Menu Extensions, Authenticated Named Pipe IPC, Controlled HKCU Run Autostart OFF by default) — **COMPLETED & ACCEPTED**.
+* **Milestone 10.7 (AURA-1007):** Phase 10 Master Integration, Security Threat Red-Teaming & Live Validation (Micro-races, 25-vector threat audit, live Windows 11 acceptance) — **PENDING AUTHORIZATION**.
 

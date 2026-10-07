@@ -38,6 +38,10 @@ CMD_INFO_MIC = 1009
 CMD_INFO_OCR = 1010
 CMD_INFO_VLM = 1011
 CMD_INFO_HOTKEY = 1012
+CMD_START_BACKEND = 1013
+CMD_STOP_BACKEND = 1014
+CMD_RESTART_BACKEND = 1015
+CMD_TOGGLE_AUTOSTART = 1016
 
 
 class WindowsTrayIcon:
@@ -48,10 +52,22 @@ class WindowsTrayIcon:
         on_kill_switch: Optional[Callable[[], None]] = None,
         on_exit: Optional[Callable[[], None]] = None,
         on_open_dashboard: Optional[Callable[[], None]] = None,
+        on_start_backend: Optional[Callable[[], None]] = None,
+        on_stop_backend: Optional[Callable[[], None]] = None,
+        on_restart_backend: Optional[Callable[[], None]] = None,
+        on_toggle_autostart: Optional[Callable[[], None]] = None,
+        session_manager: Optional[Any] = None,
     ):
         self.on_kill_switch = on_kill_switch
         self.on_exit = on_exit
         self.on_open_dashboard = on_open_dashboard
+        self.on_start_backend = on_start_backend
+        self.on_stop_backend = on_stop_backend
+        self.on_restart_backend = on_restart_backend
+        self.on_toggle_autostart = on_toggle_autostart
+
+        from app.daemon.session_manager import WindowsSessionManager
+        self.session_manager = session_manager or WindowsSessionManager()
 
         self.state: TrayRuntimeState = TrayRuntimeState.READY
         self.privacy_state = PrivacySensingState()
@@ -147,6 +163,9 @@ class WindowsTrayIcon:
             nid = (self.hwnd, 0, win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP, WM_TRAYNOTIFY, hicon, f"AURA: {self.state.value}")
             win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, nid)
 
+            # Register for Windows Session Change Notifications
+            self.session_manager.register_session_notification(self.hwnd)
+
             self._is_running = True
             logger.info(f"WindowsTrayIcon: Initialized with hWnd={self.hwnd}")
 
@@ -184,10 +203,7 @@ class WindowsTrayIcon:
                 return 0
 
             elif msg == WM_WTSSESSION_CHANGE:
-                if wparam == WTS_SESSION_LOCK:
-                    logger.info("WindowsTrayIcon: Windows Session Locked (pausing active UI sensing)")
-                elif wparam == WTS_SESSION_UNLOCK:
-                    logger.info("WindowsTrayIcon: Windows Session Unlocked")
+                self.session_manager.handle_wts_message(wparam, lparam)
                 return 0
 
             elif msg == WM_DESTROY:
@@ -208,6 +224,7 @@ class WindowsTrayIcon:
         try:
             import win32gui
             import win32con
+            from app.daemon.autostart import AutostartManager
 
             menu = win32gui.CreatePopupMenu()
 
@@ -228,12 +245,25 @@ class WindowsTrayIcon:
             win32gui.AppendMenu(menu, win32con.MF_STRING | win32con.MF_DISABLED, CMD_INFO_VLM, f"• Moondream VLM: [{self.privacy_state.vlm_state}]")
             win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
 
-            # 3. Emergency Actions
+            # 3. Backend Lifecycle Controls
+            win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_START_BACKEND, "▶ Start Backend")
+            win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_STOP_BACKEND, "⏹ Stop Backend")
+            win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_RESTART_BACKEND, "🔄 Restart Backend")
+            win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
+
+            # 4. Autostart Configuration
+            autostart_mgr = AutostartManager()
+            autostart_on = autostart_mgr.is_autostart_enabled()
+            autostart_label = "🚀 Autostart: [ON] (Click to Disable)" if autostart_on else "🚀 Autostart: [OFF] (Click to Enable)"
+            win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_TOGGLE_AUTOSTART, autostart_label)
+            win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
+
+            # 5. Emergency Actions
             kill_label = "🛑 EMERGENCY KILL SWITCH (Active)" if self.state == TrayRuntimeState.KILL_SWITCHED else "🛑 EMERGENCY KILL SWITCH"
             win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_KILL_SWITCH, kill_label)
             win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
 
-            # 4. Standard Navigation
+            # 6. Standard Navigation
             win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_OPEN_DASHBOARD, "🌐 Open Web Dashboard")
             win32gui.AppendMenu(menu, win32con.MF_STRING, CMD_VIEW_TELEMETRY, "📊 View Telemetry Summary")
             win32gui.AppendMenu(menu, win32con.MF_SEPARATOR, 0, "")
@@ -254,6 +284,33 @@ class WindowsTrayIcon:
             self.set_state(TrayRuntimeState.KILL_SWITCHED)
             if self.on_kill_switch:
                 self.on_kill_switch()
+
+        elif cmd_id == CMD_START_BACKEND:
+            logger.info("WindowsTrayIcon: User selected Start Backend.")
+            if self.on_start_backend:
+                self.on_start_backend()
+
+        elif cmd_id == CMD_STOP_BACKEND:
+            logger.info("WindowsTrayIcon: User selected Stop Backend.")
+            if self.on_stop_backend:
+                self.on_stop_backend()
+
+        elif cmd_id == CMD_RESTART_BACKEND:
+            logger.info("WindowsTrayIcon: User selected Restart Backend.")
+            if self.on_restart_backend:
+                self.on_restart_backend()
+
+        elif cmd_id == CMD_TOGGLE_AUTOSTART:
+            from app.daemon.autostart import AutostartManager
+            mgr = AutostartManager()
+            if mgr.is_autostart_enabled():
+                mgr.disable_autostart()
+                logger.info("WindowsTrayIcon: Autostart disabled by user.")
+            else:
+                mgr.enable_autostart()
+                logger.info("WindowsTrayIcon: Autostart enabled by user.")
+            if self.on_toggle_autostart:
+                self.on_toggle_autostart()
 
         elif cmd_id == CMD_OPEN_DASHBOARD:
             if self.on_open_dashboard:

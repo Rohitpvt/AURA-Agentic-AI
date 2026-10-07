@@ -105,12 +105,26 @@ npm install
 npm run dev
 ```
 
+### Step 4.4: Windows User-Session Background Daemon & Tray (Optional)
+```bash
+cd apps/api
+# Start the unprivileged supervisor daemon
+python -m app.daemon.main --start
+
+# Check autostart configuration (Default: OFF)
+python -m app.daemon.main --autostart-status
+
+# Opt-in to logon autostart:
+python -m app.daemon.main --autostart-enable
+```
+
 ---
 
 ## 5. Running the Complete Zero-Cost Stack
 
 1. **Terminal 1 (Ollama Local Daemon):** `ollama serve` (or run in background tray)
-2. **Terminal 2 (FastAPI Control Plane):** `cd apps/api && uvicorn app.main:app --reload --port 8000`
+2. **Terminal 2 (FastAPI Control Plane / Supervisor):** `cd apps/api && python -m app.daemon.main --start` (or `uvicorn app.main:app --reload --port 8000`)
 3. **Terminal 3 (Next.js Dashboard):** `cd apps/web && npm run dev`
 
 Open [http://localhost:3000](http://localhost:3000) to access your 100% private, zero-cost AI operating system!
+

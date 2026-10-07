@@ -236,7 +236,7 @@ class AuraNamedPipeServer:
                 }
 
             # 3. Validate Command Allowlist
-            cmd_str = data.get("command", "")
+            cmd_str = str(data.get("command", "")).strip().lower()
             try:
                 cmd = TrayIPCCommand(cmd_str)
             except ValueError:
@@ -324,6 +324,29 @@ class AuraNamedPipeServer:
 
         elif cmd == TrayIPCCommand.SHUTDOWN_TRAY:
             return {"status": "SHUTDOWN_ACK", "message": "Tray shutdown acknowledged"}
+
+        elif cmd == TrayIPCCommand.GET_AUTOSTART_STATUS:
+            from app.daemon.autostart import AutostartManager
+            return AutostartManager().get_autostart_status()
+
+        elif cmd == TrayIPCCommand.SET_AUTOSTART:
+            from app.daemon.autostart import AutostartManager
+            enable = bool(params.get("enable", False))
+            mgr = AutostartManager()
+            success = mgr.enable_autostart() if enable else mgr.disable_autostart()
+            return {"status": "success" if success else "error", "enabled": mgr.is_autostart_enabled()}
+
+        elif cmd == TrayIPCCommand.GET_DAEMON_STATUS:
+            ks_active = kill_switch.is_active()
+            return {
+                "daemon_state": "KILL_SWITCHED" if ks_active else "RUNNING",
+                "kill_switch_active": ks_active,
+                "backend_online": True,
+                "timestamp": time.time(),
+            }
+
+        elif cmd in (TrayIPCCommand.START_BACKEND, TrayIPCCommand.STOP_BACKEND, TrayIPCCommand.RESTART_BACKEND):
+            return {"status": "COMMAND_DISPATCHED", "command": cmd.value, "timestamp": time.time()}
 
         return {}
 

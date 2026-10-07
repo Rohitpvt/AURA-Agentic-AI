@@ -157,3 +157,51 @@ server {
 * [ ] **Secret Encryption Key:** Store `AURA_SECRET_KEY` in AWS KMS, HashiCorp Vault, or environment vault; never commit to git.
 * [ ] **Firewall (UFW):** Allow only ports 22 (SSH with key auth), 80 (HTTP redirect), and 443 (HTTPS).
 * [ ] **Rate Limiting:** Enforce 120 req/min limit per IP on public API endpoints at the reverse proxy layer.
+
+---
+
+## 5. Windows User-Session Daemon & Tray Operations (AURA-1005 / AURA-1006)
+
+For desktop/local workstation deployments on Windows 11 / Windows Server:
+
+### 5.1 Daemon Supervisor CLI Commands
+```powershell
+# Start daemon supervisor in foreground/supervised mode
+python -m app.daemon.main --start
+
+# Query daemon supervisor health and process identity
+python -m app.daemon.main --status
+
+# Restart managed AURA backend runtime
+python -m app.daemon.main --restart
+
+# Stop running daemon supervisor cleanly
+python -m app.daemon.main --stop
+```
+
+### 5.2 Controlled Autostart Management
+* **Default State**: STRICTLY **OFF** by default.
+* **Registry Key**: `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`
+* **Value Name**: `AuraAgentSupervisor`
+* **Privilege Level**: Current interactive user only (NO Administrator elevation, NO SYSTEM service).
+
+```powershell
+# Enable user-session autostart on Windows logon (Opt-In)
+python -m app.daemon.main --autostart-enable
+
+# Inspect truthful autostart status
+python -m app.daemon.main --autostart-status
+
+# Disable autostart and cleanly purge registry key
+python -m app.daemon.main --autostart-disable
+```
+
+### 5.3 What AURA Installs vs What It Prohibits
+* **Installs (when explicitly opted in)**: Unprivileged string value `AuraAgentSupervisor` under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` pointing to `python.exe -m app.daemon.main --start`.
+* **Prohibits**:
+  - NO Windows Services (`services.msc` / `CreateService`).
+  - NO Task Scheduler jobs (`schtasks.exe`).
+  - NO Machine-wide persistence (`HKLM`).
+  - NO Embedded tokens, credentials, or secrets in registry entries or command arguments.
+  - NO Auto-resurrection after Emergency Kill Switch activation without explicit operator reset.
+
