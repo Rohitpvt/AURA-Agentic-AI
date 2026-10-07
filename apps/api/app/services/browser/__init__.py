@@ -31,6 +31,7 @@ from app.services.browser.file_transfer import (
     browser_file_transfer_service,
     sanitize_url_provenance,
     is_sensitive_file,
+    is_sensitive_content,
 )
 
 __all__ = [
@@ -60,4 +61,5 @@ __all__ = [
     "browser_file_transfer_service",
     "sanitize_url_provenance",
     "is_sensitive_file",
+    "is_sensitive_content",
 ]

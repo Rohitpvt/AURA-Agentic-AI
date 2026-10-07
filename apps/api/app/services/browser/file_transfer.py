@@ -74,6 +74,16 @@ SENSITIVE_FILE_PATTERNS = [
     re.compile(r"\.(key|pem|p12|pfx|pkcs12|sqlite|db|sqlite3|token|secret)$", re.IGNORECASE),
 ]
 
+# Prohibited sensitive content signatures inside file bodies
+SENSITIVE_CONTENT_PATTERNS = [
+    re.compile(rb"-----BEGIN (?:[A-Z0-9_-]+ )?PRIVATE KEY-----", re.IGNORECASE),
+    re.compile(rb"-----BEGIN OPENSSH PRIVATE KEY-----", re.IGNORECASE),
+    re.compile(rb"-----BEGIN PGP PRIVATE KEY BLOCK-----", re.IGNORECASE),
+    re.compile(rb"-----BEGIN ENCRYPTED PRIVATE KEY-----", re.IGNORECASE),
+    re.compile(rb"SQLite format 3\x00"),
+    re.compile(rb"(?:JWT_SECRET|MASTER_KEY|DATABASE_URL|AURA_SECRET|AWS_SECRET_ACCESS_KEY)\s*=", re.IGNORECASE),
+]
+
 
 def _check_kill_switch(workspace_id: uuid.UUID) -> None:
     """Verify emergency kill switch state."""
@@ -113,6 +123,13 @@ def is_sensitive_file(filename: str) -> bool:
         return False
     base_name = os.path.basename(filename)
     return any(pat.search(base_name) for pat in SENSITIVE_FILE_PATTERNS)
+
+
+def is_sensitive_content(content_sample: bytes) -> bool:
+    """Inspect raw binary sample for sensitive secrets (private keys, DB headers, env variables)."""
+    if not content_sample:
+        return False
+    return any(pat.search(content_sample) for pat in SENSITIVE_CONTENT_PATTERNS)
 
 
 class BrowserFileTransferService:
@@ -332,6 +349,35 @@ class BrowserFileTransferService:
             target_path=record.storage_path,
             must_exist=True,
         )
+
+        if not physical_path.exists() or not physical_path.is_file():
+            raise EntityNotFoundError("PhysicalFile", str(physical_path))
+
+        # 3B. Inspect File Content Safety (Deep screening for renamed secrets)
+        try:
+            with open(physical_path, "rb") as f_check:
+                sample = f_check.read(8192)
+                if is_sensitive_content(sample):
+                    logger.warning(
+                        f"BrowserFileTransfer: Blocked upload of file '{record.original_filename}' due to sensitive content signatures."
+                    )
+                    raise AuthorizationError(
+                        f"Upload of file '{record.original_filename}' is strictly blocked by content security policy (sensitive data detected)."
+                    )
+        except (AuthorizationError, EntityNotFoundError):
+            raise
+        except Exception as read_err:
+            logger.error(f"BrowserFileTransfer: Error inspecting file content: {read_err}")
+            raise ValidationError(f"Could not verify file content safety: {read_err}")
+
+        # 3C. Verify File Integrity (Anti-mutation race defense)
+        if record.sha256_hash:
+            import hashlib
+            current_hash = hashlib.sha256(physical_path.read_bytes()).hexdigest()
+            if current_hash != record.sha256_hash:
+                raise ValidationError(
+                    f"File integrity mismatch: file content on disk has changed since indexing ({current_hash} != {record.sha256_hash})"
+                )
 
         # 4. Resolve Active Browser Tab and Page
         ws_ctx = await browser_engine.get_or_create_workspace_context(workspace_id)

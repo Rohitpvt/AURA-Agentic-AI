@@ -226,8 +226,11 @@ async def test_upload_file_workspace_isolation_and_success(db_session):
     file_id = uuid.uuid4()
     file_dir = ws_root / "files" / str(file_id)
     file_dir.mkdir(parents=True, exist_ok=True)
+    content = b"%PDF-1.4 Mock PDF Content"
     file_path = file_dir / "sample_upload.pdf"
-    file_path.write_bytes(b"%PDF-1.4 Mock PDF Content")
+    file_path.write_bytes(content)
+    import hashlib
+    content_hash = hashlib.sha256(content).hexdigest()
 
     record = FileRecord(
         id=file_id,
@@ -236,8 +239,8 @@ async def test_upload_file_workspace_isolation_and_success(db_session):
         safe_filename="sample_upload.pdf",
         mime_type="application/pdf",
         file_extension=".pdf",
-        size_bytes=len(b"%PDF-1.4 Mock PDF Content"),
-        sha256_hash="mock_hash_123",
+        size_bytes=len(content),
+        sha256_hash=content_hash,
         storage_path=f"files/{file_id}/sample_upload.pdf",
         status=FileStatus.UPLOADED.value,
         metadata_={"test": True},
