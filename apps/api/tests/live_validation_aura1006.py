@@ -13,6 +13,11 @@ import os
 import platform
 import sys
 import time
+from pathlib import Path
+
+# Ensure api directory is on sys.path for direct script execution
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import pytest
 
 from app.daemon.autostart import AutostartManager, AURA_AUTOSTART_KEY_NAME
