@@ -12,7 +12,7 @@ export function useSSEStream() {
   const addEvent = useAuraStore((s) => s.addEvent);
   const [isConnected, setIsConnected] = useState(false);
   const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -21,72 +21,125 @@ export function useSSEStream() {
     let isSubscribed = true;
     let retryCount = 0;
 
-    const connect = () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+    const connect = async () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
 
       const wsId = activeWorkspace?.id;
+      if (!wsId) {
+        setIsConnected(false);
+        return;
+      }
+
+      const token = getAccessToken();
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
-      const url = `${baseUrl}/agent/events/stream${wsId ? `?workspace_id=${wsId}` : ''}`;
+      const url = `${baseUrl}/agent/events/stream?workspace_id=${wsId}`;
+
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
       try {
-        const es = new EventSource(url, { withCredentials: true });
-        eventSourceRef.current = es;
-
-        es.onopen = () => {
-          if (!isSubscribed) return;
-          setIsConnected(true);
-          retryCount = 0;
+        const headers: Record<string, string> = {
+          Accept: 'text/event-stream',
         };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
 
-        es.onmessage = (event) => {
-          if (!isSubscribed) return;
-          try {
-            const parsed: RuntimeEvent = JSON.parse(event.data);
-            if (parsed.event_type === 'ping') {
-              setLastHeartbeat(new Date());
-              return;
-            }
+        const response = await fetch(url, {
+          method: 'GET',
+          headers,
+          signal: abortController.signal,
+        });
 
-            addEvent(parsed);
+        if (!response.ok || !response.body) {
+          throw new Error(`SSE stream connection failed with status ${response.status}`);
+        }
 
-            // Invalidate affected query keys
-            if (parsed.event_type.startsWith('task.')) {
-              queryClient.invalidateQueries({ queryKey: ['tasks'] });
-              if (parsed.task_id) {
-                queryClient.invalidateQueries({ queryKey: ['task', parsed.task_id] });
+        if (!isSubscribed) return;
+        setIsConnected(true);
+        retryCount = 0;
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (isSubscribed) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const block of lines) {
+            if (!block.trim()) continue;
+
+            const eventLines = block.split('\n');
+            let eventType = 'message';
+            let eventData = '';
+
+            for (const line of eventLines) {
+              if (line.startsWith('event:')) {
+                eventType = line.replace('event:', '').trim();
+              } else if (line.startsWith('data:')) {
+                eventData = line.replace('data:', '').trim();
+              } else if (line.startsWith(':')) {
+                // Heartbeat keepalive comment
+                setLastHeartbeat(new Date());
               }
-            } else if (parsed.event_type.startsWith('approval.')) {
-              queryClient.invalidateQueries({ queryKey: ['approvals'] });
-            } else if (parsed.event_type.startsWith('memory.')) {
-              queryClient.invalidateQueries({ queryKey: ['memory'] });
-            } else if (parsed.event_type === 'kill_switch.activated') {
-              queryClient.invalidateQueries({ queryKey: ['tasks'] });
-              queryClient.invalidateQueries({ queryKey: ['approvals'] });
-              queryClient.invalidateQueries({ queryKey: ['agent-health'] });
             }
-          } catch (e) {
-            console.error('Failed to parse SSE event data:', e);
+
+            if (eventData) {
+              try {
+                const parsed = JSON.parse(eventData);
+                if (
+                  eventType === 'ping' ||
+                  parsed.event_type === 'ping' ||
+                  parsed.status === 'connected'
+                ) {
+                  setLastHeartbeat(new Date());
+                  continue;
+                }
+
+                const runtimeEv = parsed as RuntimeEvent;
+                addEvent(runtimeEv);
+
+                // Invalidate affected query keys
+                if (runtimeEv.event_type?.startsWith('task.')) {
+                  queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                  if (runtimeEv.task_id) {
+                    queryClient.invalidateQueries({ queryKey: ['task', runtimeEv.task_id] });
+                  }
+                } else if (runtimeEv.event_type?.startsWith('approval.')) {
+                  queryClient.invalidateQueries({ queryKey: ['approvals'] });
+                } else if (runtimeEv.event_type?.startsWith('memory.')) {
+                  queryClient.invalidateQueries({ queryKey: ['memory'] });
+                } else if (runtimeEv.event_type === 'kill_switch.activated') {
+                  queryClient.invalidateQueries({ queryKey: ['tasks'] });
+                  queryClient.invalidateQueries({ queryKey: ['approvals'] });
+                  queryClient.invalidateQueries({ queryKey: ['agent-health'] });
+                }
+              } catch (e) {
+                // Ignore parsing errors on non-json stream frames
+              }
+            }
           }
-        };
-
-        es.onerror = () => {
-          if (!isSubscribed) return;
-          setIsConnected(false);
-          es.close();
-
-          // Exponential backoff reconnect
-          const backoff = Math.min(1000 * Math.pow(2, retryCount), 10000);
-          retryCount++;
-          retryTimeoutRef.current = setTimeout(() => {
-            if (isSubscribed) {
-              connect();
-            }
-          }, backoff);
-        };
-      } catch (err) {
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        if (!isSubscribed) return;
         setIsConnected(false);
+
+        // Exponential backoff reconnect
+        const backoff = Math.min(1000 * Math.pow(2, retryCount), 10000);
+        retryCount++;
+        retryTimeoutRef.current = setTimeout(() => {
+          if (isSubscribed) {
+            connect();
+          }
+        }, backoff);
       }
     };
 
@@ -97,9 +150,9 @@ export function useSSEStream() {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [activeWorkspace?.id, queryClient, addEvent]);
