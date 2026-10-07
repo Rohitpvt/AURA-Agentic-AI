@@ -122,7 +122,7 @@
 
 ---
 
-## 10. Phase 10: Advanced Browser Automation & Windows Background Runtime (IN PROGRESS)
+## 10. Phase 10: Advanced Browser Automation & Windows Background Runtime (COMPLETED & ACCEPTED)
 
 | Task ID | Task Title | Description & Acceptance Criteria | Dependencies | Complexity | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -132,5 +132,5 @@
 | **AURA-1004** | Governed Browser Download & Upload Pipeline | Sandboxed download directory `{workspace}/downloads/.incoming_{uuid}/`, path traversal defense, file type / MIME verification, size enforcement ($\le 50\text{MB}$), automatic routing into Phase 6 Universal File Registry (`FileStorageEngine`), and upload governance restricted to indexed workspace files. | AURA-1002, AURA-601 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
 | **AURA-1005** | Windows User-Session Background Daemon & Watchdog Supervisor | Lightweight Windows user-session background supervisor (`AuraDaemonSupervisor`), least-privilege non-SYSTEM execution, Uvicorn/FastAPI process lifecycle supervision, health check loop (5s interval), exponential backoff crash recovery, and `StartupRecoverySweep` task reconciliation. | AURA-905, AURA-706 | 8 pts (3 days) | **COMPLETED & ACCEPTED** |
 | **AURA-1006** | Session Awareness, Tray Integration & Controlled Autostart | Win32 `WM_WTSSESSION_CHANGE` session lock/unlock detection (suspending camera/mic/screen on lock), AURA-905 tray icon state extensions (`BROWSER_ACTIVE`, `DAEMON_ACTIVE`, `DAEMON_DEGRADED`), and explicit, user-controlled, reversible autostart via `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (OFF by default). | AURA-1005, AURA-905 | 5 pts (2 days) | **COMPLETED & ACCEPTED** |
-| **AURA-1007** | Phase 10 Master Integration, Security Threat Red-Teaming & Live Validation | Comprehensive cross-subsystem integration, 10 kill-switch race micro-benchmarks ($<15\text{ms}$ abort), 25-vector security threat matrix validation, zero-skip Windows 11 host verification, resource budget compliance, and complete regression pass. | AURA-1001 to 1006 | 8 pts (3 days) | **PENDING AUTHORIZATION** |
+| **AURA-1007** | Phase 10 Master Integration, Security Threat Red-Teaming & Live Validation | Comprehensive cross-subsystem integration, 16-state kill-switch race matrix, 12-vector adversarial security threat audit, zero-skip Windows 11 host verification, resource and latency benchmarks, pure local-first $0-cost certification, and full regression pass. | AURA-1001 to 1006 | 8 pts (3 days) | **COMPLETED & ACCEPTED** |
 

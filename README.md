@@ -6,7 +6,7 @@
 [![Python: 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB.svg)](docs/TECH_STACK.md)
 [![LLM: Ollama Local](https://img.shields.io/badge/LLM-Ollama%20Local-black.svg)](docs/TECH_STACK.md)
 [![Database: PostgreSQL 16 + pgvector](https://img.shields.io/badge/Database-PostgreSQL%2016%20%2B%20pgvector-336791.svg)](docs/DATABASE_SCHEMA.md)
-[![Backend Tests: 823 Passed](https://img.shields.io/badge/Backend%20Tests-823%20Passed%20(100%25)-brightgreen.svg)](apps/api/tests/)
+[![Backend Tests: 880 Passed](https://img.shields.io/badge/Backend%20Tests-880%20Passed%20(100%25)-brightgreen.svg)](apps/api/tests/)
 [![Frontend Tests: 33 Passed](https://img.shields.io/badge/Frontend%20Tests-33%20Passed%20(100%25)-brightgreen.svg)](apps/web/tests/)
 
 ---
