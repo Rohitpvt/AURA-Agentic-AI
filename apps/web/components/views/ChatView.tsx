@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuraStore } from '../../lib/store';
 import { auraApi } from '../../lib/api';
 import { StatusBadge } from '../StatusBadge';
+import { AuraOrb, deriveVisualState } from '../aura/AuraOrb';
 import {
   Terminal,
   Send,
@@ -44,6 +45,7 @@ export const ChatView: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [latestError, setLatestError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +63,7 @@ export const ChatView: React.FC = () => {
     const goalText = input;
     setInput('');
     setIsProcessing(true);
+    setLatestError(null);
 
     try {
       // Execute via agent API
@@ -85,11 +88,13 @@ export const ChatView: React.FC = () => {
 
       setMessages((prev) => [...prev, auraResponse]);
     } catch (err: any) {
+      const errorMsgText = `Error executing request: ${err.message || 'Unknown runtime error'}`;
+      setLatestError(errorMsgText);
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         sender: 'system',
         type: 'text',
-        content: `Error executing request: ${err.message || 'Unknown runtime error'}`,
+        content: errorMsgText,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -98,18 +103,31 @@ export const ChatView: React.FC = () => {
     }
   };
 
+  const visualState = deriveVisualState({
+    isProcessing,
+    hasErrors: !!latestError,
+  });
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col bg-aura-surface border border-aura-subtle rounded-xl overflow-hidden animate-in fade-in duration-200">
-      {/* Header */}
-      <div className="p-4 border-b border-aura-subtle bg-aura-surface flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-bold font-mono text-slate-100">
-            AURA CONVERSATIONAL OPERATOR INTERFACE
-          </h2>
+      {/* Header with AuraOrb Face */}
+      <div className="p-3.5 border-b border-aura-subtle bg-aura-surface flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <AuraOrb state={visualState} size={42} showStatusBadge={false} />
+          <div>
+            <h2 className="text-xs font-bold font-mono text-slate-100 flex items-center gap-2">
+              <span>AURA CONVERSATIONAL CONTROL SHELL</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60 uppercase">
+                {visualState}
+              </span>
+            </h2>
+            <p className="text-[11px] font-mono text-slate-400">
+              Zero-Leakage In-Memory Session
+            </p>
+          </div>
         </div>
-        <span className="text-[11px] font-mono text-slate-500">
-          Zero-Leakage Boundary Active
+        <span className="text-[11px] font-mono text-slate-500 hidden sm:inline">
+          Deterministic HITL Guardrails Active
         </span>
       </div>
 

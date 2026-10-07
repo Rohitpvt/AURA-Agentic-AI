@@ -6,6 +6,7 @@ import { auraApi } from '../../lib/api';
 import { useAuraStore } from '../../lib/store';
 import { StatusBadge } from '../StatusBadge';
 import { RiskBadge } from '../RiskBadge';
+import { AuraOrb, deriveVisualState } from '../aura/AuraOrb';
 import {
   Activity,
   Cpu,
@@ -72,51 +73,73 @@ export const DashboardView: React.FC = () => {
 
   const pendingApprovalsCount = approvals?.filter((a) => a.status === 'PENDING').length || 0;
 
+  // Derive visual state for the AuraOrb
+  const visualState = deriveVisualState({
+    pendingApprovalsCount,
+    isProcessing: isSubmitting,
+    hasErrors: !!submitError,
+    isDegraded: agentHealth?.status === 'DEGRADED',
+    taskStatus: tasks && tasks.length > 0 ? tasks[0].status : null,
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Welcome & Quick Goal Banner */}
+      {/* Top Welcome & Quick Goal Banner with AuraOrb Face */}
       <div className="p-6 bg-gradient-to-r from-aura-surface via-aura-elevated to-aura-surface border border-aura-subtle rounded-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Terminal className="w-48 h-48 text-cyan-400" />
         </div>
 
-        <div className="relative z-10 max-w-3xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse glow-cyan" />
-            <span className="text-xs font-mono text-cyan-400 font-semibold tracking-wider uppercase">
-              Autonomous Command Terminal
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-100 font-sans tracking-tight">
-            Welcome to AURA Command Center
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Zero-cost local cognitive orchestrator with deterministic HITL governance and sandboxed worker pools.
-          </p>
-
-          <form onSubmit={handleLaunchGoal} className="mt-5 flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={quickGoal}
-                onChange={(e) => setQuickGoal(e.target.value)}
-                placeholder="Dispatch autonomous goal (e.g., 'Research duckduckgo API and summarize findings in memory')"
-                className="w-full bg-aura-canvas/90 border border-aura-subtle rounded-lg px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono"
-              />
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-2xl flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse glow-cyan" />
+              <span className="text-xs font-mono text-cyan-400 font-semibold tracking-wider uppercase">
+                Autonomous Command Terminal
+              </span>
             </div>
-            <button
-              type="submit"
-              disabled={isSubmitting || !quickGoal.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-mono text-xs font-bold rounded-lg shadow-lg glow-cyan transition-all"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>DISPATCH GOAL</span>
-            </button>
-          </form>
+            <h1 className="text-2xl font-bold text-slate-100 font-sans tracking-tight">
+              Welcome to AURA Command Center
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Zero-cost local cognitive orchestrator with deterministic HITL governance and sandboxed worker pools.
+            </p>
 
-          {submitError && (
-            <p className="mt-2 text-xs font-mono text-rose-400">{submitError}</p>
-          )}
+            <form onSubmit={handleLaunchGoal} className="mt-5 flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={quickGoal}
+                  onChange={(e) => setQuickGoal(e.target.value)}
+                  placeholder="Dispatch autonomous goal (e.g., 'Research duckduckgo API and summarize findings in memory')"
+                  className="w-full bg-aura-canvas/90 border border-aura-subtle rounded-lg px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting || !quickGoal.trim()}
+                className="flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-mono text-xs font-bold rounded-lg shadow-lg glow-cyan transition-all"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>DISPATCH GOAL</span>
+              </button>
+            </form>
+
+            {submitError && (
+              <p className="mt-2 text-xs font-mono text-rose-400">{submitError}</p>
+            )}
+          </div>
+
+          {/* AuraOrb AI Face Presence */}
+          <div className="flex flex-col items-center justify-center shrink-0 pr-4">
+            <AuraOrb
+              state={visualState}
+              size={120}
+              showStatusBadge
+              interactive
+              className="transition-transform hover:scale-105"
+            />
+          </div>
         </div>
       </div>
 

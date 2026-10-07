@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuraStore } from '../../lib/store';
 import { auraApi } from '../../lib/api';
 import { VoiceSessionState, VoiceHUDTranscript } from '../../lib/types';
+import { AuraOrb, deriveVisualState } from '../aura/AuraOrb';
 import {
   Mic,
   MicOff,
@@ -558,21 +559,35 @@ export const VoiceHUDView: React.FC = () => {
         {/* Left Column: Visualizer & Controls (2 cols on large) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Audio Visualization Stage */}
-          <div className="bg-aura-elevated border border-aura-subtle rounded-xl p-6 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[320px]">
+          <div className="bg-aura-elevated border border-aura-subtle rounded-xl p-6 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[360px]">
             <div className="w-full flex items-center justify-between text-xs font-mono text-slate-400 mb-4">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                ACOUSTIC SPECTRUM VISUALIZER
+                ACOUSTIC SPECTRUM & COGNITIVE PRESENCE
               </span>
               <span className="text-slate-500">16kHz PCM • Web Audio Analyser</span>
             </div>
 
+            {/* Central AuraOrb Face of AURA */}
+            <div className="my-3 flex flex-col items-center justify-center">
+              <AuraOrb
+                state={deriveVisualState({
+                  voiceState: sessionState,
+                  hasErrors: !!errorMessage || sessionState === 'ERROR',
+                })}
+                size={150}
+                showStatusBadge
+                showCaption
+                caption={transcripts.filter((t) => t.speaker === 'agent').slice(-1)[0]?.text || null}
+              />
+            </div>
+
             {/* Canvas Spectrum Display */}
-            <div className="w-full h-44 flex items-center justify-center relative">
+            <div className="w-full h-24 flex items-center justify-center relative mt-2">
               <canvas
                 ref={canvasRef}
                 width={700}
-                height={170}
+                height={90}
                 className="w-full h-full rounded-lg bg-aura-canvas/60 border border-aura-subtle/40"
               />
             </div>
