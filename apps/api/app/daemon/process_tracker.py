@@ -155,14 +155,14 @@ class ProcessIdentity:
         create_time: float,
         exe_path: str,
         cmdline: List[str],
-        session_id: int = 0,
+        session_id: Optional[int] = None,
         launch_time: Optional[float] = None,
     ):
         self.pid = pid
         self.create_time = create_time
         self.exe_path = exe_path
         self.cmdline = cmdline
-        self.session_id = session_id
+        self.session_id = session_id if session_id is not None else get_current_session_id()
         self.launch_time = launch_time or time.time()
 
     def matches_live_process(self) -> bool:
@@ -177,7 +177,7 @@ class ProcessIdentity:
             if abs(p.create_time() - self.create_time) >= 0.5:
                 return False
             # If on Windows, check user session ID where supported
-            if platform.system() == "Windows" and hasattr(p, "uids"):
+            if platform.system() == "Windows":
                 try:
                     sid = wintypes.DWORD()
                     if ctypes.windll.kernel32.ProcessIdToSessionId(self.pid, ctypes.byref(sid)):
