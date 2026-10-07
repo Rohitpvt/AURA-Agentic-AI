@@ -198,7 +198,7 @@ class PlaywrightBrowserEngine:
         ssrf_guard.validate_url(url)
 
         # 3. Clamp timeout
-        clamped_timeout = min(max(1000, timeout_ms), MAX_NAVIGATION_TIMEOUT_MS)
+        clamped_timeout = min(max(1, timeout_ms), MAX_NAVIGATION_TIMEOUT_MS)
 
         # 4. Get workspace context
         ws_ctx = await self.get_or_create_workspace_context(workspace_id)

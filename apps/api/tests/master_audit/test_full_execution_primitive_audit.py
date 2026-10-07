@@ -111,6 +111,13 @@ APPROVED_DANGEROUS_PRIMITIVE_LOCATIONS = {
         "kill_switch_aware": True,
         "purpose": "Local Faster-Whisper audio transcription",
     },
+    # 11. Daemon Supervisor Process Tracker: launches backend with shell=False, Job Object containment, and PID+create_time verification
+    "apps/api/app/daemon/process_tracker.py": {
+        "primitives": ["Popen", "kill", "terminate", "ctypes"],
+        "governed": True,
+        "kill_switch_aware": True,
+        "purpose": "Governed Windows user-session daemon supervisor backend process lifecycle and containment",
+    },
 }
 
 
