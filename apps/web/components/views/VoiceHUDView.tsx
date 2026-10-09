@@ -264,11 +264,24 @@ export const VoiceHUDView: React.FC = () => {
       setSessionState('LISTENING');
       seqCounterRef.current = 0;
 
-      // 1. Get authenticated ticket from AURA-704 Gateway
-      const ticketData = await auraApi.voice.getTicket(activeWorkspace?.id);
+      // 1. Resolve workspace ID with graceful fallback
+      let wsId = activeWorkspace?.id;
+      if (!wsId) {
+        try {
+          const wsList = await auraApi.workspaces.list();
+          if (wsList && wsList.length > 0) {
+            wsId = wsList[0].id;
+          }
+        } catch (e) {
+          console.warn('Could not auto-fetch workspace list:', e);
+        }
+      }
+
+      // 2. Get authenticated ticket from AURA-704 Gateway
+      const ticketData = await auraApi.voice.getTicket(wsId);
       setTicket(ticketData.ticket);
 
-      // 2. Initialize Web Audio API
+      // 3. Initialize Web Audio API
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioContextClass();
       audioContextRef.current = audioCtx;
@@ -281,20 +294,20 @@ export const VoiceHUDView: React.FC = () => {
       analyser.fftSize = 128;
       analyserRef.current = analyser;
 
-      // 3. Connect WebSocket via ticket to backend
+      // 4. Connect WebSocket via ticket to backend
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
       const wsBase = baseUrl.replace(/^http/, 'ws');
       const wsUrl = ticketData.websocket_url
         ? (ticketData.websocket_url.startsWith('ws')
             ? ticketData.websocket_url
             : `${wsBase}${ticketData.websocket_url.replace('/api/v1', '')}`)
-        : `${wsBase}/voice/stream?ticket=${ticketData.ticket}${activeWorkspace?.id ? `&workspace_id=${activeWorkspace.id}` : ''}`;
+        : `${wsBase}/voice/stream?ticket=${ticketData.ticket}${wsId ? `&workspace_id=${wsId}` : ''}`;
 
       const ws = new WebSocket(wsUrl);
       ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
 
-      // 4. Request user microphone and begin 16kHz PCM audio streaming
+      // 5. Request user microphone and begin 16kHz PCM audio streaming
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
@@ -486,9 +499,9 @@ export const VoiceHUDView: React.FC = () => {
         }
       };
 
-      ws.onerror = () => {
-        setSessionState('ERROR');
-        setErrorMessage('WebSocket connection encountered an error.');
+      ws.onerror = (err) => {
+        console.warn('Voice WebSocket connection error:', err);
+        setErrorMessage('Voice WebSocket connection encountered an error.');
       };
 
       ws.onclose = () => {
@@ -496,8 +509,9 @@ export const VoiceHUDView: React.FC = () => {
         setSessionState('IDLE');
       };
     } catch (err: any) {
+      console.error('Failed to start voice session:', err);
       setSessionState('ERROR');
-      setErrorMessage(err.message || 'Failed to initialize voice session ticket.');
+      setErrorMessage(err.message || 'Failed to initialize voice session ticket. Please make sure you are logged in.');
     }
   };
 

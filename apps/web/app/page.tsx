@@ -36,7 +36,7 @@ export default function MainPage() {
     setKillSwitchModalOpen,
   } = useAuraStore();
 
-  const [authEmail, setAuthEmail] = useState('operator@aura.local');
+  const [authEmail, setAuthEmail] = useState('operator@example.com');
   const [authPassword, setAuthPassword] = useState('Password123!');
   const [isRegistering, setIsRegistering] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
