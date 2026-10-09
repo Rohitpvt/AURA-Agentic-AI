@@ -27,6 +27,67 @@ import {
   Loader2,
 } from 'lucide-react';
 
+// Downsamples Float32 audio samples to 16kHz
+function downsampleBuffer(buffer: Float32Array, inputRate: number, outputRate = 16000): Float32Array {
+  if (inputRate === outputRate) {
+    return buffer;
+  }
+  const sampleRatio = inputRate / outputRate;
+  const newLength = Math.round(buffer.length / sampleRatio);
+  const result = new Float32Array(newLength);
+  let offsetResult = 0;
+  let offsetBuffer = 0;
+
+  while (offsetResult < result.length) {
+    const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRatio);
+    let accum = 0;
+    let count = 0;
+    for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+      accum += buffer[i];
+      count++;
+    }
+    result[offsetResult] = count > 0 ? accum / count : 0;
+    offsetResult++;
+    offsetBuffer = nextOffsetBuffer;
+  }
+  return result;
+}
+
+// Converts Float32 [-1, 1] to Int16 [-32768, 32767]
+function floatToInt16(input: Float32Array): Int16Array {
+  const output = new Int16Array(input.length);
+  for (let i = 0; i < input.length; i++) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return output;
+}
+
+// Packs 12-byte header (uint32 seqNum + uint64 timestampMs) + Int16 PCM bytes
+function packAudioFrame(seqNum: number, pcmData: Int16Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(12 + pcmData.byteLength);
+  const view = new DataView(buffer);
+  view.setUint32(0, seqNum, true); // uint32 Little-Endian
+  view.setBigUint64(4, BigInt(Date.now()), true); // uint64 Little-Endian
+  new Int16Array(buffer, 12).set(pcmData);
+  return buffer;
+}
+
+// Normalizes raw backend voice session states to uppercase canonical VoiceSessionState
+function normalizeVoiceState(rawState: string | undefined | null): VoiceSessionState {
+  if (!rawState) return 'IDLE';
+  const upper = rawState.toUpperCase();
+  if (upper === 'LISTENING') return 'LISTENING';
+  if (upper === 'TRANSCRIBING') return 'TRANSCRIBING';
+  if (upper === 'THINKING') return 'THINKING';
+  if (upper === 'SPEAKING') return 'SPEAKING';
+  if (upper === 'INTERRUPTED') return 'INTERRUPTED';
+  if (upper === 'COMPLETED') return 'LISTENING';
+  if (upper === 'CANCELLED') return 'CANCELLED';
+  if (upper === 'ERROR') return 'ERROR';
+  return 'IDLE';
+}
+
 export const VoiceHUDView: React.FC = () => {
   const { activeWorkspace, pendingApprovals, removePendingApproval } = useAuraStore();
 
@@ -39,6 +100,16 @@ export const VoiceHUDView: React.FC = () => {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [audioGain, setAudioGain] = useState<number>(1.0);
   const [activeModel, setActiveModel] = useState<string>('Whisper-Small (STT) + Kokoro (TTS)');
+
+  // Dynamic state refs to avoid stale closures in audio loop
+  const isMutedRef = useRef<boolean>(false);
+  const audioGainRef = useRef<number>(1.0);
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+  useEffect(() => {
+    audioGainRef.current = audioGain;
+  }, [audioGain]);
 
   // Multimodal Static Context State (AURA-705)
   const [multimodalImage, setMultimodalImage] = useState<{
@@ -62,9 +133,27 @@ export const VoiceHUDView: React.FC = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const seqCounterRef = useRef<number>(0);
+  const nextPlayTimeRef = useRef<number>(0);
+  const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+
+  // Stop all active audio playback nodes
+  const stopAllPlayback = () => {
+    activeSourcesRef.current.forEach((src) => {
+      try {
+        src.stop();
+        src.disconnect();
+      } catch {}
+    });
+    activeSourcesRef.current = [];
+    if (audioContextRef.current) {
+      nextPlayTimeRef.current = audioContextRef.current.currentTime;
+    }
+  };
 
   // Auto-scroll transcript feed
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
@@ -110,7 +199,7 @@ export const VoiceHUDView: React.FC = () => {
       // Draw dynamic visualizer waves
       const bufferLength = analyserRef.current?.frequencyBinCount || 64;
       const dataArray = new Uint8Array(bufferLength);
-      if (analyserRef.current && sessionState === 'LISTENING') {
+      if (analyserRef.current && (sessionState === 'LISTENING' || sessionState === 'SPEAKING')) {
         analyserRef.current.getByteFrequencyData(dataArray);
       }
 
@@ -122,7 +211,7 @@ export const VoiceHUDView: React.FC = () => {
         if (sessionState === 'LISTENING') {
           value = Math.max(12, (dataArray[i % bufferLength] / 255) * height * 0.85);
         } else if (sessionState === 'SPEAKING') {
-          value = Math.max(15, Math.sin(phase + i * 0.25) * (height * 0.35) + height * 0.45);
+          value = Math.max(15, (dataArray[i % bufferLength] / 255) * height * 0.85 + Math.sin(phase + i * 0.25) * 8);
         } else if (sessionState === 'THINKING') {
           value = Math.max(10, Math.sin(phase * 2 + i * 0.4) * (height * 0.2) + height * 0.25);
         } else if (sessionState === 'TRANSCRIBING') {
@@ -169,6 +258,7 @@ export const VoiceHUDView: React.FC = () => {
     try {
       setErrorMessage(null);
       setSessionState('LISTENING');
+      seqCounterRef.current = 0;
 
       // 1. Get authenticated ticket from AURA-704 Gateway
       const ticketData = await auraApi.voice.getTicket(activeWorkspace?.id);
@@ -178,24 +268,16 @@ export const VoiceHUDView: React.FC = () => {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioContextClass();
       audioContextRef.current = audioCtx;
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+      nextPlayTimeRef.current = audioCtx.currentTime;
 
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 128;
       analyserRef.current = analyser;
 
-      // 3. Request user microphone (if available)
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaStreamRef.current = stream;
-          const source = audioCtx.createMediaStreamSource(stream);
-          source.connect(analyser);
-        } catch {
-          // Microphone fallback in sandboxed test environments
-        }
-      }
-
-      // 4. Connect WebSocket via ticket to backend
+      // 3. Connect WebSocket via ticket to backend
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
       const wsBase = baseUrl.replace(/^http/, 'ws');
       const wsUrl = ticketData.websocket_url
@@ -205,7 +287,51 @@ export const VoiceHUDView: React.FC = () => {
         : `${wsBase}/voice/stream?ticket=${ticketData.ticket}${activeWorkspace?.id ? `&workspace_id=${activeWorkspace.id}` : ''}`;
 
       const ws = new WebSocket(wsUrl);
+      ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
+
+      // 4. Request user microphone and begin 16kHz PCM audio streaming
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              channelCount: 1,
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+          mediaStreamRef.current = stream;
+          const source = audioCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+
+          // Real-time PCM streamer processor
+          const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+          processorRef.current = processor;
+
+          processor.onaudioprocess = (e) => {
+            if (isMutedRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+            const inputData = e.inputBuffer.getChannelData(0);
+
+            // Downsample to 16kHz Int16
+            const downsampled = downsampleBuffer(inputData, audioCtx.sampleRate, 16000);
+            const pcm16 = floatToInt16(downsampled);
+
+            seqCounterRef.current += 1;
+            const frameBuffer = packAudioFrame(seqCounterRef.current, pcm16);
+            wsRef.current.send(frameBuffer);
+          };
+
+          source.connect(processor);
+          // Connect to a silent gain node to keep processor active without mic loopback
+          const silentGain = audioCtx.createGain();
+          silentGain.gain.value = 0;
+          processor.connect(silentGain);
+          silentGain.connect(audioCtx.destination);
+        } catch (micErr) {
+          console.warn('Microphone stream initialization fallback:', micErr);
+        }
+      }
 
       ws.onopen = () => {
         setIsConnected(true);
@@ -214,18 +340,100 @@ export const VoiceHUDView: React.FC = () => {
           {
             id: String(Date.now()),
             speaker: 'system',
-            text: 'Authenticated duplex voice stream established. Listening for speech...',
+            text: 'Duplex voice stream connected. Listening for speech...',
             timestamp: new Date().toLocaleTimeString(),
           },
         ]);
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         try {
+          // A. Synthesized Audio Frame (TTS Chunk)
+          if (event.data instanceof ArrayBuffer) {
+            if (event.data.byteLength > 12) {
+              const pcm16 = new Int16Array(event.data, 12);
+              const float32 = new Float32Array(pcm16.length);
+              for (let i = 0; i < pcm16.length; i++) {
+                float32[i] = pcm16[i] / 32768.0;
+              }
+
+              if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                const ctx = audioContextRef.current;
+                if (ctx.state === 'suspended') {
+                  await ctx.resume();
+                }
+
+                const audioBuffer = ctx.createBuffer(1, float32.length, 16000);
+                audioBuffer.getChannelData(0).set(float32);
+
+                const sourceNode = ctx.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+
+                const gainNode = ctx.createGain();
+                gainNode.gain.value = audioGainRef.current;
+                sourceNode.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                // Also connect to analyser for speech visualization
+                if (analyserRef.current) {
+                  gainNode.connect(analyserRef.current);
+                }
+
+                const startTime = Math.max(ctx.currentTime, nextPlayTimeRef.current);
+                sourceNode.start(startTime);
+                nextPlayTimeRef.current = startTime + audioBuffer.duration;
+
+                activeSourcesRef.current.push(sourceNode);
+                sourceNode.onended = () => {
+                  activeSourcesRef.current = activeSourcesRef.current.filter((s) => s !== sourceNode);
+                  if (activeSourcesRef.current.length === 0) {
+                    setSessionState('LISTENING');
+                  }
+                };
+
+                setSessionState('SPEAKING');
+              }
+            }
+            return;
+          }
+
+          // B. JSON Control & Telemetry Frames
           if (typeof event.data === 'string') {
             const data = JSON.parse(event.data);
             if (data.type === 'state_change') {
-              setSessionState(data.state);
+              setSessionState(normalizeVoiceState(data.state));
+            } else if (data.type === 'barge_in') {
+              setSessionState('INTERRUPTED');
+              stopAllPlayback();
+              setTimeout(() => setSessionState('LISTENING'), 600);
+            } else if (data.type === 'turn_completed') {
+              if (data.transcript) {
+                setTranscripts((prev) => [
+                  ...prev,
+                  {
+                    id: String(Date.now()) + '-u',
+                    speaker: 'user',
+                    text: data.transcript,
+                    timestamp: new Date().toLocaleTimeString(),
+                    is_untrusted: true,
+                    envelope_type: 'spoken',
+                  },
+                ]);
+              }
+              if (data.agent_response) {
+                setTranscripts((prev) => [
+                  ...prev,
+                  {
+                    id: String(Date.now()) + '-a',
+                    speaker: 'agent',
+                    text: data.agent_response,
+                    timestamp: new Date().toLocaleTimeString(),
+                  },
+                ]);
+              }
+              if (activeSourcesRef.current.length === 0) {
+                setSessionState('LISTENING');
+              }
             } else if (data.type === 'transcription_final') {
               setSessionState('THINKING');
               setTranscripts((prev) => [
@@ -252,11 +460,12 @@ export const VoiceHUDView: React.FC = () => {
               ]);
             } else if (data.type === 'interrupted') {
               setSessionState('INTERRUPTED');
-              setTimeout(() => setSessionState('LISTENING'), 1200);
+              stopAllPlayback();
+              setTimeout(() => setSessionState('LISTENING'), 800);
             }
           }
-        } catch {
-          // Handled frame
+        } catch (e) {
+          console.error('Error handling voice WebSocket frame:', e);
         }
       };
 
@@ -277,6 +486,11 @@ export const VoiceHUDView: React.FC = () => {
 
   // Stop / Disconnect Voice Session
   const stopSession = () => {
+    stopAllPlayback();
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -295,8 +509,9 @@ export const VoiceHUDView: React.FC = () => {
 
   // Barge-In / Interruption Trigger
   const handleBargeIn = () => {
+    stopAllPlayback();
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: 'interrupt' }));
+      wsRef.current.send(JSON.stringify({ type: 'barge_in' }));
     }
     setSessionState('INTERRUPTED');
     setTranscripts((prev) => [
@@ -310,18 +525,19 @@ export const VoiceHUDView: React.FC = () => {
     ]);
     setTimeout(() => {
       setSessionState('LISTENING');
-    }, 1000);
+    }, 800);
   };
 
   // Emergency Cancellation Trigger
   const handleCancel = () => {
+    stopAllPlayback();
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ action: 'cancel' }));
+      wsRef.current.send(JSON.stringify({ type: 'cancel' }));
     }
     setSessionState('CANCELLED');
     setTimeout(() => {
       stopSession();
-    }, 800);
+    }, 600);
   };
 
   // Multimodal Image Drop / Upload Handler
