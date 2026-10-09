@@ -117,6 +117,51 @@ async def create_voice_ticket(
     )
 
 
+async def _generate_voice_agent_reply(untrusted_envelope: str, workspace_id: uuid.UUID) -> str:
+    """Generate concise, natural spoken agent dialogue for voice user input."""
+    import re
+    from app.core.config import settings
+    from app.services.providers.base import ChatMessage, ChatRequest
+    from app.services.providers.router import model_router
+
+    match = re.search(r"<untrusted_spoken_content>(.*?)</untrusted_spoken_content>", untrusted_envelope, re.DOTALL)
+    user_query = match.group(1).strip() if match else untrusted_envelope.strip()
+
+    if not user_query:
+        return "I am listening. How can I help you today?"
+
+    cleaned = user_query.lower().strip("?.! ")
+    if cleaned in ("hello", "hi", "hey", "hello can you hear me", "can you hear me", "are you there", "testing", "test", "halo"):
+        return "Hello! I can hear you clearly. How can I assist you with your tasks today?"
+    if cleaned in ("who are you", "what are you", "introduce yourself"):
+        return "I am AURA, your autonomous, local-first agentic AI operating system."
+
+    system_prompt = (
+        "You are AURA, an intelligent voice AI assistant. "
+        "The user is speaking to you via real-time microphone. "
+        "Answer naturally, directly, and concisely in 1 to 3 clear spoken sentences. "
+        "Do NOT use markdown bold/italic formatting, bullet lists, or code fences."
+    )
+    chat_req = ChatRequest(
+        model=settings.LOCAL_MODEL_GENERAL,
+        messages=[
+            ChatMessage(role="system", content=system_prompt),
+            ChatMessage(role="user", content=user_query),
+        ],
+        temperature=0.7,
+        max_tokens=180,
+    )
+    try:
+        chat_resp = await model_router.execute_chat(chat_req, routing_mode="auto")
+        reply = chat_resp.content.strip()
+        if reply:
+            return reply
+    except Exception as e:
+        logger.warning(f"Voice LLM chat generation failed ({e}); falling back to heuristic conversational response.")
+
+    return f"I understood your request: {user_query}. Let me know how you would like to proceed."
+
+
 # ==============================================================================
 # 2. Authenticated Real-Time Voice WebSocket Gateway
 # ==============================================================================
@@ -240,7 +285,10 @@ async def voice_stream_gateway(
                         })
 
                         # Execute turn processing: STT -> Envelope -> Agent -> TTS Stream
-                        async for chunk in session.process_turn(audio_to_process):
+                        async def agent_turn_handler(spoken_env: str) -> str:
+                            return await _generate_voice_agent_reply(spoken_env, consumed_ticket.workspace_id)
+
+                        async for chunk in session.process_turn(audio_to_process, agent_handler_fn=agent_turn_handler):
                             if session.active_cancel_event.is_set():
                                 break
 

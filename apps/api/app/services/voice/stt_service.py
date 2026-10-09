@@ -137,7 +137,7 @@ class FasterWhisperSTTService:
         if self._model is None:
             self.load_model()
 
-        # 5. CTranslate2 Transcription
+        # 5. CTranslate2 Transcription with Anti-Hallucination & Anti-Repetition Guardrails
         try:
             segments_gen, info = self._model.transcribe(
                 audio_float,
@@ -145,21 +145,47 @@ class FasterWhisperSTTService:
                 beam_size=5,
                 vad_filter=False,  # Stream VAD handled upstream by Silero
                 temperature=0.0,
+                condition_on_previous_text=False,
+                repetition_penalty=1.25,
+                no_repeat_ngram_size=3,
+                no_speech_threshold=0.6,
+                compression_ratio_threshold=2.4,
+                hallucination_silence_threshold=0.5,
             )
 
             segments_list = []
             text_parts = []
             for seg in segments_gen:
-                text_parts.append(seg.text)
-                segments_list.append({
-                    "id": seg.id,
-                    "start": seg.start,
-                    "end": seg.end,
-                    "text": seg.text.strip(),
-                    "avg_logprob": seg.avg_logprob,
-                })
+                seg_text = seg.text.strip()
+                if seg_text:
+                    text_parts.append(seg_text)
+                    segments_list.append({
+                        "id": seg.id,
+                        "start": seg.start,
+                        "end": seg.end,
+                        "text": seg_text,
+                        "avg_logprob": seg.avg_logprob,
+                    })
 
-            transcribed_text = " ".join(text_parts).strip()
+            raw_text = " ".join(text_parts).strip()
+            # Remove pathological repetitive token loops (e.g., "Yeah. Yeah. Yeah. ...")
+            tokens = raw_text.split()
+            cleaned_tokens = []
+            prev_token = None
+            repeat_count = 0
+            for tok in tokens:
+                clean_tok = tok.lower().strip(".,!?;:")
+                clean_prev = prev_token.lower().strip(".,!?;:") if prev_token else None
+                if clean_tok and clean_tok == clean_prev:
+                    repeat_count += 1
+                    if repeat_count < 3:
+                        cleaned_tokens.append(tok)
+                else:
+                    prev_token = tok
+                    repeat_count = 1
+                    cleaned_tokens.append(tok)
+
+            transcribed_text = " ".join(cleaned_tokens).strip()
             detected_lang = info.language if info else (language or "en")
 
         except Exception as e:

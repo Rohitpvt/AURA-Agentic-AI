@@ -104,12 +104,16 @@ export const VoiceHUDView: React.FC = () => {
   // Dynamic state refs to avoid stale closures in audio loop
   const isMutedRef = useRef<boolean>(false);
   const audioGainRef = useRef<number>(1.0);
+  const sessionStateRef = useRef<VoiceSessionState>('IDLE');
   useEffect(() => {
     isMutedRef.current = isMuted;
   }, [isMuted]);
   useEffect(() => {
     audioGainRef.current = audioGain;
   }, [audioGain]);
+  useEffect(() => {
+    sessionStateRef.current = sessionState;
+  }, [sessionState]);
 
   // Multimodal Static Context State (AURA-705)
   const [multimodalImage, setMultimodalImage] = useState<{
@@ -312,6 +316,19 @@ export const VoiceHUDView: React.FC = () => {
           processor.onaudioprocess = (e) => {
             if (isMutedRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
             const inputData = e.inputBuffer.getChannelData(0);
+
+            // Suppress microphone stream during assistant playback to prevent speaker acoustic echo
+            if (sessionStateRef.current === 'SPEAKING' || activeSourcesRef.current.length > 0) {
+              let peak = 0;
+              for (let i = 0; i < inputData.length; i++) {
+                const abs = Math.abs(inputData[i]);
+                if (abs > peak) peak = abs;
+              }
+              // Only pass through high amplitude voice if intentional user barge-in
+              if (peak < 0.28) {
+                return;
+              }
+            }
 
             // Downsample to 16kHz Int16
             const downsampled = downsampleBuffer(inputData, audioCtx.sampleRate, 16000);
