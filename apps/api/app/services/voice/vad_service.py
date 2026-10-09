@@ -159,13 +159,14 @@ class SileroVADService:
         now = time.time()
 
         if is_voice:
-            active_state.is_speaking = True
-            active_state.last_speech_time = now
-            if active_state.speech_start_time is None:
-                active_state.speech_start_time = now
             active_state.speech_frames_count += 1
             active_state.silence_frames_count = 0
-            active_state.speech_duration_ms += frame_duration_ms
+            active_state.last_speech_time = now
+            if active_state.speech_frames_count >= 3:
+                active_state.is_speaking = True
+                if active_state.speech_start_time is None:
+                    active_state.speech_start_time = now
+                active_state.speech_duration_ms += frame_duration_ms
         else:
             active_state.silence_frames_count += 1
             # Check hangover window (using audio frame duration and wall clock)
@@ -174,55 +175,74 @@ class SileroVADService:
                 elapsed_wall_ms = ((now - active_state.last_speech_time) * 1000.0) if active_state.last_speech_time else 0.0
                 if silence_audio_ms >= self.hangover_ms or elapsed_wall_ms >= self.hangover_ms:
                     active_state.is_speaking = False
+            else:
+                active_state.speech_frames_count = 0
 
         elapsed_inference_ms = (time.perf_counter() - start_time) * 1000.0
         logger.debug(f"VAD frame inference: prob={speech_prob:.3f}, speaking={active_state.is_speaking}, latency={elapsed_inference_ms:.2f}ms")
         return speech_prob, active_state
 
     def _infer_onnx(self, samples: np.ndarray, state: VADState) -> float:
-        """Run ONNX runtime inference for Silero VAD."""
-        # Ensure audio samples match expected window size (pad or slice to 512)
-        if len(samples) < self.WINDOW_SIZE_SAMPLES:
-            padded = np.zeros(self.WINDOW_SIZE_SAMPLES, dtype=np.float32)
-            padded[:len(samples)] = samples
-            tensor_input = padded.reshape(1, -1)
-        elif len(samples) > self.WINDOW_SIZE_SAMPLES:
-            tensor_input = samples[:self.WINDOW_SIZE_SAMPLES].reshape(1, -1)
-        else:
-            tensor_input = samples.reshape(1, -1)
+        """Run ONNX runtime inference for Silero VAD across sequential 512-sample windows."""
+        chunk_size = self.WINDOW_SIZE_SAMPLES
+        num_samples = len(samples)
+        if num_samples == 0:
+            return 0.0
 
-        sr_tensor = np.array([self.SAMPLE_RATE], dtype=np.int64)
+        # Initialize persistent recurrent state
+        if self._is_v5_model:
+            if state.state_v5 is None:
+                state.state_v5 = np.zeros((2, 1, 128), dtype=np.float32)
+            sr_tensor = np.array(self.SAMPLE_RATE, dtype=np.int64)
+        else:
+            if state.h_state is None:
+                state.h_state = np.zeros((2, 1, 64), dtype=np.float32)
+            if state.c_state is None:
+                state.c_state = np.zeros((2, 1, 64), dtype=np.float32)
+            sr_tensor = np.array([self.SAMPLE_RATE], dtype=np.int64)
+
+        # Slice into 512-sample frames (pad final frame if at least half full)
+        slices = []
+        if num_samples < chunk_size:
+            padded = np.zeros(chunk_size, dtype=np.float32)
+            padded[:num_samples] = samples
+            slices.append(padded)
+        else:
+            for i in range(0, num_samples, chunk_size):
+                sub = samples[i:i + chunk_size]
+                if len(sub) == chunk_size:
+                    slices.append(sub)
+                elif len(sub) >= chunk_size // 2:
+                    padded = np.zeros(chunk_size, dtype=np.float32)
+                    padded[:len(sub)] = sub
+                    slices.append(padded)
 
         try:
-            if self._is_v5_model:
-                if state.state_v5 is None:
-                    state.state_v5 = np.zeros((2, 1, 128), dtype=np.float32)
-                ort_inputs = {
-                    "input": tensor_input,
-                    "state": state.state_v5,
-                    "sr": sr_tensor,
-                }
-                out, new_state = self._session.run(None, ort_inputs)
-                state.state_v5 = new_state
-                prob = float(out[0][0])
-            else:
-                if state.h_state is None:
-                    state.h_state = np.zeros((2, 1, 64), dtype=np.float32)
-                if state.c_state is None:
-                    state.c_state = np.zeros((2, 1, 64), dtype=np.float32)
+            probs = []
+            for sl in slices:
+                tensor_input = sl.reshape(1, -1)
+                if self._is_v5_model:
+                    ort_inputs = {
+                        "input": tensor_input,
+                        "state": state.state_v5,
+                        "sr": sr_tensor,
+                    }
+                    out, new_state = self._session.run(None, ort_inputs)
+                    state.state_v5 = new_state
+                    probs.append(float(out[0][0]))
+                else:
+                    ort_inputs = {
+                        "input": tensor_input,
+                        "sr": sr_tensor,
+                        "h": state.h_state,
+                        "c": state.c_state,
+                    }
+                    out, new_h, new_c = self._session.run(None, ort_inputs)
+                    state.h_state = new_h
+                    state.c_state = new_c
+                    probs.append(float(out[0][0]))
 
-                ort_inputs = {
-                    "input": tensor_input,
-                    "sr": sr_tensor,
-                    "h": state.h_state,
-                    "c": state.c_state,
-                }
-                out, new_h, new_c = self._session.run(None, ort_inputs)
-                state.h_state = new_h
-                state.c_state = new_c
-                prob = float(out[0][0])
-
-            return max(0.0, min(1.0, prob))
+            return max(probs) if probs else 0.0
         except Exception as e:
             logger.warning(f"ONNX VAD inference failed: {e}. Falling back to spectral energy.")
             return self._infer_spectral_energy(samples)
@@ -238,8 +258,8 @@ class SileroVADService:
         # Zero Crossing Rate
         zero_crossings = np.sum(np.abs(np.diff(np.sign(samples)))) / (2.0 * len(samples))
 
-        # Spectral energy probability sigmoid
-        # Typical speech RMS > 0.015
-        val = (rms - 0.015) * 60.0 + (zero_crossings - 0.1) * 5.0
+        # Spectral energy probability sigmoid with noise rejection floor
+        # Voiced speech typically exceeds 0.03 RMS
+        val = (rms - 0.03) * 75.0 + (zero_crossings - 0.12) * 8.0
         prob = 1.0 / (1.0 + math.exp(-max(-20.0, min(20.0, val))))
         return float(prob)

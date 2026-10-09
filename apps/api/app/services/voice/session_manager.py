@@ -131,7 +131,7 @@ class VoiceEvent:
 class VoiceSession:
     """Encapsulates real-time voice interaction, bi-directional state, and cooperative barge-in."""
 
-    MIN_SPEECH_DURATION_MS: float = 300.0  # Minimum speech required to trigger transcription
+    MIN_SPEECH_DURATION_MS: float = 500.0  # Minimum speech required to trigger transcription
 
     def __init__(
         self,
@@ -300,6 +300,10 @@ class VoiceSession:
                             "audio_bytes": audio_to_process,
                             "duration_ms": buffered_duration_ms,
                         }
+                    elif len(self.ephemeral_audio_buffer) > 0:
+                        # Transient noise / click below speech threshold; purge buffer
+                        self.ephemeral_audio_buffer.clear()
+                        self.vad_state.reset()
 
             return {"action": "noop", "prob": speech_prob}
 
