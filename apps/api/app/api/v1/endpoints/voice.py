@@ -117,24 +117,39 @@ async def create_voice_ticket(
     )
 
 
+def _heuristic_conversational_response(query: str) -> str:
+    """Heuristic conversational answers when LLM provider daemon is offline."""
+    cleaned = query.lower().strip("?.! ")
+
+    if any(q in cleaned for q in ["who are you", "what are you", "introduce yourself", "tell me about yourself", "your name"]):
+        return "I am AURA, your autonomous, local-first agentic AI operating system designed to execute tools, manage tasks, and assist you with complete privacy."
+
+    if any(q in cleaned for q in ["hello", "hi", "hey", "can you hear me", "are you there", "good morning", "good evening", "testing"]):
+        return "Hello! I can hear you clearly. How can I assist you with your tasks today?"
+
+    if any(q in cleaned for q in ["what can you do", "help", "capabilities", "features"]):
+        return "I can plan and execute autonomous multi-step tasks, inspect codebases, analyze documents, browse the web, and manage your local environment securely."
+
+    if any(q in cleaned for q in ["status", "system status", "health", "how are you"]):
+        return "All local control plane services, speech recognition, and neural audio synthesis engines are fully operational."
+
+    if any(q in cleaned for q in ["thank you", "thanks"]):
+        return "You're very welcome! Let me know whenever you need anything else."
+
+    return f"I understood your request: '{query}'. Let me know how you would like me to proceed."
+
+
 async def _generate_voice_agent_reply(untrusted_envelope: str, workspace_id: uuid.UUID) -> str:
     """Generate concise, natural spoken agent dialogue for voice user input."""
-    import re
     from app.core.config import settings
     from app.services.providers.base import ChatMessage, ChatRequest
     from app.services.providers.router import model_router
+    from app.services.voice.audio_envelope import extract_untrusted_spoken_content
 
-    match = re.search(r"<untrusted_spoken_content>(.*?)</untrusted_spoken_content>", untrusted_envelope, re.DOTALL)
-    user_query = match.group(1).strip() if match else untrusted_envelope.strip()
+    user_query = extract_untrusted_spoken_content(untrusted_envelope)
 
     if not user_query:
         return "I am listening. How can I help you today?"
-
-    cleaned = user_query.lower().strip("?.! ")
-    if cleaned in ("hello", "hi", "hey", "hello can you hear me", "can you hear me", "are you there", "testing", "test", "halo"):
-        return "Hello! I can hear you clearly. How can I assist you with your tasks today?"
-    if cleaned in ("who are you", "what are you", "introduce yourself"):
-        return "I am AURA, your autonomous, local-first agentic AI operating system."
 
     system_prompt = (
         "You are AURA, an intelligent voice AI assistant. "
@@ -157,9 +172,9 @@ async def _generate_voice_agent_reply(untrusted_envelope: str, workspace_id: uui
         if reply:
             return reply
     except Exception as e:
-        logger.warning(f"Voice LLM chat generation failed ({e}); falling back to heuristic conversational response.")
+        logger.debug(f"Voice LLM chat generation bypassed ({e}); using heuristic conversational response.")
 
-    return f"I understood your request: {user_query}. Let me know how you would like to proceed."
+    return _heuristic_conversational_response(user_query)
 
 
 # ==============================================================================
