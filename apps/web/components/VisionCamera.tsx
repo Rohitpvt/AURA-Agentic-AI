@@ -209,10 +209,10 @@ export const VisionCamera: React.FC<VisionCameraProps> = ({ workspaceId, onState
       const ticketRes = await api.vision.getTicket(targetWsId, 60, 'camera_stream');
       const ticketToken = ticketRes.ticket;
 
-      // 3. Connect to duplex WebSocket
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/api/v1/vision/stream?ticket=${encodeURIComponent(ticketToken)}&workspace_id=${encodeURIComponent(targetWsId)}`;
+      // 3. Connect to duplex WebSocket on backend
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+      const wsBase = baseUrl.replace(/^http/, 'ws');
+      const wsUrl = `${wsBase}/vision/stream?ticket=${encodeURIComponent(ticketToken)}&workspace_id=${encodeURIComponent(targetWsId)}`;
 
       const ws = new WebSocket(wsUrl);
       ws.binaryType = 'arraybuffer';

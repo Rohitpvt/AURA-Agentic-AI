@@ -195,10 +195,14 @@ export const VoiceHUDView: React.FC = () => {
         }
       }
 
-      // 4. Connect WebSocket via ticket
-      const wsUrl = ticketData.websocket_url.startsWith('ws')
-        ? ticketData.websocket_url
-        : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${ticketData.websocket_url}`;
+      // 4. Connect WebSocket via ticket to backend
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+      const wsBase = baseUrl.replace(/^http/, 'ws');
+      const wsUrl = ticketData.websocket_url
+        ? (ticketData.websocket_url.startsWith('ws')
+            ? ticketData.websocket_url
+            : `${wsBase}${ticketData.websocket_url.replace('/api/v1', '')}`)
+        : `${wsBase}/voice/stream?ticket=${ticketData.ticket}${activeWorkspace?.id ? `&workspace_id=${activeWorkspace.id}` : ''}`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
