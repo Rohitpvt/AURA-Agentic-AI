@@ -33,8 +33,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-_DEFAULT_DIR_NAME = ".openjarvis"
-_XDG_SUBDIR_NAME = "openjarvis"
+_DEFAULT_DIR_NAME = ".aura"
+_XDG_SUBDIR_NAME = "aura"
 
 
 class ConfigurationError(RuntimeError):
