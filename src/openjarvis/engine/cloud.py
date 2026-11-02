@@ -46,6 +46,10 @@ PRICING: Dict[str, tuple[float, float]] = {
     "claude-3-opus-20240229": (15.00, 75.00),
     "claude-3-opus": (15.00, 75.00),
     # Google
+    "gemini-3.8-flash": (0.30, 1.20),
+    "gemini-3.5-flash": (0.20, 0.80),
+    "gemini-3.5-flash-lite": (0.10, 0.40),
+    "gemini-3.1-flash-lite": (0.10, 0.40),
     "gemini-2.5-pro": (1.25, 10.00),
     "gemini-2.5-flash": (0.30, 2.50),
     "gemini-2.0-flash": (0.10, 0.40),
@@ -94,6 +98,10 @@ _ANTHROPIC_FIXED_SAMPLING_PREFIXES = (
     "claude-haiku-5-5",
 )
 _GOOGLE_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
     "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
@@ -419,6 +427,19 @@ class CloudEngine(InferenceEngine):
         self._init_clients()
 
     def _init_clients(self) -> None:
+        try:
+            from openjarvis.core.paths import get_config_dir
+            keys_file = get_config_dir() / "cloud-keys.env"
+            if keys_file.exists():
+                for raw_line in keys_file.read_text(encoding="utf-8").splitlines():
+                    line = raw_line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k, v = k.strip(), v.strip()
+                        if k and v and k not in os.environ:
+                            os.environ[k] = v
+        except Exception:
+            pass
         if os.environ.get("OPENAI_API_KEY"):
             try:
                 import openai
