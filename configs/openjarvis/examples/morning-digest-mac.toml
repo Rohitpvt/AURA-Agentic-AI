@@ -1,18 +1,18 @@
 # Morning Digest — Mac (Apple Silicon) with Ollama
-# Copy to ~/.openjarvis/config.toml and customize
+# Copy to ~/.aura/config.toml and customize
 #
 # Requirements:
 #   - Ollama installed (https://ollama.com)
-#   - ollama pull qwen3.5:9b
+#   - ollama pull qwen2.5:7b
 #   - Cartesia API key (https://play.cartesia.ai) or OpenAI API key
 
 [engine]
 default = "ollama"
 
 [intelligence]
-default_model = "qwen3.5:9b"       # Good balance of speed + quality on M1/M2/M3
-# default_model = "qwen3.5:4b"     # Faster, lower quality
-# default_model = "qwen3.5:35b"    # Slower, higher quality (needs 32GB+ RAM)
+default_model = "qwen2.5:7b"       # Good balance of speed + quality on M1/M2/M3
+# default_model = "llama3.2:3b"     # Faster, lower quality
+# default_model = "qwen2.5:14b"    # Slower, higher quality (needs 32GB+ RAM)
 
 [agent]
 default_agent = "simple"

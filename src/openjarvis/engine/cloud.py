@@ -28,46 +28,38 @@ logger = logging.getLogger(__name__)
 
 # Pricing per million tokens (input, output)
 PRICING: Dict[str, tuple[float, float]] = {
+    # OpenAI
     "gpt-4o": (2.50, 10.00),
     "gpt-4o-mini": (0.15, 0.60),
-    "gpt-5": (10.00, 30.00),
-    "gpt-5.4": (15.00, 60.00),
-    "gpt-5-mini": (0.25, 2.00),
+    "gpt-4-turbo": (10.00, 30.00),
+    "o1": (15.00, 60.00),
+    "o1-mini": (1.10, 4.40),
     "o3-mini": (1.10, 4.40),
-    "claude-sonnet-4-20250514": (3.00, 15.00),
-    "claude-opus-4-20250514": (15.00, 75.00),
+    # Anthropic
+    "claude-3-7-sonnet-20250219": (3.00, 15.00),
+    "claude-3-7-sonnet": (3.00, 15.00),
+    "claude-3-5-sonnet-20241022": (3.00, 15.00),
+    "claude-3-5-sonnet": (3.00, 15.00),
     "claude-haiku-3-5-20241022": (0.80, 4.00),
-    "claude-opus-4-6": (5.00, 25.00),
-    "claude-sonnet-4-6": (3.00, 15.00),
-    "claude-haiku-4-5": (1.00, 5.00),
+    "claude-3-5-haiku-20241022": (0.80, 4.00),
+    "claude-3-5-haiku": (0.80, 4.00),
+    "claude-3-opus-20240229": (15.00, 75.00),
+    "claude-3-opus": (15.00, 75.00),
+    # Google
     "gemini-2.5-pro": (1.25, 10.00),
     "gemini-2.5-flash": (0.30, 2.50),
-    "gemini-3-pro": (2.00, 12.00),
-    "gemini-3-flash": (0.50, 3.00),
-    "gemini-3.1-pro-preview": (2.50, 15.00),
-    "gemini-3.1-flash-lite-preview": (0.30, 2.50),
-    "gemini-3-flash-preview": (0.50, 3.00),
-    "claude-haiku-4-5-20251001": (1.00, 5.00),
+    "gemini-2.0-flash": (0.10, 0.40),
+    "gemini-1.5-pro": (1.25, 5.00),
+    "gemini-1.5-flash": (0.075, 0.30),
+    # DeepSeek
+    "deepseek-chat": (0.14, 0.28),
+    "deepseek-reasoner": (0.55, 2.19),
+    # MiniMax
     "MiniMax-M3": (0.30, 1.20),
     "MiniMax-M2.7": (0.30, 1.20),
     "MiniMax-M2.7-highspeed": (0.60, 2.40),
     "MiniMax-M2.5": (0.30, 1.20),
     "MiniMax-M2.5-highspeed": (0.60, 2.40),
-    "deepseek-v4-flash": (0.27, 1.10),
-    "deepseek-v4-pro": (0.55, 2.19),
-    # Atlas Cloud — an aggregator, so keys carry the "atlascloud/" routing
-    # prefix (same convention as OpenRouter below). Rates are USD per 1M
-    # tokens, read from the gateway's own catalog: GET
-    # https://api.atlascloud.ai/v1/models returns pricing.prompt /
-    # pricing.completion in USD *per token*; multiply by 1e6.
-    "atlascloud/openai/gpt-4.1-mini": (0.40, 1.60),
-    "atlascloud/openai/gpt-5.4-mini": (0.75, 4.50),
-    "atlascloud/deepseek-ai/deepseek-v3.2": (0.26, 0.38),
-    "atlascloud/Qwen/Qwen3-235B-A22B-Instruct-2507": (0.20, 0.88),
-    "atlascloud/qwen/qwen3.5-35b-a3b": (0.225, 1.80),
-    "atlascloud/zai-org/GLM-4.6": (0.60, 2.20),
-    "atlascloud/moonshotai/kimi-k2.5": (0.49, 2.50),
-    "atlascloud/minimaxai/minimax-m2.5": (0.295, 1.20),
 }
 
 _MINIMAX_M3_LONG_CONTEXT_THRESHOLD = 512_000
@@ -77,19 +69,21 @@ _MINIMAX_M3_LONG_CONTEXT_PRICING = (0.60, 2.40)
 _OPENAI_MODELS = [
     "gpt-4o",
     "gpt-4o-mini",
-    "gpt-5",
-    "gpt-5.4",
-    "gpt-5-mini",
+    "o1",
+    "o1-mini",
     "o3-mini",
+    "gpt-4-turbo",
 ]
 _ANTHROPIC_MODELS = [
-    "claude-sonnet-4-20250514",
-    "claude-opus-4-20250514",
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-sonnet",
     "claude-haiku-3-5-20241022",
-    "claude-opus-4-6",
-    "claude-sonnet-4-6",
-    "claude-haiku-4-5",
-    "claude-haiku-4-5-20251001",
+    "claude-3-5-haiku-20241022",
+    "claude-3-5-haiku",
+    "claude-3-opus-20240229",
+    "claude-3-opus",
 ]
 _ANTHROPIC_FIXED_SAMPLING_PREFIXES = (
     "claude-opus-4-7",
@@ -102,11 +96,9 @@ _ANTHROPIC_FIXED_SAMPLING_PREFIXES = (
 _GOOGLE_MODELS = [
     "gemini-2.5-pro",
     "gemini-2.5-flash",
-    "gemini-3-pro",
-    "gemini-3-flash",
-    "gemini-3.1-pro-preview",
-    "gemini-3.1-flash-lite-preview",
-    "gemini-3-flash-preview",
+    "gemini-2.0-flash",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
 ]
 _MINIMAX_MODELS = [
     "MiniMax-M3",
@@ -116,20 +108,22 @@ _MINIMAX_MODELS = [
     "MiniMax-M2.5-highspeed",
 ]
 _DEEPSEEK_MODELS = [
-    "deepseek-v4-flash",
-    "deepseek-v4-pro",
+    "deepseek-chat",
+    "deepseek-reasoner",
 ]
 
 # OpenRouter models — prefixed with "openrouter/" so they can be identified
 _OPENROUTER_POPULAR = [
     "openrouter/auto",
     "openrouter/openai/gpt-4o",
-    "openrouter/anthropic/claude-sonnet-4",
-    "openrouter/google/gemini-2.5-pro",
+    "openrouter/openai/gpt-4o-mini",
+    "openrouter/anthropic/claude-3.5-sonnet",
+    "openrouter/anthropic/claude-3.7-sonnet",
+    "openrouter/google/gemini-2.0-flash-001",
     "openrouter/meta-llama/llama-3.3-70b-instruct",
-    "openrouter/mistralai/mistral-large",
     "openrouter/deepseek/deepseek-r1",
-    "openrouter/qwen/qwen3-235b-a22b",
+    "openrouter/deepseek/deepseek-chat",
+    "openrouter/qwen/qwen-2.5-72b-instruct",
 ]
 
 # Atlas Cloud models — prefixed with "atlascloud/" so they can be identified.
@@ -155,8 +149,6 @@ _CODEX_MODELS = [
     "codex/gpt-4o",
     "codex/gpt-4o-mini",
     "codex/o3-mini",
-    "codex/gpt-5-mini",
-    "codex/gpt-5-mini-2025-08-07",
 ]
 
 
@@ -230,10 +222,7 @@ def _is_openai_model(model: str) -> bool:
 def _is_openai_reasoning_model(model: str) -> bool:
     """Check if model is an OpenAI reasoning model that restricts temperature."""
     m = model.lower()
-    # o1/o3 series and gpt-5-mini (all variants) are reasoning models
-    if m.startswith(("o1", "o3")):
-        return True
-    return m == "gpt-5-mini" or m.startswith("gpt-5-mini-")
+    return m.startswith(("o1", "o3", "o4"))
 
 
 def _is_unsupported_temperature_error(exc: Exception) -> bool:

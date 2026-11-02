@@ -1,5 +1,5 @@
 # LLM-Guided Spec Search — quickstart configuration
-# Copy to ~/.openjarvis/config.toml and run:
+# Copy to ~/.aura/config.toml and run:
 #   python -m openjarvis_examples.spec_search_quickstart
 #
 # This config has two parts:
@@ -24,7 +24,7 @@
 default = "ollama"               # swap to "vllm" on H100/RTX 6000 / DGX Spark
 
 [intelligence]
-default_model = "qwen3.5:9b"     # the local student
+default_model = "qwen2.5:7b"     # the local student
 # default_model = "qwen3.5:27b-fp8"  # workstation tier
 
 [agent]

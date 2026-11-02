@@ -539,8 +539,8 @@ class TestCodexClientInit:
         engine = CloudEngine()
         models = engine.list_models()
         assert "codex/gpt-4o" in models
-        assert "codex/gpt-5-mini" in models
-        assert "codex/gpt-5-mini-2025-08-07" in models
+        assert "codex/gpt-4o-mini" in models
+        assert "codex/o3-mini" in models
 
     def test_no_codex_key_means_no_codex(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
@@ -825,10 +825,10 @@ class TestCloudEngineDeepSeek:
         assert _is_openai_model("deepseek-v4-pro") is False
 
     def test_pricing_entries_present(self) -> None:
-        assert estimate_cost("deepseek-v4-flash", 1_000_000, 1_000_000) == (
-            pytest.approx(1.37)  # 0.27 + 1.10
+        assert estimate_cost("deepseek-chat", 1_000_000, 1_000_000) == (
+            pytest.approx(0.42)  # 0.14 + 0.28
         )
-        assert estimate_cost("deepseek-v4-pro", 1_000_000, 1_000_000) == (
+        assert estimate_cost("deepseek-reasoner", 1_000_000, 1_000_000) == (
             pytest.approx(2.74)  # 0.55 + 2.19
         )
 
@@ -863,12 +863,12 @@ class TestCloudEngineDeepSeek:
 
         assert engine.health() is True
         models = engine.list_models()
-        assert "deepseek-v4-flash" in models
-        assert "deepseek-v4-pro" in models
+        assert "deepseek-chat" in models
+        assert "deepseek-reasoner" in models
         # can_serve must agree with list_models (regression for the missing
         # _client_for_model deepseek branch flagged by the #504 verifier).
-        assert engine.can_serve("deepseek-v4-pro") is True
-        assert engine.can_serve("deepseek-v4-flash") is True
+        assert engine.can_serve("deepseek-reasoner") is True
+        assert engine.can_serve("deepseek-chat") is True
 
     def test_generate_routes_to_deepseek_client(
         self, monkeypatch: pytest.MonkeyPatch

@@ -1,4 +1,4 @@
-# OpenJarvis configuration — GLM-4.7-Flash eval on 8x A100-80GB
+# AURA configuration — GLM-4.7-Flash eval on 8x A100-80GB
 
 # ═══════════════════════════════════════════════════════════════
 # PILLAR 1: Intelligence — The Model
@@ -31,7 +31,7 @@ context_from_memory = false               # No memory injection during eval
 # ═══════════════════════════════════════════════════════════════
 [tools.storage]
 default_backend = "sqlite"
-db_path = "~/.openjarvis/memory.db"
+db_path = "~/.aura/memory.db"
 
 [tools.mcp]
 enabled = true
@@ -101,7 +101,7 @@ efficiency_weight = 0.1
 # ═══════════════════════════════════════════════════════════════
 [telemetry]
 enabled = true
-db_path = "~/.openjarvis/telemetry.db"
+db_path = "~/.aura/telemetry.db"
 gpu_metrics = true
 gpu_poll_interval_ms = 50
 energy_vendor = ""                       # Auto-detect; or force "nvidia"/"amd"/"apple"/"cpu_rapl"
@@ -111,7 +111,7 @@ steady_state_threshold = 0.05            # Coefficient of variation threshold fo
 
 [traces]
 enabled = true                            # Record traces for analysis
-db_path = "~/.openjarvis/traces.db"
+db_path = "~/.aura/traces.db"
 
 [server]
 # Bind to loopback by default so the API is not exposed to the local network.

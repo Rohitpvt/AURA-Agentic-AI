@@ -1,6 +1,6 @@
 # Morning Digest — Minimal setup (just Ollama + Gmail)
 # The simplest possible config to get a working digest.
-# Copy to ~/.openjarvis/config.toml
+# Copy to ~/.aura/config.toml
 #
 # Requirements:
 #   - Ollama installed with any model
@@ -11,7 +11,7 @@
 default = "ollama"
 
 [intelligence]
-default_model = "qwen3.5:4b"      # Small, fast, runs on any machine
+default_model = "llama3.2:3b"      # Small, fast, runs on any machine
 
 [tools]
 enabled = ["digest_collect", "text_to_speech"]

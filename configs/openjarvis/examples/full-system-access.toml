@@ -1,5 +1,5 @@
 # Full system access: unrestricted shell and filesystem
-# Copy to ~/.openjarvis/config.toml
+# Copy to ~/.aura/config.toml
 #
 # WARNING: shell_exec runs arbitrary commands as your user. No command
 # allowlist, no denylist, no working-directory restriction. file_read and
@@ -12,14 +12,14 @@
 # hosting the backend. See docs/user-guide/system-access.md.
 #
 # Usage:
-#   jarvis ask "What's using the most disk space in my home directory?"
-#   jarvis chat        # prompts before each shell_exec call
+#   aura ask "What's using the most disk space in my home directory?"
+#   aura chat        # prompts before each shell_exec call
 
 [engine]
 default = "ollama"
 
 [intelligence]
-default_model = "qwen3.5:9b"
+default_model = "qwen2.5:7b"
 
 [agent]
 default_agent = "orchestrator"

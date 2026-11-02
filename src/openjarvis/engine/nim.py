@@ -238,6 +238,8 @@ class NIMEngine(InferenceEngine):
             ) from exc
 
     def list_models(self) -> List[str]:
+        if self._host.startswith("https://integrate.api.nvidia.com") and not self._api_key:
+            return []
         try:
             resp = self._client.get(
                 f"{self._api_prefix}/models",
@@ -255,6 +257,8 @@ class NIMEngine(InferenceEngine):
         return [m["id"] for m in data.get("data", [])]
 
     def health(self) -> bool:
+        if self._host.startswith("https://integrate.api.nvidia.com") and not self._api_key:
+            return False
         try:
             resp = self._client.get(
                 f"{self._api_prefix}/health/ready",

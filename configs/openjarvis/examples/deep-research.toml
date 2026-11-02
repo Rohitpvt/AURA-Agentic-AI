@@ -1,19 +1,19 @@
 # Deep Research Agent — multi-hop research across your indexed documents
-# Copy to ~/.openjarvis/config.toml
+# Copy to ~/.aura/config.toml
 #
 # First index your documents:
 #   jarvis memory index ./docs/
 #   jarvis memory index ~/Documents/papers/
 #
 # Then ask complex questions:
-#   jarvis ask --agent deep_research "Summarize all emails about Project X"
-#   jarvis ask --agent deep_research "What meetings did I have with Alice last month?"
+#   aura ask --agent deep_research "Summarize all emails about Project X"
+#   aura ask --agent deep_research "What meetings did I have with Alice last month?"
 
 [engine]
 default = "ollama"
 
 [intelligence]
-default_model = "qwen3.5:9b"
+default_model = "qwen2.5:7b"
 temperature = 0.3               # Low temperature for factual research
 
 [agent]

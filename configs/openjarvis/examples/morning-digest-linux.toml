@@ -1,5 +1,5 @@
 # Morning Digest — Linux / Cloud GPU with Ollama or vLLM
-# Copy to ~/.openjarvis/config.toml and customize
+# Copy to ~/.aura/config.toml and customize
 #
 # Requirements:
 #   - Ollama or vLLM running locally
@@ -16,7 +16,7 @@ host = "http://localhost:11434"
 # host = "http://localhost:8001"
 
 [intelligence]
-default_model = "qwen3.5:9b"
+default_model = "qwen2.5:7b"
 
 [agent]
 default_agent = "simple"

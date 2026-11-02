@@ -1,5 +1,5 @@
 # Scheduled Monitor — persistent agent that runs on a schedule
-# Copy to ~/.openjarvis/config.toml
+# Copy to ~/.aura/config.toml
 #
 # The operative agent maintains state across runs, making it ideal for:
 # - Daily email/inbox monitoring
@@ -20,7 +20,7 @@
 default = "ollama"
 
 [intelligence]
-default_model = "qwen3.5:9b"
+default_model = "qwen2.5:7b"
 temperature = 0.3
 
 [agent]

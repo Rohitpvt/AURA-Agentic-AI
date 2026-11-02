@@ -113,43 +113,46 @@ class TestLocalModelSpecs:
 class TestCloudModelSpecs:
     """Verify every new cloud model has correct fields."""
 
-    def test_gpt_5_mini_provider(self) -> None:
-        spec = _get_spec("gpt-5-mini")
+    def test_o1_provider(self) -> None:
+        spec = _get_spec("o1")
         assert spec.provider == "openai"
         assert spec.requires_api_key is True
 
-    def test_gpt_5_mini_context(self) -> None:
-        spec = _get_spec("gpt-5-mini")
-        assert spec.context_length == 400000
-
-    def test_gpt_5_mini_pricing(self) -> None:
-        spec = _get_spec("gpt-5-mini")
-        assert spec.metadata["pricing_input"] == pytest.approx(0.25)
-        assert spec.metadata["pricing_output"] == pytest.approx(2.00)
-
-    def test_claude_opus_4_6_provider(self) -> None:
-        spec = _get_spec("claude-opus-4-6")
-        assert spec.provider == "anthropic"
-        assert spec.requires_api_key is True
-
-    def test_claude_opus_4_6_context(self) -> None:
-        spec = _get_spec("claude-opus-4-6")
+    def test_o1_context(self) -> None:
+        spec = _get_spec("o1")
         assert spec.context_length == 200000
 
-    def test_claude_sonnet_4_6_provider(self) -> None:
-        spec = _get_spec("claude-sonnet-4-6")
+    def test_o1_pricing(self) -> None:
+        spec = _get_spec("o1")
+        assert spec.metadata["pricing_input"] == pytest.approx(15.00)
+        assert spec.metadata["pricing_output"] == pytest.approx(60.00)
+
+    def test_o3_mini_provider(self) -> None:
+        spec = _get_spec("o3-mini")
+        assert spec.provider == "openai"
+        assert spec.requires_api_key is True
+        assert spec.context_length == 200000
+
+    def test_claude_37_sonnet_provider(self) -> None:
+        spec = _get_spec("claude-3-7-sonnet")
         assert spec.provider == "anthropic"
         assert spec.requires_api_key is True
 
-    def test_claude_haiku_4_5_provider(self) -> None:
-        spec = _get_spec("claude-haiku-4-5")
+    def test_claude_35_sonnet_provider(self) -> None:
+        spec = _get_spec("claude-3-5-sonnet")
+        assert spec.provider == "anthropic"
+        assert spec.requires_api_key is True
+        assert spec.context_length == 200000
+
+    def test_claude_35_haiku_provider(self) -> None:
+        spec = _get_spec("claude-3-5-haiku")
         assert spec.provider == "anthropic"
         assert spec.requires_api_key is True
 
-    def test_claude_haiku_4_5_pricing(self) -> None:
-        spec = _get_spec("claude-haiku-4-5")
-        assert spec.metadata["pricing_input"] == pytest.approx(1.00)
-        assert spec.metadata["pricing_output"] == pytest.approx(5.00)
+    def test_claude_35_haiku_pricing(self) -> None:
+        spec = _get_spec("claude-3-5-haiku")
+        assert spec.metadata["pricing_input"] == pytest.approx(0.80)
+        assert spec.metadata["pricing_output"] == pytest.approx(4.00)
 
     def test_gemini_25_pro_provider(self) -> None:
         spec = _get_spec("gemini-2.5-pro")
@@ -162,20 +165,26 @@ class TestCloudModelSpecs:
         assert spec.provider == "google"
         assert spec.context_length == 1000000
 
-    def test_gemini_3_pro_provider(self) -> None:
-        spec = _get_spec("gemini-3-pro")
+    def test_gemini_20_flash_provider(self) -> None:
+        spec = _get_spec("gemini-2.0-flash")
+        assert spec.provider == "google"
+        assert spec.requires_api_key is True
+        assert spec.context_length == 1048576
+
+    def test_gemini_15_flash_provider(self) -> None:
+        spec = _get_spec("gemini-1.5-flash")
         assert spec.provider == "google"
         assert spec.requires_api_key is True
 
-    def test_gemini_3_flash_provider(self) -> None:
-        spec = _get_spec("gemini-3-flash")
-        assert spec.provider == "google"
-        assert spec.requires_api_key is True
+    def test_gemini_20_flash_pricing(self) -> None:
+        spec = _get_spec("gemini-2.0-flash")
+        assert spec.metadata["pricing_input"] == pytest.approx(0.10)
+        assert spec.metadata["pricing_output"] == pytest.approx(0.40)
 
-    def test_gemini_3_pro_pricing(self) -> None:
-        spec = _get_spec("gemini-3-pro")
-        assert spec.metadata["pricing_input"] == pytest.approx(2.00)
-        assert spec.metadata["pricing_output"] == pytest.approx(12.00)
+    def test_deepseek_chat_provider(self) -> None:
+        spec = _get_spec("deepseek-chat")
+        assert spec.provider == "deepseek"
+        assert spec.requires_api_key is True
 
 
 # ---------------------------------------------------------------------------
@@ -284,17 +293,21 @@ class TestModelDiscovery:
         cloud_ids = {
             "gpt-4o",
             "gpt-4o-mini",
-            "gpt-5-mini",
-            "gpt-5-mini-2025-08-07",
-            "claude-sonnet-4-20250514",
-            "claude-opus-4-20250514",
-            "claude-opus-4-6",
-            "claude-sonnet-4-6",
-            "claude-haiku-4-5",
+            "o1",
+            "o1-mini",
+            "o3-mini",
+            "gpt-4-turbo",
+            "claude-3-7-sonnet",
+            "claude-3-5-sonnet",
+            "claude-3-5-haiku",
+            "claude-3-opus",
             "gemini-2.5-pro",
             "gemini-2.5-flash",
-            "gemini-3-pro",
-            "gemini-3-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash",
+            "deepseek-chat",
+            "deepseek-reasoner",
         }
         for spec in BUILTIN_MODELS:
             if spec.model_id in cloud_ids:
@@ -332,9 +345,9 @@ class TestModelDiscovery:
             "gpt-oss:120b",
             "glm-4.7-flash",
             "trinity-mini",
-            "gpt-5-mini",
-            "claude-opus-4-6",
-            "gemini-3-pro",
+            "o1",
+            "claude-3-5-sonnet",
+            "gemini-2.0-flash",
         ]
         # Merging known IDs should not raise
         merge_discovered_models("vllm", new_ids)
