@@ -12,11 +12,9 @@ import { CommandPalette } from './components/CommandPalette';
 import { SetupScreen } from './components/SetupScreen';
 import { Toaster } from './components/ui/sonner';
 import { useAppStore } from './lib/store';
-import { fetchModels, fetchServerInfo, fetchSavings, submitSavings, isTauri } from './lib/api';
-import { OptInModal } from './components/OptInModal';
+import { fetchModels, fetchServerInfo, fetchSavings, isTauri } from './lib/api';
 import { UpdateChecker } from './components/Desktop/UpdateChecker';
 import { track, hashId } from './lib/analytics';
-import { offerAnalyticsChoice } from './lib/analytics-invitation';
 
 export default function App() {
   const [setupDone, setSetupDone] = useState(!isTauri());
@@ -86,31 +84,7 @@ export default function App() {
       fetchSavings()
         .then((data) => {
           setSavings(data);
-          if (optInEnabled && optInDisplayName && data) {
-            const claudeEntry = data.per_provider.find(
-              (p) => p.provider === 'claude-fable-5',
-            );
-            const dollarSavings = claudeEntry ? claudeEntry.total_cost : 0;
-            const energySaved = data.per_provider.reduce(
-              (sum, p) => sum + (p.energy_wh || 0),
-              0,
-            );
-            const flopsSaved = data.per_provider.reduce(
-              (sum, p) => sum + (p.flops || 0),
-              0,
-            );
-            submitSavings({
-              anon_id: optInAnonId,
-              display_name: optInDisplayName,
-              email: optInEmail,
-              total_calls: data.total_calls,
-              total_tokens: data.total_tokens,
-              dollar_savings: dollarSavings,
-              energy_wh_saved: energySaved,
-              flops_saved: flopsSaved,
-              token_counting_version: data.token_counting_version ?? 1,
-            });
-          }
+          
         })
         .catch(() => {});
     refresh();
@@ -118,13 +92,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [optInEnabled, optInDisplayName, optInEmail, optInAnonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Wait for desktop setup before fetching identity or marking the dialog seen.
-  useEffect(() => offerAnalyticsChoice({
-    ready: setupDone,
-    sharingModalSeen: optInModalSeen,
-    open: () => setOptInModalOpen(true),
-    markSharingModalSeen: markOptInModalSeen,
-  }), [setupDone, optInModalSeen, setOptInModalOpen, markOptInModalSeen]);
+  // Analytics sharing disabled for clean interface
 
   // Fire model_changed when the user switches models. First mount is
   // not a "change" — only emit when both prev and current are real and
@@ -195,9 +163,7 @@ export default function App() {
       </Routes>
       <Toaster position="bottom-right" />
       {commandPaletteOpen && <CommandPalette />}
-      {optInModalOpen && (
-        <OptInModal onClose={() => setOptInModalOpen(false)} />
-      )}
+      
     </>
   );
 }
