@@ -514,7 +514,7 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
                 "run",
                 "--extra",
                 "desktop",
-                "jarvis",
+                "aura",
                 "start",
                 "--port",
                 str(api_port),
