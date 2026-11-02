@@ -61,7 +61,7 @@ inference-mlx = ["mlx-lm>=0.31.1; sys_platform == 'darwin'"]
 inference-vllm = ["vllm>=0.30.0"]
 inference-cloud = [
     "openai>=1.30",
-    "anthropic>=0.30",
+    "anthropic>=2.3.0",
 ]
 inference-google = [
     "google-genai>=1.0",
