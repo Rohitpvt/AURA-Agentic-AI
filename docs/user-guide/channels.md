@@ -1,6 +1,6 @@
 # Channels
 
-The channels module lets OpenJarvis send and receive messages through external messaging platforms. Each platform has a dedicated channel implementation that connects directly to the platform's API -- there is no intermediate gateway.
+The channels module lets AURA send and receive messages through external messaging platforms. Each platform has a dedicated channel implementation that connects directly to the platform's API -- there is no intermediate gateway.
 
 !!! note "Channels are disabled by default"
     The `[channel]` config section defaults to `enabled = false`. You must set `enabled = true` and configure platform-specific credentials before channel features become active.
@@ -219,7 +219,7 @@ jarvis channel status
 
 ## API Server Endpoints
 
-When `jarvis serve` is running, three channel endpoints are available. Channels must be configured and enabled in `[channel]` for these endpoints to return data.
+When `aura serve` is running, three channel endpoints are available. Channels must be configured and enabled in `[channel]` for these endpoints to return data.
 
 ### `GET /v1/channels`
 
@@ -339,7 +339,7 @@ print(f"Available channels: {channels}")
 
 # Send a message
 if channels:
-    channel.send(channels[0], "Hello from OpenJarvis!")
+    channel.send(channels[0], "Hello from AURA!")
 
 # Wait for incoming messages
 time.sleep(10)
@@ -357,12 +357,12 @@ print(f"Total messages received: {len(received_messages)}")
 ### How It Works
 
 ```
-Your phone  ──text──▶  SendBlue  ──webhook──▶  ngrok tunnel  ──▶  OpenJarvis
+Your phone  ──text──▶  SendBlue  ──webhook──▶  ngrok tunnel  ──▶  AURA
                                                                        │
 Your phone  ◀──iMessage──  SendBlue  ◀──API call──  DeepResearch agent ◀┘
 ```
 
-When someone texts the SendBlue number, SendBlue POSTs the message to your webhook. OpenJarvis sends an immediate "Message received!" acknowledgment, runs the DeepResearch agent, and sends the response back via iMessage.
+When someone texts the SendBlue number, SendBlue POSTs the message to your webhook. AURA sends an immediate "Message received!" acknowledgment, runs the DeepResearch agent, and sends the response back via iMessage.
 
 ### Setup (Browser UI)
 
@@ -378,7 +378,7 @@ The easiest way is through the Agents UI:
 
 ### Tunnel Setup (Required)
 
-Since OpenJarvis runs locally, you need a tunnel so SendBlue can reach your webhook:
+Since AURA runs locally, you need a tunnel so SendBlue can reach your webhook:
 
 ```bash
 # Install ngrok (one time)
@@ -426,7 +426,7 @@ channel = SendBlueChannel(
 channel.connect()
 
 # Send a message
-ok = channel.send("+15551234567", "Hello from OpenJarvis!")
+ok = channel.send("+15551234567", "Hello from AURA!")
 ```
 
 ### Webhook Endpoint
@@ -474,7 +474,7 @@ jarvis channel send sendblue "+15551234567" "Hello from Jarvis!"
 
 ### Server Restart Behavior
 
-SendBlue bindings are **automatically restored on server restart**. When `jarvis serve` starts:
+SendBlue bindings are **automatically restored on server restart**. When `aura serve` starts:
 
 1. The server checks the database for existing SendBlue channel bindings
 2. Re-creates the `SendBlueChannel` instance with stored credentials
@@ -582,7 +582,7 @@ Messages are addressed by WhatsApp **JID** (Jabber ID) -- the canonical identifi
 
 ok = channel.send(
     "15551234567@s.whatsapp.net",      # JID of the recipient
-    "Hello from OpenJarvis!",
+    "Hello from AURA!",
 )
 
 if not ok:
@@ -632,7 +632,7 @@ WhatsApp Baileys channel settings live in the `[channel.whatsapp_baileys]` subse
 ```toml title="~/.openjarvis/config.toml"
 [channel.whatsapp_baileys]
 auth_dir = "/home/user/.openjarvis/whatsapp_baileys_bridge/auth"
-assistant_name = "Jarvis"
+assistant_name = "AURA"
 assistant_has_own_number = false
 ```
 

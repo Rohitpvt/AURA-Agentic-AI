@@ -1,3 +1,3 @@
-"""OpenAI-compatible API server for OpenJarvis."""
+"""OpenAI-compatible API server for AURA."""
 
 from __future__ import annotations

@@ -591,7 +591,7 @@ class TestModelConvert:
         assert (output_dir / "Modelfile").read_text(encoding="utf-8") == (
             "FROM ./some--repo.f16.gguf\n"
         )
-        assert "jarvis chat --engine ollama --model repo" in result.output
+        assert "aura chat --engine ollama --model repo" in result.output
 
     @pytest.mark.parametrize("engine", ["vllm", "sglang"])
     def test_direct_hf_engines_are_noop(

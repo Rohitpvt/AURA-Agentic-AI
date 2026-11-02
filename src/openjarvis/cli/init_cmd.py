@@ -1,4 +1,4 @@
-"""``jarvis init`` — detect hardware, generate config, write to disk."""
+"""``aura init`` — detect hardware, generate config, write to disk."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from openjarvis.core.config import (
     recommend_model,
 )
 
-# Engines supported by ``jarvis init --engine``.
+# Engines supported by ``aura init --engine``.
 _SUPPORTED_ENGINES = [
     "ollama",
     "vllm",
@@ -83,7 +83,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  3. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "vllm": (
             "Next steps:\n"
@@ -95,7 +95,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "llamacpp": (
             "Next steps:\n"
@@ -107,7 +107,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "sglang": (
             "Next steps:\n"
@@ -119,7 +119,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "mlx": (
             "Next steps:\n"
@@ -131,7 +131,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "lmstudio": (
             "Next steps:\n"
@@ -144,7 +144,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  3. Try it out:\n"
             '     jarvis ask "Hello"\n'
             "\n"
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "exo": (
             "Next steps:\n\n"
@@ -153,7 +153,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "     exo\n\n"
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n\n'
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "nexa": (
             "Next steps:\n\n"
@@ -162,7 +162,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "     nexa server\n\n"
             "  2. Try it out:\n"
             '     jarvis ask "Hello"\n\n'
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
         "lemonade": (
             "Next steps:\n\n"
@@ -171,7 +171,7 @@ def _next_steps_text(engine: str, model: str = "") -> str:
             "  2. Start the Lemonade server\n\n"
             "  3. Try it out:\n"
             '     jarvis ask "Hello"\n\n'
-            "  Run `jarvis doctor` to verify your setup."
+            "  Run `aura doctor` to verify your setup."
         ),
     }
     return steps.get(engine, steps["ollama"])
@@ -332,7 +332,7 @@ def init(
         if preset:
             console.print(
                 "Switching presets replaces the existing config. Re-run with "
-                f"[bold]jarvis init --preset {preset} --force[/bold] to confirm."
+                f"[bold]aura init --preset {preset} --force[/bold] to confirm."
             )
         else:
             console.print("Use [bold]--force[/bold] to overwrite.")
@@ -370,7 +370,7 @@ def init(
         )
         console.print(
             "\n  Edit the config to customize, then run "
-            "[bold]jarvis doctor[/bold] to verify."
+            "[bold]aura doctor[/bold] to verify."
         )
         return
 
@@ -495,7 +495,7 @@ def init(
 enabled = true
 schedule = "0 7 * * *"
 timezone = "America/Los_Angeles"
-persona = "jarvis"
+persona = "aura"
 honorific = "sir"
 tts_backend = "cartesia"
 voice_id = "c8f7835e-28a3-4f0c-80d7-c1302ac62aae"

@@ -72,7 +72,7 @@ class CheckpointStore:
     def init(self) -> None:
         """Initialize the checkpoint repo if it doesn't exist.
 
-        Refuses to initialize if ``self.root`` is inside the OpenJarvis source
+        Refuses to initialize if ``self.root`` is inside the AURA source
         tree — this is the same defense-in-depth check as
         ``resolve_spec_search_root``: we never want a stray git repo writing
         config snapshots into the working copy.
@@ -89,7 +89,7 @@ class CheckpointStore:
             else:
                 raise ConfigurationError(
                     f"CheckpointStore root ({self._root}) is inside the "
-                    f"OpenJarvis source tree ({source_root}). Refusing to "
+                    f"AURA source tree ({source_root}). Refusing to "
                     "initialize a checkpoint repo there."
                 )
 
@@ -100,8 +100,8 @@ class CheckpointStore:
 
         if not (self._root / ".git").exists():
             self._git("init", "-q")
-            self._git("config", "user.email", "spec-search@openjarvis.local")
-            self._git("config", "user.name", "OpenJarvis Spec Search")
+            self._git("config", "user.email", "spec-search@aura.local")
+            self._git("config", "user.name", "AURA Spec Search")
 
         # Stage whatever tracked paths currently exist (it's OK if some
         # don't yet — the user may not have agents or tools dirs at first

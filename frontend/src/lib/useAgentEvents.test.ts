@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildWsProtocols, buildWsUrl } from './useAgentEvents';
 
-const SETTINGS_KEY = 'openjarvis-settings';
+const SETTINGS_KEY = 'aura-settings';
 
 class MemoryStorage {
   private store = new Map<string, string>();
@@ -66,8 +66,8 @@ describe('buildWsProtocols', () => {
     const protocols = buildWsProtocols();
 
     expect(protocols).toEqual([
-      'openjarvis.auth.v1',
-      `openjarvis.key.b64url.${encoded}`,
+      'aura.auth.v1',
+      `aura.key.b64url.${encoded}`,
     ]);
     expect(new Set(protocols).size).toBe(protocols?.length);
     expect(protocols?.every((value) => /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(value)))

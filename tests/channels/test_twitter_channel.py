@@ -78,14 +78,14 @@ class TestSend:
         mock_response.status_code = 201
 
         with patch("httpx.post", return_value=mock_response) as mock_post:
-            result = ch.send("twitter", "Hello from OpenJarvis!")
+            result = ch.send("twitter", "Hello from AURA!")
             assert result is True
             mock_post.assert_called_once()
             call_args = mock_post.call_args
             url = call_args[0][0]
             assert "api.twitter.com/2/tweets" in url
             payload = call_args[1]["json"]
-            assert payload["text"] == "Hello from OpenJarvis!"
+            assert payload["text"] == "Hello from AURA!"
             assert "reply" not in payload
 
     def test_send_as_reply(self):

@@ -1,7 +1,7 @@
 # Contributing Guide
 
 This guide covers how to set up a development environment, run tests, and
-contribute code to OpenJarvis.
+contribute code to AURA.
 
 ---
 
@@ -18,8 +18,8 @@ contribute code to OpenJarvis.
 ### Clone and Install
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync --extra dev
 ```
 
@@ -54,7 +54,7 @@ uv run jarvis --help      # Show all subcommands
 
 ## Running Tests
 
-OpenJarvis uses [pytest](https://docs.pytest.org/) with approximately 1,000+
+AURA uses [pytest](https://docs.pytest.org/) with approximately 1,000+
 tests organized by module.
 
 ### Full Test Suite
@@ -125,7 +125,7 @@ uv run pytest tests/ -m "not cloud" -v   # Skip cloud tests
 
 ## Linting
 
-OpenJarvis uses [Ruff](https://docs.astral.sh/ruff/) for linting, configured
+AURA uses [Ruff](https://docs.astral.sh/ruff/) for linting, configured
 in `pyproject.toml`:
 
 ```bash
@@ -260,12 +260,12 @@ src/openjarvis/
     cli/                        # Click CLI commands
         __init__.py             # main group
         ask.py                  # jarvis ask
-        init_cmd.py             # jarvis init
+        init_cmd.py             # aura init
         model.py                # jarvis model list/info
-        memory_cmd.py           # jarvis memory index/search/stats
+        memory_cmd.py           # aura memory index/search/stats
         telemetry_cmd.py        # jarvis telemetry stats/export/clear
         bench_cmd.py            # jarvis bench run
-        serve.py                # jarvis serve
+        serve.py                # aura serve
 ```
 
 ---

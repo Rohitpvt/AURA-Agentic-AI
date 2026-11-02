@@ -1,6 +1,6 @@
 # Query Flow
 
-This page traces the end-to-end journey of a user query through the OpenJarvis system, from the moment it enters the CLI or SDK to the final response and telemetry recording.
+This page traces the end-to-end journey of a user query through the AURA system, from the moment it enters the CLI or SDK to the final response and telemetry recording.
 
 ---
 
@@ -70,7 +70,7 @@ sequenceDiagram
 
 ## Direct Mode vs Agent Mode
 
-OpenJarvis supports two query processing paths, selected by the `--agent` CLI flag or the `agent` parameter in the SDK.
+AURA supports two query processing paths, selected by the `--agent` CLI flag or the `agent` parameter in the SDK.
 
 The CLI and SDK have different defaults:
 

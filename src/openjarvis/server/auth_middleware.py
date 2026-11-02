@@ -1,4 +1,4 @@
-"""API key authentication middleware for the OpenJarvis server."""
+"""API key authentication middleware for the AURA server."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
-_WS_AUTH_PROTOCOL = "openjarvis.auth.v1"
-_WS_KEY_PROTOCOL_PREFIX = "openjarvis.key.b64url."
+_WS_AUTH_PROTOCOL = "aura.auth.v1"
+_WS_KEY_PROTOCOL_PREFIX = "aura.key.b64url."
 
 
 def _api_keys_match(presented: str, expected: str) -> bool:
@@ -36,7 +36,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app, api_key: str = "") -> None:  # noqa: ANN001
         super().__init__(app)
-        self._api_key = api_key or os.environ.get("OPENJARVIS_API_KEY", "")
+        self._api_key = api_key or os.environ.get("AURA_API_KEY", "")
 
     async def dispatch(self, request: Request, call_next):  # noqa: ANN001
         # Browser CORS preflights never carry Authorization, and rejecting
@@ -117,7 +117,7 @@ def check_bind_safety(host: str, *, api_key: str) -> None:
 
     if not is_loop and not api_key:
         logger.error(
-            "Binding to %s requires OPENJARVIS_API_KEY to be set. "
+            "Binding to %s requires AURA_API_KEY to be set. "
             "Run: jarvis auth generate-key",
             host,
         )
@@ -164,7 +164,7 @@ def authenticate_websocket(
     """Authenticate a WebSocket and return its negotiated auth subprotocol.
 
     Programmatic clients can send ``Authorization: Bearer <key>``. Browser
-    clients, which cannot set that header, offer ``openjarvis.auth.v1`` plus a
+    clients, which cannot set that header, offer ``aura.auth.v1`` plus a
     marked, unpadded base64url encoding of the UTF-8 key. The encoding only
     makes the credential valid subprotocol syntax; it does not make it secret.
     """

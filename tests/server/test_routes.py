@@ -906,7 +906,7 @@ def _identity_config():
     from openjarvis.core.config import JarvisConfig
 
     cfg = JarvisConfig()
-    cfg.agent.default_system_prompt = "You are OpenJarvis."
+    cfg.agent.default_system_prompt = "You are AURA."
     cfg.analytics.enabled = False
     return cfg
 
@@ -916,7 +916,7 @@ class TestIdentityPromptInjection:
 
     The desktop UI posts only user/assistant turns to the
     OpenAI-compatible ``/v1/chat/completions`` endpoint, so the engine never
-    saw OpenJarvis's identity system prompt and the model answered from its
+    saw AURA's identity system prompt and the model answered from its
     training identity ("I'm Claude", "I am Qwen", ...). The engine-direct
     server handlers must now inject ``agent.default_system_prompt`` whenever
     the client omits a system message — and must NOT inject a second one when
@@ -942,7 +942,7 @@ class TestIdentityPromptInjection:
         assert captured, "engine.stream was never called"
         msgs = captured[-1]
         assert msgs[0].role.value == "system"
-        assert "OpenJarvis" in msgs[0].content
+        assert "AURA" in msgs[0].content
 
     def test_stream_no_double_injection_when_client_supplies_system(self):
         captured: list = []
@@ -1025,7 +1025,7 @@ class TestIdentityPromptInjection:
         assert engine.generate.called
         msgs = engine.generate.call_args.args[0]
         assert msgs[0].role.value == "system"
-        assert "OpenJarvis" in msgs[0].content
+        assert "AURA" in msgs[0].content
 
     def test_direct_no_double_injection_when_client_supplies_system(self):
         captured: list = []
@@ -1158,7 +1158,7 @@ class TestIdentityPromptInjection:
             Role.ASSISTANT,
             Role.USER,
         ]
-        assert messages[0].content.count("You are OpenJarvis.") == 1
+        assert messages[0].content.count("You are AURA.") == 1
         assert "First instruction." in messages[0].content
         assert "Second instruction." in messages[0].content
         assert [message.content for message in messages[1:]] == [
@@ -1199,7 +1199,7 @@ class TestIdentityPromptInjection:
         messages = engine.generate.call_args.args[0]
         system_messages = [m for m in messages if m.role == Role.SYSTEM]
         assert len(system_messages) == 1
-        assert "OpenJarvis" in system_messages[0].content
+        assert "AURA" in system_messages[0].content
         assert "favorite color is blue" in system_messages[0].content
 
     def test_direct_never_sends_quarantined_fact_to_engine(self):
@@ -1346,7 +1346,7 @@ class TestIdentityPromptInjection:
         messages = engine.generate.call_args.args[0]
         system_messages = [m for m in messages if m.role == Role.SYSTEM]
         assert len(system_messages) == 1
-        assert system_messages[0].content.count("You are OpenJarvis.") == 1
+        assert system_messages[0].content.count("You are AURA.") == 1
         assert "favorite color is blue" in system_messages[0].content
 
     def test_direct_injects_soul_persona_when_present(self, tmp_path):
@@ -1380,7 +1380,7 @@ class TestIdentityPromptInjection:
         assert resp.status_code == 200
         msgs = engine.generate.call_args.args[0]
         assert msgs[0].role.value == "system"
-        assert "OpenJarvis" in msgs[0].content  # identity blurb still present
+        assert "AURA" in msgs[0].content  # identity blurb still present
         assert "extreme sarcasm" in msgs[0].content  # persona now injected too
 
     def test_stream_tools_injects_identity_when_absent(self):
@@ -1411,7 +1411,7 @@ class TestIdentityPromptInjection:
         assert captured, "engine.stream_full was never called"
         msgs = captured[-1]
         assert msgs[0].role.value == "system"
-        assert "OpenJarvis" in msgs[0].content
+        assert "AURA" in msgs[0].content
 
     def test_stream_tools_normalizes_mid_history_system_messages(self):
         captured: list = []
@@ -1469,13 +1469,13 @@ class TestIdentityPromptInjection:
         result = _ensure_identity_prompt(messages, _identity_config())
         system_msgs = [m for m in result if m.role == Role.SYSTEM]
         assert len(system_msgs) == 1
-        assert "OpenJarvis" in system_msgs[0].content
+        assert "AURA" in system_msgs[0].content
         assert system_msgs[0].metadata["memory_context"] is True
         assert system_msgs[0].metadata["openjarvis_identity_prompt"] is True
 
         normalized_again = _ensure_identity_prompt(result, _identity_config())
         assert len([m for m in normalized_again if m.role == Role.SYSTEM]) == 1
-        assert normalized_again[0].content.count("You are OpenJarvis.") == 1
+        assert normalized_again[0].content.count("You are AURA.") == 1
 
     def test_normalization_preserves_first_metadata_and_non_system_order(self):
         from openjarvis.core.types import Message, Role

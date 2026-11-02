@@ -1,5 +1,5 @@
 /**
- * OpenJarvis Claude Agent SDK runner.
+ * AURA Claude Agent SDK runner.
  *
  * Reads one JSON request from stdin and writes one sentinel-delimited JSON
  * response to stdout.

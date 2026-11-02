@@ -1,11 +1,11 @@
 ---
 title: Code Snippets
-description: Copy-paste patterns for common OpenJarvis tasks
+description: Copy-paste patterns for common AURA tasks
 ---
 
 # Code Snippets
 
-Ready-to-use patterns for the most common OpenJarvis tasks. Each snippet is self-contained and copy-pasteable.
+Ready-to-use patterns for the most common AURA tasks. Each snippet is self-contained and copy-pasteable.
 
 ## Ask a Question (3 lines)
 
@@ -73,7 +73,7 @@ Run with: `jarvis compose run research_assistant "quantum computing advances"`
 ## API Server (1 command)
 
 ```bash
-jarvis serve --port 8000 --engine ollama --model qwen3:8b
+aura serve --port 8000 --engine ollama --model qwen3:8b
 ```
 
 Any OpenAI-compatible client works against this endpoint.
@@ -82,7 +82,7 @@ Any OpenAI-compatible client works against this endpoint.
 
 ```bash
 docker build -t openjarvis .
-docker run -p 8000:8000 openjarvis serve --host 0.0.0.0
+docker run -p 8000:8000 openaura serve --host 0.0.0.0
 ```
 
 ## Custom Tool (10 lines)

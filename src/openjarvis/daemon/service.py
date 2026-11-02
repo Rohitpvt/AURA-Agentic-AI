@@ -5,7 +5,7 @@ from pathlib import Path
 
 SYSTEMD_TEMPLATE = """\
 [Unit]
-Description=OpenJarvis Gateway Daemon
+Description=AURA Gateway Daemon
 After=network.target
 
 [Service]

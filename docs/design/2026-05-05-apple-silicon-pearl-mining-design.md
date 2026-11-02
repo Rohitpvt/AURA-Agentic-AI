@@ -4,15 +4,15 @@
 |---|---|
 | **Date** | 2026-05-05 |
 | **Status** | Design — Phase 0 investigation complete; v1 scope reduced (see §1.5) |
-| **Owner** | OpenJarvis team (parallel-agent friendly) |
+| **Owner** | AURA team (parallel-agent friendly) |
 | **Companion spec** | [Spec A — vLLM-Pearl mining integration (v1)](2026-05-05-vllm-pearl-mining-integration-design.md) |
-| **Repos referenced** | `OpenJarvis`, `pearl-research-labs/pearl`, possibly upstream `ml-explore/mlx`, `ggerganov/llama.cpp` |
+| **Repos referenced** | `AURA`, `pearl-research-labs/pearl`, possibly upstream `ml-explore/mlx`, `ggerganov/llama.cpp` |
 
 > **For agents picking this up cold:** read §1 ("Cold-start brief") first, then **§1.5 ("Phase 0 findings")** which substantially simplifies v1 scope. The original Phase 1–4 GPU-kernel plan in §5–§8 is preserved as the v2/v3 path; v1 ships using upstream Pearl's PyTorch reference and pure-Rust miner.
 
 ## 1. Cold-start brief
 
-**One-paragraph problem statement.** OpenJarvis is adding a `mining` subsystem (Spec A) that lets users mine the Pearl PoUW blockchain through their local LLM inference. Pearl's reference miner is CUDA-only and bound to NVIDIA Hopper (`sm_90a`, H100/H200) — most OpenJarvis users on Apple Silicon are locked out at the protocol level. **This spec is the plan to unblock them.** The OJ-side integration work is small (a new `MiningProvider` implementation that drops into the existing `MinerRegistry` from Spec A); the substantial work is a Metal port of Pearl's `NoisyGEMM` kernel and a matching plugin into an Apple-native inference backend (MLX or llama.cpp Metal). The Pearl validation path is plonky2-STARK-based and **already hardware-neutral** — see §3 for the evidence — so a correct Metal implementation produces blocks Pearl validators accept without any consensus changes.
+**One-paragraph problem statement.** AURA is adding a `mining` subsystem (Spec A) that lets users mine the Pearl PoUW blockchain through their local LLM inference. Pearl's reference miner is CUDA-only and bound to NVIDIA Hopper (`sm_90a`, H100/H200) — most AURA users on Apple Silicon are locked out at the protocol level. **This spec is the plan to unblock them.** The OJ-side integration work is small (a new `MiningProvider` implementation that drops into the existing `MinerRegistry` from Spec A); the substantial work is a Metal port of Pearl's `NoisyGEMM` kernel and a matching plugin into an Apple-native inference backend (MLX or llama.cpp Metal). The Pearl validation path is plonky2-STARK-based and **already hardware-neutral** — see §3 for the evidence — so a correct Metal implementation produces blocks Pearl validators accept without any consensus changes.
 
 **Three things to know before doing any work.**
 
@@ -270,7 +270,7 @@ pearl/miner/pearl-gemm-metal/
     tests/
 ```
 
-If upstream contribution is blocked (Phase 0 outcome), fork with attribution into `OpenJarvis/vendor/pearl-gemm-metal/` and document the divergence policy in this spec.
+If upstream contribution is blocked (Phase 0 outcome), fork with attribution into `AURA/vendor/pearl-gemm-metal/` and document the divergence policy in this spec.
 
 #### 6.1.4 Testing
 
@@ -326,7 +326,7 @@ The plugin is correctness-critical: a noised model that doesn't fully denoise pr
 - [ ] Mining shares are submitted to a Pearl testnet during inference
 - [ ] At least one block found on testnet from a Mac
 
-## 7. Phase 3 — OpenJarvis provider integration
+## 7. Phase 3 — AURA provider integration
 
 Where the OJ-side work is small. Inherits the entire `MiningProvider` ABC, registry, sidecar, config schema, telemetry adapter, and v2 seams from Spec A unchanged.
 
@@ -532,7 +532,7 @@ This section defines the v1 design that ships in weeks rather than months. v1 is
 ### 13.1 Architecture
 
 ```
-                      OpenJarvis user (Apple Silicon)
+                      AURA user (Apple Silicon)
                      ┌────────────────────────────────┐
                      │  jarvis mine start              │
                      │      ↓                          │

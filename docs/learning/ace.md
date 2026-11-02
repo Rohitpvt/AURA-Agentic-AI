@@ -1,6 +1,6 @@
 # ACE optimizer (Agentic Context Engineering)
 
-OpenJarvis supports [ACE](https://github.com/ace-agent/ace) as a third
+AURA supports [ACE](https://github.com/ace-agent/ace) as a third
 optimizer alongside DSPy and GEPA. Where DSPy bootstraps few-shot
 examples and GEPA evolves prompts via reflective mutation, **ACE
 evolves a textual *playbook*** — annotated natural-language strategies
@@ -33,19 +33,19 @@ should produce" for your task, ACE is the right choice.
 
 ## Setup
 
-ACE is **not on PyPI** as of OpenJarvis v1.0.1, and the upstream
+ACE is **not on PyPI** as of AURA v1.0.1, and the upstream
 repository is structured as a research codebase (multiple top-level
 directories) rather than a Python package. There's no `learning-ace`
 extra for that reason. Install ACE manually instead:
 
 ```bash
-# 1. Clone ACE somewhere outside your OpenJarvis checkout
+# 1. Clone ACE somewhere outside your AURA checkout
 git clone https://github.com/ace-agent/ace.git ~/code/ace
 cd ~/code/ace
 curl -LsSf https://astral.sh/uv/install.sh | sh   # if you don't have uv
 uv sync
 
-# 2. Make ACE's src/ importable from your OpenJarvis venv
+# 2. Make ACE's src/ importable from your AURA venv
 echo "$HOME/code/ace/src" > \
   "$(python -c 'import site; print(site.getsitepackages()[0])')/ace.pth"
 
@@ -53,18 +53,18 @@ echo "$HOME/code/ace/src" > \
 cp ~/code/ace/.env.example ~/code/ace/.env
 # Edit ~/code/ace/.env to set API_KEY for your chosen provider.
 
-# 4. Verify the import resolves from OpenJarvis's venv
+# 4. Verify the import resolves from AURA's venv
 python -c "from openjarvis.learning.agents.ace_optimizer import HAS_ACE; print(HAS_ACE)"
 # True
 ```
 
 If `HAS_ACE` prints `False`, the `.pth` file isn't being picked up —
 verify the path matches `site.getsitepackages()[0]` for the same
-Python interpreter you're using to run OpenJarvis.
+Python interpreter you're using to run AURA.
 
 ## Configuration
 
-ACE is configured under `[learning.agent.ace]` in your OpenJarvis
+ACE is configured under `[learning.agent.ace]` in your AURA
 config TOML:
 
 ```toml
@@ -101,12 +101,12 @@ jarvis optimize agent --policy ace
 ```
 
 ACE writes intermediate state and the final playbook to `save_dir`.
-The OpenJarvis runtime will pick up the playbook on next agent start
+The AURA runtime will pick up the playbook on next agent start
 (via the same sidecar overlay mechanism the Skills System uses).
 
 ## Trace adapter behavior
 
-OpenJarvis traces are adapted into ACE's `train_samples` /
+AURA traces are adapted into ACE's `train_samples` /
 `val_samples` / `test_samples` format via a 70 / 15 / 15 split
 (order-preserving for reproducibility). Each trace becomes a
 `{question: trace.query, ground_truth_answer: trace.result}` sample.
@@ -126,7 +126,7 @@ through your own callsite to `ACEAgentOptimizer.optimize()`.
 - **The trace adapter uses substring correctness.** Override for
   domain-specific scoring.
 - **Single provider per run.** ACE assigns the same `api_provider` to
-  all three roles. To mix providers, run ACE outside OpenJarvis and
+  all three roles. To mix providers, run ACE outside AURA and
   hand-deliver the resulting playbook into `save_dir`.
 
 These will get revisited once ACE publishes a PyPI package or stable

@@ -1,6 +1,6 @@
 """Recipe loader — load and resolve TOML recipe files.
 
-Recipes are the universal composition format for OpenJarvis.  Each recipe
+Recipes are the universal composition format for AURA.  Each recipe
 specifies all five primitives (Intelligence, Engine, Agent, Tools, Learning)
 and carries a ``kind`` that determines its lifecycle:
 

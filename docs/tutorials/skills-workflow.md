@@ -8,11 +8,11 @@ description: End-to-end tutorial — install skills, use them with an agent, dis
 This tutorial walks through the complete skills lifecycle: installing skills from public sources, using them with a local agent, discovering patterns from trace history, and optimizing skill descriptions with DSPy. By the end you will have a working skills setup that improves over time.
 
 !!! note "Before you begin"
-    This tutorial assumes OpenJarvis is installed with Ollama running and a model available (e.g., `qwen3.5:9b`). If you have not completed setup yet, start with the [Quick Start guide](../getting-started/quickstart.md).
+    This tutorial assumes AURA is installed with Ollama running and a model available (e.g., `qwen3.5:9b`). If you have not completed setup yet, start with the [Quick Start guide](../getting-started/quickstart.md).
 
 ## Step 1: Install Skills from Hermes Agent
 
-OpenJarvis can import skills from the [Hermes Agent](https://github.com/NousResearch/hermes-agent) skill library maintained by NousResearch. Let's install a few useful ones.
+AURA can import skills from the [Hermes Agent](https://github.com/NousResearch/hermes-agent) skill library maintained by NousResearch. Let's install a few useful ones.
 
 ```bash
 # Install individual skills
@@ -136,7 +136,7 @@ For the learning loop to work, we need traces. Run several queries that use skil
 
 ```bash
 # Tracing is disabled in the generated config until you opt in
-jarvis config set traces.enabled true
+aura config set traces.enabled true
 
 # Generate a few traces
 jarvis ask --agent orchestrator "Use llm-wiki to describe a model entry"

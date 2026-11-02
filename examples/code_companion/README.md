@@ -1,6 +1,6 @@
 # Code Companion
 
-A set of developer-focused scripts that use OpenJarvis tool-using agents
+A set of developer-focused scripts that use AURA tool-using agents
 to automate common coding tasks: code review, debugging, and test generation.
 
 ## What This Demonstrates
@@ -19,7 +19,7 @@ intelligence workflow.
 
 ## Prerequisites
 
-1. **Install OpenJarvis** (from the repo root):
+1. **Install AURA** (from the repo root):
 
    ```bash
    uv sync --extra dev

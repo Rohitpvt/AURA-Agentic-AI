@@ -9,7 +9,7 @@ This tutorial walks through `examples/deep_research/research.py` — a standalon
 
 !!! tip "Prerequisites"
     - Python 3.10 or later
-    - OpenJarvis installed: run `uv sync --extra dev` from the repository root
+    - AURA installed: run `uv sync --extra dev` from the repository root
     - An inference engine running — either Ollama locally (see below) or a cloud API key in your `.env` file
 
 ## Quick Start

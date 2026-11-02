@@ -23,8 +23,8 @@ from openjarvis.server.api_routes import include_all_routes  # noqa: E402
 from openjarvis.server.auth_middleware import websocket_authorized  # noqa: E402
 from openjarvis.server.ws_bridge import create_ws_router  # noqa: E402
 
-AUTH_PROTOCOL = "openjarvis.auth.v1"
-KEY_PROTOCOL_PREFIX = "openjarvis.key.b64url."
+AUTH_PROTOCOL = "aura.auth.v1"
+KEY_PROTOCOL_PREFIX = "aura.key.b64url."
 
 
 def _auth_subprotocols(api_key: str) -> list[str]:
@@ -51,9 +51,9 @@ class TestWebsocketAuthorizedHelper:
     @pytest.mark.parametrize(
         "api_key,credential_protocol",
         [
-            ("secret+/=", "openjarvis.key.b64url.c2VjcmV0Ky89"),
-            ("bearer", "openjarvis.key.b64url.YmVhcmVy"),
-            ("sëcret🔑", "openjarvis.key.b64url.c8OrY3JldPCflJE"),
+            ("secret+/=", "aura.key.b64url.c2VjcmV0Ky89"),
+            ("bearer", "aura.key.b64url.YmVhcmVy"),
+            ("sëcret🔑", "aura.key.b64url.c8OrY3JldPCflJE"),
         ],
     )
     def test_token_via_subprotocol(self, api_key, credential_protocol):

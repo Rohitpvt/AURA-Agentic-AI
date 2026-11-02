@@ -1,4 +1,4 @@
-"""``jarvis serve`` — OpenAI-compatible API server."""
+"""``aura serve`` — OpenAI-compatible API server."""
 
 from __future__ import annotations
 
@@ -158,7 +158,7 @@ def serve(
         )
         sys.exit(1)
 
-    # Tool credentials saved through the browser UI live in the OpenJarvis
+    # Tool credentials saved through the browser UI live in the AURA
     # credential store. Restore them before engines and tools are constructed
     # so availability checks and tool instances see the same environment.
     inject_credentials()
@@ -689,7 +689,7 @@ def serve(
     # --- Channel Gateway: API key, sessions, ChannelBridge ---
     import os as _os
 
-    api_key = _os.environ.get("OPENJARVIS_API_KEY", "")
+    api_key = _os.environ.get("AURA_API_KEY", "")
     if not api_key:
         try:
             import tomllib
@@ -774,7 +774,7 @@ def serve(
     )
 
     console.print(
-        f"[green]Starting OpenJarvis API server[/green]\n"
+        f"[green]Starting AURA API server[/green]\n"
         f"  Engine: [cyan]{engine_name}[/cyan]\n"
         f"  Model:  [cyan]{model_name}[/cyan]\n"
         f"  Agent:  [cyan]{agent_key or 'none'}[/cyan]\n"

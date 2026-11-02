@@ -1,7 +1,7 @@
 //! File read/write tools.
 
 use crate::traits::BaseTool;
-use openjarvis_core::{OpenJarvisError, ToolResult, ToolSpec};
+use openjarvis_core::{AURAError, ToolResult, ToolSpec};
 use openjarvis_security::file_policy::is_sensitive_file;
 use once_cell::sync::Lazy;
 use serde_json::Value;
@@ -56,7 +56,7 @@ impl BaseTool for FileReadTool {
     fn spec(&self) -> &ToolSpec {
         &READ_SPEC
     }
-    fn execute(&self, params: &Value) -> Result<ToolResult, OpenJarvisError> {
+    fn execute(&self, params: &Value) -> Result<ToolResult, AURAError> {
         let path_str = params["path"].as_str().unwrap_or("");
         let path = Path::new(path_str);
 
@@ -86,7 +86,7 @@ impl BaseTool for FileWriteTool {
     fn spec(&self) -> &ToolSpec {
         &WRITE_SPEC
     }
-    fn execute(&self, params: &Value) -> Result<ToolResult, OpenJarvisError> {
+    fn execute(&self, params: &Value) -> Result<ToolResult, AURAError> {
         let path_str = params["path"].as_str().unwrap_or("");
         let content = params["content"].as_str().unwrap_or("");
         let path = Path::new(path_str);

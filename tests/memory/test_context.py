@@ -241,7 +241,7 @@ def test_inject_context_prioritizes_newest_facts_within_token_budget():
 
 def test_inject_context_merges_with_existing_system_message():
     messages = [
-        Message(role=Role.SYSTEM, content="You are OpenJarvis."),
+        Message(role=Role.SYSTEM, content="You are AURA."),
         Message(role=Role.USER, content="What is my favorite color?"),
     ]
     facts = [Fact(text="The user's favorite color is blue")]
@@ -250,9 +250,9 @@ def test_inject_context_merges_with_existing_system_message():
 
     system_messages = [m for m in augmented if m.role == Role.SYSTEM]
     assert len(system_messages) == 1
-    assert "You are OpenJarvis." in system_messages[0].content
+    assert "You are AURA." in system_messages[0].content
     assert "favorite color is blue" in system_messages[0].content
-    assert messages[0].content == "You are OpenJarvis."
+    assert messages[0].content == "You are AURA."
 
 
 def test_inject_context_collapses_multiple_system_messages():

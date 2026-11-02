@@ -2,11 +2,11 @@
 
 A smart inbox assistant that triages incoming messages, classifies them by
 priority, drafts replies, and produces end-of-day summaries — all powered by an
-OpenJarvis orchestrator agent.
+AURA orchestrator agent.
 
 ## What This Demonstrates
 
-- **Channel integration** — connecting OpenJarvis to messaging platforms (Slack, WhatsApp, etc.)
+- **Channel integration** — connecting AURA to messaging platforms (Slack, WhatsApp, etc.)
 - **Message triage** — automatic classification into URGENT, ACTION_REQUIRED, FYI, or SPAM
 - **Smart replies** — context-aware reply drafting for actionable messages
 - **Memory-backed summaries** — key information stored in memory for end-of-day rollups
@@ -14,7 +14,7 @@ OpenJarvis orchestrator agent.
 ## Prerequisites
 
 - Python 3.10+
-- OpenJarvis installed: `uv sync --extra dev`
+- AURA installed: `uv sync --extra dev`
 - An inference engine running (e.g., Ollama with `qwen3:8b` pulled)
 
 For live channel mode you also need the relevant channel credentials (see
@@ -73,7 +73,7 @@ second prompt asks the agent to summarize the inbox grouped by category.
 ### WhatsApp
 
 1. Ensure Node.js 22+ is installed.
-2. Configure the WhatsApp Baileys bridge (see the OpenJarvis channel docs).
+2. Configure the WhatsApp Baileys bridge (see the AURA channel docs).
 3. Scan the QR code to authenticate.
 4. Run:
    ```bash
@@ -82,7 +82,7 @@ second prompt asks the agent to summarize the inbox grouped by category.
 
 ### Other Channels
 
-OpenJarvis supports many channels — LINE, Viber, Mastodon, Rocket.Chat, and
+AURA supports many channels — LINE, Viber, Mastodon, Rocket.Chat, and
 more. List all available channels with:
 
 ```bash
@@ -134,7 +134,7 @@ You can also add domain-specific rules by extending the system prompt in
 
 After processing all messages, the agent produces a grouped summary. In demo
 mode this is printed to the terminal. In a production setup you could schedule
-this via the OpenJarvis scheduler:
+this via the AURA scheduler:
 
 ```bash
 jarvis scheduler create "Daily inbox summary" --type cron --value "0 17 * * *"

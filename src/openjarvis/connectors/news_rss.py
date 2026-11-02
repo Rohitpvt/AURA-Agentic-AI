@@ -188,7 +188,7 @@ def _request_feed(url: str, target: _FeedTarget) -> httpx.Response:
                         "application/rss+xml, application/atom+xml, "
                         "application/xml, text/xml;q=0.9, */*;q=0.1"
                     ),
-                    "User-Agent": "OpenJarvis-RSS/1.0",
+                    "User-Agent": "AURA-RSS/1.0",
                     "Connection": "close",
                 },
             )

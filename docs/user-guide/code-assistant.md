@@ -7,10 +7,10 @@ An orchestrator agent with code execution, file I/O, and shell access. It can wr
 ### 1. Install and initialize
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync --extra dev
-jarvis init --preset code-assistant --force
+aura init --preset code-assistant --force
 ```
 
 This writes a pre-configured `~/.openjarvis/config.toml` for the code assistant.
@@ -49,7 +49,7 @@ jarvis ask "Run the test suite and summarize any failures"
 jarvis ask --agent orchestrator --tools code_interpreter "Calculate the first 20 Fibonacci numbers"
 
 # Interactive chat for iterative coding
-jarvis chat
+aura chat
 ```
 
 ## Configuration Reference
@@ -121,7 +121,7 @@ The `shell_exec` and `code_interpreter` tools execute real commands on your mach
 
 - **shell_exec** runs commands in your current user context. It can read, write, and delete files. Avoid running the agent on directories containing sensitive data without reviewing tool calls.
 - **code_interpreter** executes Python code. It has access to your Python environment and installed packages.
-- The agent asks for confirmation before executing potentially destructive commands when running in interactive mode (`jarvis chat`).
+- The agent asks for confirmation before executing potentially destructive commands when running in interactive mode (`aura chat`).
 - For stronger isolation, use the sandboxed agent: `jarvis ask --agent sandboxed --tools code_interpreter "..."`, which runs inside a Docker/Podman container.
 
 ## Troubleshooting

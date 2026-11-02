@@ -2,8 +2,8 @@
 # Copy to ~/.aura/config.toml
 #
 # First index your documents:
-#   jarvis memory index ./docs/
-#   jarvis memory index ~/Documents/papers/
+#   aura memory index ./docs/
+#   aura memory index ~/Documents/papers/
 #
 # Then ask complex questions:
 #   aura ask --agent deep_research "Summarize all emails about Project X"

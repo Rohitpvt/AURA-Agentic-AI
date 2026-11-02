@@ -32,7 +32,7 @@ class ContainerRunner:
     Parameters
     ----------
     image:
-        Docker image to run.  Defaults to ``openjarvis-sandbox:latest``.
+        Docker image to run.  Defaults to ``aura-sandbox:latest``.
     timeout:
         Maximum execution time in seconds.
     mount_allowlist_path:
@@ -43,7 +43,7 @@ class ContainerRunner:
         Container runtime binary name (``docker`` or ``podman``).
     """
 
-    DEFAULT_IMAGE = "openjarvis-sandbox:latest"
+    DEFAULT_IMAGE = "aura-sandbox:latest"
     DEFAULT_TIMEOUT = 300
 
     def __init__(
@@ -117,7 +117,7 @@ class ContainerRunner:
             "--name",
             container_name,
             "--label",
-            "openjarvis-sandbox=true",
+            "aura-sandbox=true",
             "--network",
             "none",
             "-i",
@@ -253,7 +253,7 @@ class ContainerRunner:
                     "ps",
                     "-aq",
                     "--filter",
-                    "label=openjarvis-sandbox=true",
+                    "label=aura-sandbox=true",
                 ],
                 capture_output=True,
                 text=True,

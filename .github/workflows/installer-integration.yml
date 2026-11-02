@@ -68,8 +68,8 @@ jobs:
       - name: Verify jarvis --version
         run: su testuser -c '~/.local/bin/jarvis --version'
 
-      - name: Verify jarvis doctor exits 0
-        run: su testuser -c '~/.local/bin/jarvis doctor'
+      - name: Verify aura doctor exits 0
+        run: su testuser -c '~/.local/bin/aura doctor'
 
       - name: Verify uninstall is clean
         run: |
@@ -108,8 +108,8 @@ jobs:
       - name: Verify jarvis --version
         run: ~/.local/bin/jarvis --version
 
-      - name: Verify jarvis doctor exits 0
-        run: ~/.local/bin/jarvis doctor
+      - name: Verify aura doctor exits 0
+        run: ~/.local/bin/aura doctor
 
       - name: Verify uninstall is clean
         run: |

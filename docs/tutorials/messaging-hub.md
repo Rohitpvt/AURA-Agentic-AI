@@ -5,11 +5,11 @@ description: Smart inbox with message triage and auto-replies across channels
 
 # Messaging Hub
 
-This tutorial walks through `examples/messaging_hub/smart_inbox.py` — a script that connects OpenJarvis to messaging platforms, triages incoming messages by priority, drafts context-aware replies, and produces end-of-day summaries. It demonstrates channel integration, structured agent output, and memory-backed aggregation across multiple messages.
+This tutorial walks through `examples/messaging_hub/smart_inbox.py` — a script that connects AURA to messaging platforms, triages incoming messages by priority, drafts context-aware replies, and produces end-of-day summaries. It demonstrates channel integration, structured agent output, and memory-backed aggregation across multiple messages.
 
 !!! tip "Prerequisites"
     - Python 3.10 or later
-    - OpenJarvis installed: `uv sync --extra dev` from the repository root
+    - AURA installed: `uv sync --extra dev` from the repository root
     - An inference engine running (Ollama with `qwen3:8b` pulled, or cloud API keys)
     - For live channel mode: channel-specific credentials (see [Setting Up Real Channels](#setting-up-real-channels))
 
@@ -141,7 +141,7 @@ The `think` tool lets the agent reason internally before committing to a categor
 
 === "Other Channels"
 
-    OpenJarvis supports LINE, Viber, Mastodon, Rocket.Chat, Zulip, XMPP, Twitch, Nostr, and more. List all available channels:
+    AURA supports LINE, Viber, Mastodon, Rocket.Chat, Zulip, XMPP, Twitch, Nostr, and more. List all available channels:
 
     ```bash title="Terminal"
     jarvis channel list
@@ -199,7 +199,7 @@ You can also add domain rules in the system prompt via `messaging.toml` — for 
 
 ## Scheduling the Daily Summary
 
-After processing all messages, the end-of-day summary call runs immediately in the script. For production use, schedule it independently via the OpenJarvis scheduler:
+After processing all messages, the end-of-day summary call runs immediately in the script. For production use, schedule it independently via the AURA scheduler:
 
 ```bash title="Terminal"
 jarvis scheduler create "Daily inbox summary" \

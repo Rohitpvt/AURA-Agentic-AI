@@ -1,6 +1,6 @@
 # WSL2 Install
 
-OpenJarvis on Windows installs two ways: **WSL2** (this page — the
+AURA on Windows installs two ways: **WSL2** (this page — the
 recommended path; identical to native Linux) or **[native Windows
 (advanced)](windows-native.md)** (Phase-1; PowerShell installer, no
 WSL2 / no Docker). Pick WSL2 for the smoothest experience.
@@ -15,10 +15,10 @@ wsl --install
 
 Then open the Ubuntu (or Debian) shell that gets installed.
 
-## Install OpenJarvis
+## Install AURA
 
 ```bash
-curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash
+curl -fsSL https://github.com/Rohitpvt/AURA-Agentic-AIinstall.sh | bash
 ```
 
 About 3 minutes. Type `jarvis` to start.

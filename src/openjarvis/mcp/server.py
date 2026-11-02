@@ -1,4 +1,4 @@
-"""MCP Server — wraps OpenJarvis tools as MCP-discoverable tools."""
+"""MCP Server — wraps AURA tools as MCP-discoverable tools."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ _TOOL_ANNOTATIONS: Dict[str, Dict[str, Any]] = {
 
 
 class MCPServer:
-    """MCP server that exposes OpenJarvis tools via JSON-RPC.
+    """MCP server that exposes AURA tools via JSON-RPC.
 
     Parameters
     ----------
@@ -254,7 +254,7 @@ class MCPServer:
                 "serverInfo": {
                     "name": self.SERVER_NAME,
                     "version": self.SERVER_VERSION,
-                    "title": "OpenJarvis Tool Server",
+                    "title": "AURA Tool Server",
                 },
             },
             id=req.id,

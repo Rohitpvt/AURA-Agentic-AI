@@ -1,4 +1,4 @@
-"""Tests for ``jarvis init`` next-steps guidance."""
+"""Tests for ``aura init`` next-steps guidance."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class TestInitShowsNextSteps:
         assert result.exit_code == 0
         assert "Getting Started" in result.output
         assert "jarvis ask" in result.output
-        assert "jarvis doctor" in result.output
+        assert "aura doctor" in result.output
 
     def test_init_output_shows_toml_sections_literally(self, tmp_path: Path) -> None:
         """Init output should render TOML section headers like [engine] literally."""
@@ -50,7 +50,7 @@ class TestNextStepsOllama:
         assert "ollama serve" in text
         assert "ollama pull" in text
         assert "jarvis ask" in text
-        assert "jarvis doctor" in text
+        assert "aura doctor" in text
 
     def test_next_steps_ollama_with_model(self) -> None:
         text = _next_steps_text("ollama", "qwen3.5:27b")
@@ -67,7 +67,7 @@ class TestNextStepsVllm:
         assert "pip install vllm" in text
         assert "vllm serve" in text
         assert "jarvis ask" in text
-        assert "jarvis doctor" in text
+        assert "aura doctor" in text
 
 
 class TestNextStepsLlamacpp:
@@ -76,7 +76,7 @@ class TestNextStepsLlamacpp:
         assert "brew install llama.cpp" in text
         assert "llama-server" in text
         assert "jarvis ask" in text
-        assert "jarvis doctor" in text
+        assert "aura doctor" in text
 
 
 class TestNextStepsMlx:
@@ -85,12 +85,12 @@ class TestNextStepsMlx:
         assert "pip install mlx-lm" in text
         assert "mlx_lm.server" in text
         assert "jarvis ask" in text
-        assert "jarvis doctor" in text
+        assert "aura doctor" in text
 
 
 class TestMinimalConfig:
     def test_init_generates_minimal_by_default(self, tmp_path: Path) -> None:
-        """Default jarvis init produces a short config."""
+        """Default aura init produces a short config."""
         config_dir = tmp_path / ".openjarvis"
         config_path = config_dir / "config.toml"
         with (
@@ -105,10 +105,10 @@ class TestMinimalConfig:
         lines = [ln for ln in content.splitlines() if ln.strip()]
         assert len(lines) <= 30
         # Should have the reference hint
-        assert "jarvis init --full" in content
+        assert "aura init --full" in content
 
     def test_init_full_generates_verbose_config(self, tmp_path: Path) -> None:
-        """jarvis init --full produces the full reference config."""
+        """aura init --full produces the full reference config."""
         config_dir = tmp_path / ".openjarvis"
         config_path = config_dir / "config.toml"
         with (

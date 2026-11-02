@@ -532,7 +532,7 @@ Trace
 ## Optimization Framework
 
 The optimization subsystem (`learning/optimize/`) provides LLM-guided search
-over OpenJarvis's 5-primitive configuration space. It automates finding optimal
+over AURA's 5-primitive configuration space. It automates finding optimal
 configurations for accuracy, latency, cost, and energy consumption.
 
 ### Components

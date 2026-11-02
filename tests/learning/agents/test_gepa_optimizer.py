@@ -81,15 +81,15 @@ class TestGEPAOptimizerOptimize:
                 assert "gepa" in result["reason"].lower()
 
 
-class TestOpenJarvisGEPAAdapter:
+class TestAURAGEPAAdapter:
     def test_adapter_init(self) -> None:
         from openjarvis.core.config import GEPAOptimizerConfig
         from openjarvis.learning.agents.gepa_optimizer import (
-            OpenJarvisGEPAAdapter,
+            AURAGEPAAdapter,
         )
 
         mock_store = MagicMock()
-        adapter = OpenJarvisGEPAAdapter(
+        adapter = AURAGEPAAdapter(
             mock_store,
             "native_react",
             GEPAOptimizerConfig(),

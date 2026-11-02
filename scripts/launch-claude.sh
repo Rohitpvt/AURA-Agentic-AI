@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ── OpenJarvis: launch Claude via the cloud engine ────────────────────
+# ── AURA: launch Claude via the cloud engine ────────────────────
 # Claude is a proprietary Anthropic model with no public weights, so it
-# cannot be served by Ollama. This script routes through OpenJarvis's
+# cannot be served by Ollama. This script routes through AURA's
 # ``cloud`` engine, which speaks the Anthropic API directly.
 #
 # Usage:
@@ -36,4 +36,4 @@ if ! command -v jarvis >/dev/null 2>&1; then
     exit 3
 fi
 
-exec jarvis chat --engine cloud --model "$MODEL" "$@"
+exec aura chat --engine cloud --model "$MODEL" "$@"

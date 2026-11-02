@@ -325,7 +325,7 @@ def extract_patch(text: str) -> Optional[str]:
 def _harness_cache_dir() -> Path:
     """Where the swebench subprocess writes its report JSON + logs/ tree.
 
-    Consolidated under the env-aware OpenJarvis cache root
+    Consolidated under the env-aware AURA cache root
     (``<openjarvis-home>/cache/swebench``) so it never pollutes the project
     root or scatters across ``$HOME``. Honors ``OPENJARVIS_HOME`` /
     ``XDG_DATA_HOME`` via :func:`openjarvis.core.paths.get_cache_dir`.

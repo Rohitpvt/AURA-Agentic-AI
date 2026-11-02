@@ -1,4 +1,4 @@
-//! OpenJarvis Templates — pre-configured agent templates loaded from TOML.
+//! AURA Templates — pre-configured agent templates loaded from TOML.
 
 use serde::{Deserialize, Serialize};
 

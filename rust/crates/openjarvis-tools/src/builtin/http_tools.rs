@@ -1,7 +1,7 @@
 //! HTTP request tool.
 
 use crate::traits::BaseTool;
-use openjarvis_core::{OpenJarvisError, ToolResult, ToolSpec};
+use openjarvis_core::{AURAError, ToolResult, ToolSpec};
 use openjarvis_security::ssrf::check_ssrf;
 use once_cell::sync::Lazy;
 use serde_json::Value;
@@ -38,7 +38,7 @@ impl BaseTool for HttpRequestTool {
     fn spec(&self) -> &ToolSpec {
         &SPEC
     }
-    fn execute(&self, params: &Value) -> Result<ToolResult, OpenJarvisError> {
+    fn execute(&self, params: &Value) -> Result<ToolResult, AURAError> {
         let url = params["url"].as_str().unwrap_or("");
         let method = params["method"].as_str().unwrap_or("GET").to_uppercase();
 
@@ -50,7 +50,7 @@ impl BaseTool for HttpRequestTool {
             .timeout(std::time::Duration::from_secs(30))
             .build()
             .map_err(|e| {
-                OpenJarvisError::Io(std::io::Error::other(e.to_string()))
+                AURAError::Io(std::io::Error::other(e.to_string()))
             })?;
 
         let mut request = match method.as_str() {

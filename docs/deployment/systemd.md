@@ -1,12 +1,12 @@
 # systemd Service (Linux)
 
-OpenJarvis includes a systemd unit file for running the API server as a managed background service on Linux. This provides automatic startup on boot, crash recovery, and integration with standard Linux service management tools.
+AURA includes a systemd unit file for running the API server as a managed background service on Linux. This provides automatic startup on boot, crash recovery, and integration with standard Linux service management tools.
 
 ## Prerequisites
 
 Before installing the service, ensure that:
 
-1. OpenJarvis is installed in a virtual environment at `/opt/openjarvis/.venv` (or adjust paths accordingly).
+1. AURA is installed in a virtual environment at `/opt/openjarvis/.venv` (or adjust paths accordingly).
 2. A dedicated `openjarvis` system user exists (recommended for security).
 3. An inference engine (such as Ollama) is running and accessible.
 
@@ -15,8 +15,8 @@ Create the user and installation directory:
 ```bash
 sudo useradd --system --create-home --home-dir /opt/openjarvis openjarvis
 sudo -u openjarvis python3 -m venv /opt/openjarvis/.venv
-sudo -u openjarvis git clone https://github.com/open-jarvis/OpenJarvis.git /opt/openjarvis/OpenJarvis
-cd /opt/openjarvis/OpenJarvis && sudo -u openjarvis uv sync --extra server
+sudo -u openjarvis git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git /opt/openjarvis/AURA
+cd /opt/openjarvis/AURA && sudo -u openjarvis uv sync --extra server
 ```
 
 ## Installing the Service
@@ -27,7 +27,7 @@ declares `EnvironmentFile=/etc/openjarvis/env` (no `-` prefix), so it will
 
 ```bash
 sudo mkdir -p /etc/openjarvis
-echo "OPENJARVIS_API_KEY=$(jarvis auth generate-key)" | sudo tee /etc/openjarvis/env
+echo "AURA_API_KEY=$(jarvis auth generate-key)" | sudo tee /etc/openjarvis/env
 sudo chmod 600 /etc/openjarvis/env
 ```
 
@@ -56,14 +56,14 @@ The provided unit file at `deploy/systemd/openjarvis.service`:
 
 ```ini
 [Unit]
-Description=OpenJarvis API Server
+Description=AURA API Server
 After=network.target
 
 [Service]
 Type=simple
 User=openjarvis
 WorkingDirectory=/opt/openjarvis
-ExecStart=/opt/openjarvis/.venv/bin/jarvis serve --host 0.0.0.0 --port 8000
+ExecStart=/opt/openjarvis/.venv/bin/aura serve --host 0.0.0.0 --port 8000
 Restart=on-failure
 RestartSec=5
 Environment=HOME=/opt/openjarvis
@@ -76,7 +76,7 @@ WantedBy=multi-user.target
 
 | Directive     | Value              | Description                                                                 |
 |---------------|--------------------|-----------------------------------------------------------------------------|
-| `Description` | `OpenJarvis API Server` | Human-readable name shown in `systemctl status` and logs.              |
+| `Description` | `AURA API Server` | Human-readable name shown in `systemctl status` and logs.              |
 | `After`       | `network.target`   | Delays startup until the network stack is available, since the server binds to a network socket and may need to reach a remote engine. |
 
 ### `[Service]` Section
@@ -85,11 +85,11 @@ WantedBy=multi-user.target
 |--------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
 | `Type`             | `simple`                                                           | The process started by `ExecStart` is the main service process. systemd considers the service started immediately. |
 | `User`             | `openjarvis`                                                       | Runs the server as the `openjarvis` user rather than root, limiting the blast radius of any security issue. |
-| `WorkingDirectory` | `/opt/openjarvis`                                                  | Sets the working directory for the process. This is where OpenJarvis looks for local files and writes data. |
-| `ExecStart`        | `/opt/openjarvis/.venv/bin/jarvis serve --host 0.0.0.0 --port 8000` | The command to start the server. Uses the full path to the `jarvis` binary inside the virtual environment. |
+| `WorkingDirectory` | `/opt/openjarvis`                                                  | Sets the working directory for the process. This is where AURA looks for local files and writes data. |
+| `ExecStart`        | `/opt/openjarvis/.venv/bin/aura serve --host 0.0.0.0 --port 8000` | The command to start the server. Uses the full path to the `jarvis` binary inside the virtual environment. |
 | `Restart`          | `on-failure`                                                       | Automatically restarts the service if it exits with a non-zero exit code. Does not restart on clean shutdown (`systemctl stop`). |
 | `RestartSec`       | `5`                                                                | Waits 5 seconds before attempting a restart, preventing rapid restart loops if the service crashes immediately on startup. |
-| `Environment`      | `HOME=/opt/openjarvis`                                             | Sets the `HOME` environment variable so OpenJarvis finds its configuration at `~/.openjarvis/config.toml` (resolving to `/opt/openjarvis/.openjarvis/config.toml`). |
+| `Environment`      | `HOME=/opt/openjarvis`                                             | Sets the `HOME` environment variable so AURA finds its configuration at `~/.openjarvis/config.toml` (resolving to `/opt/openjarvis/.openjarvis/config.toml`). |
 
 ### `[Install]` Section
 
@@ -104,7 +104,7 @@ WantedBy=multi-user.target
 Edit the `ExecStart` line to change the host or port:
 
 ```ini
-ExecStart=/opt/openjarvis/.venv/bin/jarvis serve --host 127.0.0.1 --port 9000
+ExecStart=/opt/openjarvis/.venv/bin/aura serve --host 127.0.0.1 --port 9000
 ```
 
 !!! tip
@@ -112,10 +112,10 @@ ExecStart=/opt/openjarvis/.venv/bin/jarvis serve --host 127.0.0.1 --port 9000
 
 ### Setting the Engine and Model
 
-Pass additional flags to `jarvis serve`:
+Pass additional flags to `aura serve`:
 
 ```ini
-ExecStart=/opt/openjarvis/.venv/bin/jarvis serve --host 0.0.0.0 --port 8000 --engine ollama --model qwen3:8b
+ExecStart=/opt/openjarvis/.venv/bin/aura serve --host 0.0.0.0 --port 8000 --engine ollama --model qwen3:8b
 ```
 
 ### Adding Environment Variables
@@ -144,7 +144,7 @@ If you prefer a different service user, update both the `User` directive and the
 [Service]
 User=myuser
 WorkingDirectory=/home/myuser/openjarvis
-ExecStart=/home/myuser/openjarvis/.venv/bin/jarvis serve --host 0.0.0.0 --port 8000
+ExecStart=/home/myuser/openjarvis/.venv/bin/aura serve --host 0.0.0.0 --port 8000
 Environment=HOME=/home/myuser/openjarvis
 ```
 
@@ -161,7 +161,7 @@ The server reads `~/.openjarvis/config.toml` on startup, where `~` resolves from
 
 ## Viewing Logs
 
-OpenJarvis logs are captured by journald. View them with `journalctl`:
+AURA logs are captured by journald. View them with `journalctl`:
 
 ```bash
 # View all logs for the service
@@ -207,7 +207,7 @@ sudo systemctl status openjarvis
 Example output:
 
 ```
-● openjarvis.service - OpenJarvis API Server
+● openjarvis.service - AURA API Server
      Loaded: loaded (/etc/systemd/system/openjarvis.service; enabled; preset: enabled)
      Active: active (running) since Fri 2026-02-21 10:00:00 UTC; 2h ago
    Main PID: 12345 (jarvis)
@@ -215,7 +215,7 @@ Example output:
      Memory: 256.0M
         CPU: 1min 23s
      CGroup: /system.slice/openjarvis.service
-             └─12345 /opt/openjarvis/.venv/bin/python /opt/openjarvis/.venv/bin/jarvis serve --host 0.0.0.0 --port 8000
+             └─12345 /opt/openjarvis/.venv/bin/python /opt/openjarvis/.venv/bin/aura serve --host 0.0.0.0 --port 8000
 ```
 
 ### Enable and Disable on Boot
@@ -239,19 +239,19 @@ sudo systemctl restart openjarvis
 
 ## Running Alongside Ollama
 
-If Ollama is also managed via systemd, you can add an ordering dependency so the OpenJarvis service waits for Ollama to start:
+If Ollama is also managed via systemd, you can add an ordering dependency so the AURA service waits for Ollama to start:
 
 ```ini
 [Unit]
-Description=OpenJarvis API Server
+Description=AURA API Server
 After=network.target ollama.service
 Requires=ollama.service
 ```
 
 | Directive  | Description                                                              |
 |------------|--------------------------------------------------------------------------|
-| `After`    | Ensures OpenJarvis starts after Ollama.                                  |
-| `Requires` | If Ollama fails to start, OpenJarvis will not start either.              |
+| `After`    | Ensures AURA starts after Ollama.                                  |
+| `Requires` | If Ollama fails to start, AURA will not start either.              |
 
 !!! note
-    Use `Wants` instead of `Requires` if you want OpenJarvis to start even when Ollama is unavailable (for example, if you plan to start Ollama manually later).
+    Use `Wants` instead of `Requires` if you want AURA to start even when Ollama is unavailable (for example, if you plan to start Ollama manually later).

@@ -6,7 +6,7 @@ from terminal_bench.agents.naive_agent import NaiveAgent
 from terminal_bench.llms.lite_llm import LiteLLM
 
 
-class OpenJarvisTerminalBenchAgent(NaiveAgent):
+class AURATerminalBenchAgent(NaiveAgent):
     """NaiveAgent that constructs its own LiteLLM from string kwargs.
 
     This avoids serialization issues in terminal-bench's lock file

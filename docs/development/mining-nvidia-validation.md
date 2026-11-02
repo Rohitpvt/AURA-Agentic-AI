@@ -1,8 +1,8 @@
 # NVIDIA Pearl Mining Validation Runbook
 
 This runbook is the release gate for the v1 `vllm-pearl` provider. Unit tests
-prove OpenJarvis wiring; this validates that a real H100/H200 host can mine
-through Pearl and serve inference through OpenJarvis.
+prove AURA wiring; this validates that a real H100/H200 host can mine
+through Pearl and serve inference through AURA.
 
 ## Required Host
 
@@ -183,7 +183,7 @@ Expected:
   `8339`.
 - `mine status` exits 0 and prints `provider: vllm-pearl`.
 
-## Verify OpenJarvis Inference Uses Mining Endpoint
+## Verify AURA Inference Uses Mining Endpoint
 
 Run:
 
@@ -264,7 +264,7 @@ The NVIDIA provider is considered proven when all are true:
 - `mine doctor` reports supported on H100/H200.
 - `mine init` resolves/builds the Pearl image.
 - `mine start` launches the container and writes the sidecar.
-- OpenJarvis inference succeeds through `vllm-pearl-mining`.
+- AURA inference succeeds through `vllm-pearl-mining`.
 - Pearl gateway metrics are reachable and `mine status` parses them.
 - `pearld` accepts the miner's network path.
 - At least one accepted share/block is observed, or a documented Pearl

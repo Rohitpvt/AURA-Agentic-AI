@@ -25,7 +25,7 @@ arch="$(uname -m)"
 case "$os" in
 Darwin)
     if [ "$arch" != "arm64" ]; then
-        echo "Intel Macs expose no energy counters OpenJarvis can read." >&2
+        echo "Intel Macs expose no energy counters AURA can read." >&2
         exit 1
     fi
     extra="energy-apple"
@@ -64,7 +64,7 @@ from openjarvis.telemetry.energy_monitor import create_energy_monitor
 monitor = create_energy_monitor()
 if monitor is None:
     raise SystemExit(
-        "Energy monitor still unavailable. Run `jarvis doctor` for details."
+        "Energy monitor still unavailable. Run `aura doctor` for details."
     )
 print(f"OK: {monitor.vendor().value} via {monitor.energy_method()}")
 monitor.close()

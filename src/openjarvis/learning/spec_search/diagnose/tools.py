@@ -418,7 +418,7 @@ def build_diagnostic_tools(
         ),
         DiagnosticTool(
             name="get_current_config",
-            description="Read the current OpenJarvis config.toml.",
+            description="Read the current AURA config.toml.",
             parameters={"type": "object", "properties": {}},
             fn=_get_current_config,
         ),

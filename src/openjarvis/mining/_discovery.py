@@ -84,7 +84,7 @@ def detect_for_engine_model(
     if spec is None:
         return MiningCapabilities(
             False,
-            reason=f"model {model!r} is not in OpenJarvis' Pearl model registry",
+            reason=f"model {model!r} is not in AURA' Pearl model registry",
         )
     if not spec.is_validated:
         return MiningCapabilities(

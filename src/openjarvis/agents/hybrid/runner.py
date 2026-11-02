@@ -6,12 +6,12 @@
 
 Reads a cell definition from ``registry/<method>.toml`` (bundled with this
 package or pointed at by ``OPENJARVIS_HYBRID_REGISTRY_DIR``), constructs
-the registered agent, loads bench tasks via OpenJarvis's existing dataset
+the registered agent, loads bench tasks via AURA's existing dataset
 providers, runs every task, scores it, and writes
 ``<EXPERIMENTS_DIR>/runs/<cell>/results.jsonl`` + ``summary.json``.
 
 The output schema matches ``hybrid-local-cloud-compute/runner.py`` so the
-existing rescore / dashboard scripts can read OpenJarvis cells without
+existing rescore / dashboard scripts can read AURA cells without
 modification.
 """
 
@@ -135,7 +135,7 @@ def _load_gaia_tasks(n: Optional[int]) -> List[Dict[str, Any]]:
         # rec.problem is the formatted question prompt; rec.metadata carries
         # the GAIA-specific fields including any reference answer. Prefer the
         # upstream GAIA `task_id` field (bare uuid) over rec.record_id (which
-        # OpenJarvis prefixes with `gaia-`) so subsets keyed by the upstream
+        # AURA prefixes with `gaia-`) so subsets keyed by the upstream
         # id round-trip.
         md = rec.metadata or {}
         task_id = md.get("task_id") or rec.record_id
@@ -289,7 +289,7 @@ def _get_gaia_scorer():
 def _score_gaia(task: Dict[str, Any], answer: str) -> Dict[str, Any]:
     """GAIA scorer — normalized exact-match with an LLM-judge fallback.
 
-    Uses the shared OpenJarvis :class:`GAIAScorer`. The previous version
+    Uses the shared AURA :class:`GAIAScorer`. The previous version
     only credited answers that emitted a literal ``FINAL ANSWER:`` line and
     string-matched it; a verbose answer that stated the right answer in
     prose silently scored 0. Opus emits the marker ~92% of the time but

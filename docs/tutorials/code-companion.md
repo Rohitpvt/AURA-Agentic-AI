@@ -9,7 +9,7 @@ This tutorial walks through `examples/code_companion/` — three developer-focus
 
 !!! tip "Prerequisites"
     - Python 3.10 or later
-    - OpenJarvis installed: `uv sync --extra dev` from the repository root
+    - AURA installed: `uv sync --extra dev` from the repository root
     - An inference engine running — Ollama locally or a cloud API key in `.env`
     - For `reviewer.py` and `code_review.py`: a git repository with at least two branches or commits
 

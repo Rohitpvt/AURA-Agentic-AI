@@ -4,11 +4,11 @@ A personalized daily briefing that collects data from your connected services, s
 
 ## Quickstart (5 minutes)
 
-### 1. Install and set up OpenJarvis
+### 1. Install and set up AURA
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync --extra dev
 ```
 
@@ -34,7 +34,7 @@ default_model = "qwen3.5:9b"
 enabled = true
 schedule = "0 6 * * *"          # 6 AM daily (cron syntax)
 timezone = "America/Los_Angeles"
-persona = "jarvis"
+persona = "aura"
 honorific = "sir"               # or "ma'am", "boss", etc.
 tts_backend = "cartesia"        # or "openai"
 voice_id = "c8f7835e-28a3-4f0c-80d7-c1302ac62aae"  # Alistair (British male)
@@ -191,7 +191,7 @@ Add any RSS or Atom feed to `~/.openjarvis/connectors/news_rss.json`:
 The digest is also available via the FastAPI server:
 
 ```bash
-jarvis serve  # Start the server
+aura serve  # Start the server
 
 # GET  /api/digest           — Get today's digest text
 # GET  /api/digest/audio     — Stream the digest audio (MP3)

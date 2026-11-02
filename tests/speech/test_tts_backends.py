@@ -340,7 +340,7 @@ def test_kokoro_synthesize_routes_voice_to_correct_language(monkeypatch):
     monkeypatch.setitem(sys.modules, "kokoro", fake_kokoro)
 
     # ``soundfile`` is a kokoro-runtime dep; stub it so we can test the
-    # routing logic without requiring it in the OpenJarvis test env.
+    # routing logic without requiring it in the AURA test env.
     def _fake_sf_write(buf, _samples, _sr, format=None):  # noqa: A002
         buf.write(b"FAKE_AUDIO_BYTES")
 

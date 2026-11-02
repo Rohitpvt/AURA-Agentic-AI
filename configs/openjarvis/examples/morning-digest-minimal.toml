@@ -18,7 +18,7 @@ enabled = ["digest_collect", "text_to_speech"]
 
 [digest]
 enabled = true
-persona = "jarvis"
+persona = "aura"
 honorific = "sir"
 tts_backend = "openai"
 voice_id = "onyx"

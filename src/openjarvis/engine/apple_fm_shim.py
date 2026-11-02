@@ -6,7 +6,7 @@ Only runs on macOS 26+ with Apple Intelligence enabled. Wraps
 ``apple-fm-sdk``'s ``LanguageModelSession`` as ``/v1/chat/completions`` and
 ``/v1/models``.
 
-OpenJarvis's own preferred path is the in-process ``afm`` engine
+AURA's own preferred path is the in-process ``afm`` engine
 (``openjarvis.engine.apple_fm``), which avoids an HTTP hop and a second
 process whose CPU energy would otherwise land inside the same measurement
 window.

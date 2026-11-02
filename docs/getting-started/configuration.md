@@ -1,11 +1,11 @@
 ---
 title: Configuration
-description: Complete reference for OpenJarvis configuration
+description: Complete reference for AURA configuration
 ---
 
 # Configuration
 
-OpenJarvis uses a TOML configuration file to control engine selection, model identity, memory backends, agent behavior, and more. This page is the complete reference for every configuration option, organized by primitive.
+AURA uses a TOML configuration file to control engine selection, model identity, memory backends, agent behavior, and more. This page is the complete reference for every configuration option, organized by primitive.
 
 ## Config File Location
 
@@ -15,11 +15,11 @@ The configuration file lives at:
 ~/.openjarvis/config.toml
 ```
 
-OpenJarvis creates the `~/.openjarvis/` directory and populates it with a default config when you run `jarvis init`.
+AURA creates the `~/.openjarvis/` directory and populates it with a default config when you run `aura init`.
 
-## Relocating the OpenJarvis directory
+## Relocating the AURA directory
 
-OpenJarvis keeps **all** of its state — config, databases, caches, logs,
+AURA keeps **all** of its state — config, databases, caches, logs,
 credentials, skills, recipes, connectors — under a **single root** so it never
 clutters your home directory beyond one folder. By default that root is
 `~/.openjarvis`, but you can move it.
@@ -35,7 +35,7 @@ The root is resolved in priority order:
 
 ```bash
 # Relocate the whole install + runtime tree at install time:
-OPENJARVIS_HOME=~/apps/openjarvis curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash
+OPENJARVIS_HOME=~/apps/openjarvis curl -fsSL https://github.com/Rohitpvt/AURA-Agentic-AIinstall.sh | bash
 
 # Or for a single run / your shell profile:
 export OPENJARVIS_HOME=~/apps/openjarvis
@@ -44,13 +44,13 @@ export OPENJARVIS_HOME=~/apps/openjarvis
 Confirm where your data lives with:
 
 ```bash
-jarvis config path
+aura config path
 ```
 
 !!! note "Migration"
     Because the default is unchanged, **no data migration is required** for
     existing installs. If you set `OPENJARVIS_HOME` (or `XDG_DATA_HOME`) on a
-    machine that already has data in `~/.openjarvis`, OpenJarvis will look in
+    machine that already has data in `~/.openjarvis`, AURA will look in
     the new location and not see your old data — move it yourself if you want
     to keep it: `mv ~/.openjarvis "$OPENJARVIS_HOME"`.
 
@@ -62,7 +62,7 @@ independently of the root, if you need to override just the config file path.
 ### First-Time Setup
 
 ```bash
-jarvis init
+aura init
 ```
 
 This command:
@@ -76,7 +76,7 @@ This command:
 To overwrite an existing config:
 
 ```bash
-jarvis init --force
+aura init --force
 ```
 
 !!! warning
@@ -142,7 +142,7 @@ host = "http://localhost:30000"
 | `binary_path` | string | `""` | Path to the llama.cpp binary, if not on `$PATH`. |
 
 !!! tip "Engine fallback"
-    If the configured default engine is unreachable, OpenJarvis automatically probes all registered engines and falls back to any healthy one.
+    If the configured default engine is unreachable, AURA automatically probes all registered engines and falls back to any healthy one.
 
 !!! note "Backward compatibility"
     The old flat field names (`ollama_host`, `vllm_host`, `llamacpp_host`, `llamacpp_path`, `sglang_host`) are still accepted as backward-compatible properties. New configurations should use the nested sub-section format.
@@ -193,7 +193,7 @@ max_tokens = 1024
 | `repetition_penalty` | float | `1.0` | Penalize repeated tokens. Values > 1 reduce repetition. |
 | `stop_sequences` | string | `""` | Comma-separated stop strings. Generation halts when any stop string is produced. |
 
-When both `default_model` and `fallback_model` are empty, OpenJarvis uses the configured router policy (see `[learning]`) to select a model from those available on the active engine.
+When both `default_model` and `fallback_model` are empty, AURA uses the configured router policy (see `[learning]`) to select a model from those available on the active engine.
 
 ### Engine Selection Priority
 
@@ -438,7 +438,7 @@ environment variable is present.
 
 ### `[server]` — API Server
 
-Controls the OpenAI-compatible API server started by `jarvis serve`.
+Controls the OpenAI-compatible API server started by `aura serve`.
 
 ```toml
 [server]
@@ -460,7 +460,7 @@ workers = 1
 CLI options override config values:
 
 ```bash
-jarvis serve --host 127.0.0.1 --port 9000 --model qwen3:8b --agent simple
+aura serve --host 127.0.0.1 --port 9000 --model qwen3:8b --agent simple
 ```
 
 ---
@@ -477,7 +477,7 @@ sharing and `--no-analytics` declines it.
 enabled = false
 ```
 
-Use `jarvis config set analytics.enabled true` to enable sharing or `false` to
+Use `aura config set analytics.enabled true` to enable sharing or `false` to
 disable it, then restart the server and reload the frontend. This setting is
 independent of local telemetry and leaderboard participation. See
 [Telemetry](../telemetry.md) for the event catalog and sharing details.
@@ -662,7 +662,7 @@ enforce_tool_confirmation = true
 
 ## Hardware Auto-Detection
 
-When you run `jarvis init`, OpenJarvis probes your system to detect available hardware. The detection runs in this order:
+When you run `aura init`, AURA probes your system to detect available hardware. The detection runs in this order:
 
 ### GPU Detection
 
@@ -1083,7 +1083,7 @@ The `default_tools` name still works via a backward-compatible property.
 
 ## Programmatic Configuration
 
-You can configure OpenJarvis entirely from Python without a TOML file:
+You can configure AURA entirely from Python without a TOML file:
 
 ```python
 from openjarvis import Jarvis
@@ -1136,7 +1136,7 @@ j = Jarvis(config_path="/path/to/my-config.toml")
 
 ## Environment Variables
 
-OpenJarvis respects the following environment variables:
+AURA respects the following environment variables:
 
 | Variable | Description |
 |----------|-------------|

@@ -1,6 +1,6 @@
 # Channel Integrations
 
-OpenJarvis ships adapters for many messaging platforms.
+AURA ships adapters for many messaging platforms.
 
 ## Telegram
 

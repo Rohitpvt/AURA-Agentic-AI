@@ -46,7 +46,7 @@ describe('getMemoryStats', () => {
   });
 
   it('retries successfully against the updated API URL after a connection failure', async () => {
-    localStorage.setItem('openjarvis-settings', JSON.stringify({ apiUrl: 'http://localhost:8000' }));
+    localStorage.setItem('aura-settings', JSON.stringify({ apiUrl: 'http://localhost:8000' }));
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     fetchMock.mockResolvedValueOnce(new Response(
       JSON.stringify({ backend: 'sqlite', entries: 3 }),
@@ -55,7 +55,7 @@ describe('getMemoryStats', () => {
     const { getMemoryStats } = await import('./api');
 
     await expect(getMemoryStats()).rejects.toThrow(/Check the server status and API URL/);
-    localStorage.setItem('openjarvis-settings', JSON.stringify({ apiUrl: 'http://localhost:8010' }));
+    localStorage.setItem('aura-settings', JSON.stringify({ apiUrl: 'http://localhost:8010' }));
     await expect(getMemoryStats()).resolves.toEqual({ backend: 'sqlite', entries: 3 });
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
       'http://localhost:8000/v1/memory/stats',

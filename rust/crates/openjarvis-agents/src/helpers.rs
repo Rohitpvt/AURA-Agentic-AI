@@ -40,7 +40,7 @@ impl<E: InferenceEngine> AgentHelpers<E> {
         &self,
         messages: &[Message],
         extra: Option<&serde_json::Value>,
-    ) -> Result<GenerateResult, openjarvis_core::OpenJarvisError> {
+    ) -> Result<GenerateResult, openjarvis_core::AURAError> {
         self.engine.generate(messages, &self.model, self.temperature, self.max_tokens, extra)
     }
 

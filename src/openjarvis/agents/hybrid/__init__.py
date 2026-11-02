@@ -16,7 +16,7 @@ metadata that the paradigm needs (a problem statement vs. a question, hints,
 etc.) goes through ``context.metadata``.
 
 The original ``hybrid-local-cloud-compute`` harness is the reference
-implementation and stays untouched — these ports are the OpenJarvis-native
+implementation and stays untouched — these ports are the AURA-native
 versions of the same paradigms.
 """
 

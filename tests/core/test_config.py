@@ -247,11 +247,11 @@ class TestAgentConfigNew:
         )
 
     def test_default_system_prompt_anchors_identity(self) -> None:
-        """#540: the hardened wording must name OpenJarvis and explicitly
+        """#540: the hardened wording must name AURA and explicitly
         deny the model's training identity so distilled models stop
         claiming to be Claude/ChatGPT/etc."""
         prompt = AgentConfig().default_system_prompt
-        assert "OpenJarvis" in prompt
+        assert "AURA" in prompt
         assert "not Claude" in prompt
 
 
@@ -433,7 +433,7 @@ class TestSandboxConfig:
     def test_defaults(self) -> None:
         sc = SandboxConfig()
         assert sc.enabled is False
-        assert sc.image == "openjarvis-sandbox:latest"
+        assert sc.image == "aura-sandbox:latest"
         assert sc.timeout == 300
         assert sc.workspace == ""
         assert sc.mount_allowlist_path == ""

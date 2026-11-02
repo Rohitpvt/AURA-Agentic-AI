@@ -1,7 +1,7 @@
 # Deep Research Assistant
 
 A tutorial example demonstrating how to build a multi-source research agent
-using OpenJarvis. The assistant uses an orchestrator agent loop with web
+using AURA. The assistant uses an orchestrator agent loop with web
 search, memory storage, and file output to produce comprehensive research
 reports with citations.
 
@@ -21,7 +21,7 @@ reports with citations.
 ## Prerequisites
 
 - Python 3.10 or later
-- OpenJarvis installed (`uv sync --extra dev` from the repo root)
+- AURA installed (`uv sync --extra dev` from the repo root)
 - An inference engine running. Either:
   - **Ollama** (local): `ollama serve` and `ollama pull qwen3:8b`
   - **Cloud API** (remote): set the appropriate key in `.env` and use

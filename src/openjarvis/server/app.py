@@ -1,4 +1,4 @@
-"""FastAPI application factory for the OpenJarvis API server."""
+"""FastAPI application factory for the AURA API server."""
 
 from __future__ import annotations
 
@@ -212,7 +212,7 @@ def create_app(
             for primitive in (capability_policy, rate_limiter, audit_logger)
         ):
             # Programmatic factory callers must receive the same config-driven
-            # enforcement as ``jarvis serve``. Explicitly injected primitives
+            # enforcement as ``aura serve``. Explicitly injected primitives
             # remain authoritative; only missing pieces are derived.
             from openjarvis.security import setup_security
 
@@ -247,8 +247,8 @@ def create_app(
     )
 
     app = FastAPI(
-        title="OpenJarvis API",
-        description="OpenAI-compatible API server for OpenJarvis",
+        title="AURA API",
+        description="OpenAI-compatible API server for AURA",
         version="0.1.0",
     )
 

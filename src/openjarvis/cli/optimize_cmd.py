@@ -77,7 +77,7 @@ def optimize_run(
     max_samples: int,
     output_dir: str,
 ) -> None:
-    """Run an optimization loop over OpenJarvis configuration."""
+    """Run an optimization loop over AURA configuration."""
     console = Console(stderr=True)
 
     # Load config data if provided

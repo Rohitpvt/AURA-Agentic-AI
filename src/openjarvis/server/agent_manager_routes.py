@@ -2541,7 +2541,7 @@ def create_agent_manager_router(
             payload: Dict[str, str] = {
                 "number": to_number,
                 "content": (
-                    "Hello from your OpenJarvis agent! "
+                    "Hello from your AURA agent! "
                     "Text this number anytime to search your "
                     "personal data. Reply with any question to try it."
                 ),

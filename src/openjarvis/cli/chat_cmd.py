@@ -1,4 +1,4 @@
-"""``jarvis chat`` — interactive multi-turn chat REPL."""
+"""``aura chat`` — interactive multi-turn chat REPL."""
 
 from __future__ import annotations
 
@@ -303,7 +303,7 @@ def chat(
         else ""
     )
     console.print(
-        f"[green bold]OpenJarvis Chat[/green bold]\n"
+        f"[green bold]AURA Chat[/green bold]\n"
         f"  Engine: [cyan]{_safe_rich_label(engine_name)}[/cyan]  "
         f"Model: [cyan]{_safe_rich_label(model)}[/cyan]"
         f"  Agent: [cyan]{_safe_rich_label(agent_key or 'direct')}[/cyan]\n"

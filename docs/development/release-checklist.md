@@ -21,7 +21,7 @@ For each platform below, start from a fresh user account / VM snapshot. Run the 
 3. **First chat turn returns a response** from `qwen3.5:2b` via Ollama.
 4. **Banner shows background work** ("Setting up in background: …") while it's still going.
 5. **Completion notification fires** between turns when the bg work finishes (Rust extension or a model).
-6. **`jarvis doctor`** exits 0 once all bg work completes; shows the Background tasks table.
+6. **`aura doctor`** exits 0 once all bg work completes; shows the Background tasks table.
 7. **Re-run `curl … | bash`** on the same machine. It completes ≤ 30 s, says `[ok] step already done` for every step.
 8. **`jarvis-uninstall`** removes `~/.openjarvis/` and `~/.local/bin/jarvis*`. Verify with `ls`.
 
@@ -31,7 +31,7 @@ On any one platform:
 
 ```bash
 export ANTHROPIC_API_KEY=test-fake-key
-jarvis init --force
+aura init --force
 ```
 
 Verify init proposes cloud (mentions "anthropic" in the prompt), and the resulting `config.toml` has `[intelligence] provider = "anthropic"`.

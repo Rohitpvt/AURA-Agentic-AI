@@ -14,14 +14,14 @@ def ask_analytics_consent(host: str | None = None) -> bool:
     if not stream.isatty():
         return False
     click.echo(
-        "\nHelp improve OpenJarvis by sharing optional usage statistics.\n"
+        "\nHelp improve AURA by sharing optional usage statistics.\n"
         "Data includes feature usage, timings, token counts, error categories,\n"
         "environment metadata, and a random installation ID.\n"
-        "Recipient: the OpenJarvis team's PostHog analytics endpoint.\n"
-        "Privacy details: https://open-jarvis.github.io/OpenJarvis/telemetry/\n"
-        "You can disable sharing later: jarvis config set analytics.enabled false\n"
+        "Recipient: the AURA team's PostHog analytics endpoint.\n"
+        "Privacy details: https://github.com/Rohitpvt/AURA-Agentic-AI#telemetry\n"
+        "You can disable sharing later: aura config set analytics.enabled false\n"
         "(then restart the server and reload the app).\n"
-        "Declining does not change OpenJarvis functionality.",
+        "Declining does not change AURA functionality.",
         err=True,
     )
     click.echo(f"Analytics destination: {host or AnalyticsConfig().host}", err=True)

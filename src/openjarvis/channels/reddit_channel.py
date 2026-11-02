@@ -129,7 +129,7 @@ class RedditChannel(BaseChannel):
             else:
                 # Submit as a new text post to the subreddit
                 subreddit = reddit.subreddit(channel)
-                title = (metadata or {}).get("title", "OpenJarvis Message")
+                title = (metadata or {}).get("title", "AURA Message")
                 subreddit.submit(title=title, selftext=content)
 
             self._publish_sent(channel, content, conversation_id)

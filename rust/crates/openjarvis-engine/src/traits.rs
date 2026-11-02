@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::pin::Pin;
 use tokio_stream::Stream;
 
-pub type StreamItem = Result<String, openjarvis_core::OpenJarvisError>;
+pub type StreamItem = Result<String, openjarvis_core::AURAError>;
 pub type TokenStream = Pin<Box<dyn Stream<Item = StreamItem> + Send>>;
 
 /// ABC for all inference engine backends.
@@ -22,7 +22,7 @@ pub trait InferenceEngine: Send + Sync {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<GenerateResult, openjarvis_core::OpenJarvisError>;
+    ) -> Result<GenerateResult, openjarvis_core::AURAError>;
 
     async fn stream(
         &self,
@@ -31,9 +31,9 @@ pub trait InferenceEngine: Send + Sync {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<TokenStream, openjarvis_core::OpenJarvisError>;
+    ) -> Result<TokenStream, openjarvis_core::AURAError>;
 
-    fn list_models(&self) -> Result<Vec<String>, openjarvis_core::OpenJarvisError>;
+    fn list_models(&self) -> Result<Vec<String>, openjarvis_core::AURAError>;
 
     fn health(&self) -> bool;
 

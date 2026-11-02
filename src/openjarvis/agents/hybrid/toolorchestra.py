@@ -183,7 +183,7 @@ RL_ALL_TOOLS: Dict[str, Dict[str, List[str]]] = {
     "search": {"model": ["search-1", "search-2", "search-3"]},
 }
 
-# Map the orchestrator's `model` slot to a concrete OpenJarvis worker spec.
+# Map the orchestrator's `model` slot to a concrete AURA worker spec.
 # Tiers ranked by the upstream tools.json table (`*-1` = frontier,
 # `*-2` = mid, `*-3` = local). math-1 / math-2 collapse onto the same
 # tiers since we don't have Qwen-Math served.
@@ -372,7 +372,7 @@ def _call_tavily_search(
 ) -> Tuple[str, int, int, float, int]:
     """One-shot Tavily search. Returns (text, p_tok=0, c_tok=0, cost, uses).
 
-    Token counts are reported as zero (no LLM was billed); the OpenJarvis
+    Token counts are reported as zero (no LLM was billed); the AURA
     accounting layer separately tallies tool-call counts. Falls back to
     DuckDuckGo if Tavily is unreachable (see ``WebSearchTool``).
     """

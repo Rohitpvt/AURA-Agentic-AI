@@ -53,7 +53,7 @@ impl BaseTool for BuiltinTool {
     fn spec(&self) -> &ToolSpec {
         delegate_tool!(self, spec)
     }
-    fn execute(&self, params: &Value) -> Result<ToolResult, openjarvis_core::OpenJarvisError> {
+    fn execute(&self, params: &Value) -> Result<ToolResult, openjarvis_core::AURAError> {
         delegate_tool!(self, execute, params)
     }
 }

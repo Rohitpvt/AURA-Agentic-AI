@@ -3,7 +3,7 @@
 //! vLLM exposes an OpenAI-compatible API at `http://host:port/v1/`.
 
 use crate::traits::{InferenceEngine, TokenStream};
-use openjarvis_core::error::{EngineError, OpenJarvisError};
+use openjarvis_core::error::{EngineError, AURAError};
 use openjarvis_core::{GenerateResult, Message, ToolCall, Usage};
 use serde_json::Value;
 
@@ -96,7 +96,7 @@ impl InferenceEngine for VLLMEngine {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<GenerateResult, OpenJarvisError> {
+    ) -> Result<GenerateResult, AURAError> {
         let msg_dicts = crate::traits::messages_to_dicts(messages);
         let mut payload = serde_json::json!({
             "model": model,
@@ -125,7 +125,7 @@ impl InferenceEngine for VLLMEngine {
             .json(&payload)
             .send()
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(format!(
+                AURAError::Engine(EngineError::Connection(format!(
                     "vLLM not reachable at {}: {}",
                     self.host, e
                 )))
@@ -134,13 +134,13 @@ impl InferenceEngine for VLLMEngine {
         if !resp.status().is_success() {
             let status = resp.status();
             let body = resp.text().unwrap_or_default();
-            return Err(OpenJarvisError::Engine(EngineError::Http(format!(
+            return Err(AURAError::Engine(EngineError::Http(format!(
                 "vLLM returned {status}: {body}"
             ))));
         }
 
         let data: Value = resp.json().map_err(|e| {
-            OpenJarvisError::Engine(EngineError::Deserialization(e.to_string()))
+            AURAError::Engine(EngineError::Deserialization(e.to_string()))
         })?;
 
         let choice = &data["choices"][0];
@@ -199,7 +199,7 @@ impl InferenceEngine for VLLMEngine {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<TokenStream, OpenJarvisError> {
+    ) -> Result<TokenStream, AURAError> {
         let msg_dicts = crate::traits::messages_to_dicts(messages);
         let mut payload = serde_json::json!({
             "model": model,
@@ -219,7 +219,7 @@ impl InferenceEngine for VLLMEngine {
             .timeout(self.timeout)
             .build()
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(e.to_string()))
+                AURAError::Engine(EngineError::Connection(e.to_string()))
             })?;
 
         let mut headers = reqwest::header::HeaderMap::new();
@@ -241,14 +241,14 @@ impl InferenceEngine for VLLMEngine {
             .send()
             .await
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(format!(
+                AURAError::Engine(EngineError::Connection(format!(
                     "vLLM not reachable at {}: {}",
                     self.host, e
                 )))
             })?;
 
         if !resp.status().is_success() {
-            return Err(OpenJarvisError::Engine(EngineError::Http(format!(
+            return Err(AURAError::Engine(EngineError::Http(format!(
                 "vLLM returned {}",
                 resp.status()
             ))));
@@ -279,7 +279,7 @@ impl InferenceEngine for VLLMEngine {
                     }
                     None
                 }
-                Err(e) => Some(Err(OpenJarvisError::Engine(EngineError::Streaming(
+                Err(e) => Some(Err(AURAError::Engine(EngineError::Streaming(
                     e.to_string(),
                 )))),
             }
@@ -288,14 +288,14 @@ impl InferenceEngine for VLLMEngine {
         Ok(Box::pin(token_stream))
     }
 
-    fn list_models(&self) -> Result<Vec<String>, OpenJarvisError> {
+    fn list_models(&self) -> Result<Vec<String>, AURAError> {
         let resp = self
             .client
             .get(format!("{}/v1/models", self.host))
             .headers(self.build_headers())
             .send()
             .map_err(|_| {
-                OpenJarvisError::Engine(EngineError::Connection(
+                AURAError::Engine(EngineError::Connection(
                     "vLLM not reachable".into(),
                 ))
             })?;

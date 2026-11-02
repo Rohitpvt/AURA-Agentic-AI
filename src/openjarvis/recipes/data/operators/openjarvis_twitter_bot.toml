@@ -1,7 +1,7 @@
 [recipe]
 name = "openjarvis-twitter-bot"
 kind = "operator"
-description = "Reactive Twitter bot for @OpenJarvisAI — answers questions, creates GitHub issues from bug/feature mentions"
+description = "Reactive Twitter bot for @AURAAI — answers questions, creates GitHub issues from bug/feature mentions"
 version = "0.1.0"
 
 [intelligence]

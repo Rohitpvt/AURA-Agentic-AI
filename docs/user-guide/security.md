@@ -1,10 +1,10 @@
 # Security
 
-OpenJarvis includes a security layer that scans prompts and model outputs for secrets, personally identifiable information (PII), and sensitive file paths. The system is designed to be composable: scanners run as a pipeline, and the `GuardrailsEngine` wrapper drops in front of any inference backend without changing how the rest of your code works.
+AURA includes a security layer that scans prompts and model outputs for secrets, personally identifiable information (PII), and sensitive file paths. The system is designed to be composable: scanners run as a pipeline, and the `GuardrailsEngine` wrapper drops in front of any inference backend without changing how the rest of your code works.
 
 ## Three layers of security review
 
-OpenJarvis separates host posture, application data boundaries, and runtime prompt guardrails:
+AURA separates host posture, application data boundaries, and runtime prompt guardrails:
 
 | Layer | Command / component | What it checks |
 | --- | --- | --- |

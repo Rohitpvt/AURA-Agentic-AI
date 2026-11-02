@@ -3,7 +3,7 @@
 //! SGLang exposes an OpenAI-compatible API at `http://host:port/v1/`.
 
 use crate::traits::{InferenceEngine, TokenStream};
-use openjarvis_core::error::{EngineError, OpenJarvisError};
+use openjarvis_core::error::{EngineError, AURAError};
 use openjarvis_core::{GenerateResult, Message, ToolCall, Usage};
 use serde_json::Value;
 
@@ -77,7 +77,7 @@ impl InferenceEngine for SGLangEngine {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<GenerateResult, OpenJarvisError> {
+    ) -> Result<GenerateResult, AURAError> {
         let msg_dicts = crate::traits::messages_to_dicts(messages);
         let mut payload = serde_json::json!({
             "model": model,
@@ -105,7 +105,7 @@ impl InferenceEngine for SGLangEngine {
             .json(&payload)
             .send()
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(format!(
+                AURAError::Engine(EngineError::Connection(format!(
                     "SGLang not reachable at {}: {}",
                     self.host, e
                 )))
@@ -114,13 +114,13 @@ impl InferenceEngine for SGLangEngine {
         if !resp.status().is_success() {
             let status = resp.status();
             let body = resp.text().unwrap_or_default();
-            return Err(OpenJarvisError::Engine(EngineError::Http(format!(
+            return Err(AURAError::Engine(EngineError::Http(format!(
                 "SGLang returned {status}: {body}"
             ))));
         }
 
         let data: Value = resp.json().map_err(|e| {
-            OpenJarvisError::Engine(EngineError::Deserialization(e.to_string()))
+            AURAError::Engine(EngineError::Deserialization(e.to_string()))
         })?;
 
         let choice = &data["choices"][0];
@@ -179,7 +179,7 @@ impl InferenceEngine for SGLangEngine {
         temperature: f64,
         max_tokens: i64,
         extra: Option<&Value>,
-    ) -> Result<TokenStream, OpenJarvisError> {
+    ) -> Result<TokenStream, AURAError> {
         let msg_dicts = crate::traits::messages_to_dicts(messages);
         let mut payload = serde_json::json!({
             "model": model,
@@ -199,7 +199,7 @@ impl InferenceEngine for SGLangEngine {
             .timeout(self.timeout)
             .build()
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(e.to_string()))
+                AURAError::Engine(EngineError::Connection(e.to_string()))
             })?;
 
         let resp = async_client
@@ -208,14 +208,14 @@ impl InferenceEngine for SGLangEngine {
             .send()
             .await
             .map_err(|e| {
-                OpenJarvisError::Engine(EngineError::Connection(format!(
+                AURAError::Engine(EngineError::Connection(format!(
                     "SGLang not reachable at {}: {}",
                     self.host, e
                 )))
             })?;
 
         if !resp.status().is_success() {
-            return Err(OpenJarvisError::Engine(EngineError::Http(format!(
+            return Err(AURAError::Engine(EngineError::Http(format!(
                 "SGLang returned {}",
                 resp.status()
             ))));
@@ -246,7 +246,7 @@ impl InferenceEngine for SGLangEngine {
                     }
                     None
                 }
-                Err(e) => Some(Err(OpenJarvisError::Engine(EngineError::Streaming(
+                Err(e) => Some(Err(AURAError::Engine(EngineError::Streaming(
                     e.to_string(),
                 )))),
             }
@@ -255,13 +255,13 @@ impl InferenceEngine for SGLangEngine {
         Ok(Box::pin(token_stream))
     }
 
-    fn list_models(&self) -> Result<Vec<String>, OpenJarvisError> {
+    fn list_models(&self) -> Result<Vec<String>, AURAError> {
         let resp = self
             .client
             .get(format!("{}/v1/models", self.host))
             .send()
             .map_err(|_| {
-                OpenJarvisError::Engine(EngineError::Connection(
+                AURAError::Engine(EngineError::Connection(
                     "SGLang not reachable".into(),
                 ))
             })?;

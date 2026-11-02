@@ -1,13 +1,13 @@
 # launchd Service (macOS)
 
-OpenJarvis includes a launchd property list (plist) for running the API server as a background service on macOS. This provides automatic startup at login, automatic restart if the process exits, and log capture.
+AURA includes a launchd property list (plist) for running the API server as a background service on macOS. This provides automatic startup at login, automatic restart if the process exits, and log capture.
 
 ## Prerequisites
 
-Before installing the service, ensure that OpenJarvis is installed and the `jarvis` command is available at `/usr/local/bin/jarvis`. If you installed via `uv` or `pip` with a different prefix, adjust the path in the plist accordingly.
+Before installing the service, ensure that AURA is installed and the `jarvis` command is available at `/usr/local/bin/jarvis`. If you installed via `uv` or `pip` with a different prefix, adjust the path in the plist accordingly.
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git && cd OpenJarvis && uv sync --extra server
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git && cd AURA && uv sync --extra server
 which jarvis  # Verify the installation path
 ```
 
@@ -28,7 +28,7 @@ The service starts immediately (due to `RunAtLoad`) and will automatically resta
     The plist binds `127.0.0.1` — reachable from this Mac but not the network,
     the right default for a personal device, and no API key is needed. To
     expose it on your LAN, change the host to `0.0.0.0` **and** uncomment the
-    `EnvironmentVariables` block to set `OPENJARVIS_API_KEY`
+    `EnvironmentVariables` block to set `AURA_API_KEY`
     (`jarvis auth generate-key`); an unauthenticated `0.0.0.0` server refuses
     to start.
 
@@ -70,7 +70,7 @@ The provided plist file at `deploy/launchd/com.openjarvis.plist`:
     <!-- To expose on the LAN: set host to 0.0.0.0 and uncomment this block.
     <key>EnvironmentVariables</key>
     <dict>
-        <key>OPENJARVIS_API_KEY</key>
+        <key>AURA_API_KEY</key>
         <string>REPLACE_WITH_A_REAL_KEY</string>
     </dict>
     -->
@@ -245,7 +245,7 @@ launchctl load ~/Library/LaunchAgents/com.openjarvis.plist
 
 ## System-Wide Installation
 
-The instructions above install the service as a **user agent** (runs only when you are logged in). To run OpenJarvis as a system-wide daemon that starts at boot regardless of user login:
+The instructions above install the service as a **user agent** (runs only when you are logged in). To run AURA as a system-wide daemon that starts at boot regardless of user login:
 
 1. Copy the plist to `/Library/LaunchDaemons/` (requires `sudo`).
 2. Set the file ownership to `root:wheel`.

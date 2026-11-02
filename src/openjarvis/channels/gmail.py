@@ -171,7 +171,7 @@ class GmailChannel(BaseChannel):
             msg["From"] = self._user_id
             msg["Subject"] = (metadata or {}).get(
                 "subject",
-                "Message from OpenJarvis",
+                "Message from AURA",
             )
 
             raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("utf-8")

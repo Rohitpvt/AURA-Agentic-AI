@@ -33,7 +33,7 @@ def tty_wants_model_picker(cli_flag: bool) -> bool:
 
     Bare ``jarvis`` owns the TTY auto-prompt policy in ``_first_run`` and
     passes ``pick_model=True`` when appropriate. Keeping the subcommand gate
-    flag-only prevents ``jarvis chat`` from unexpectedly reading stdin before
+    flag-only prevents ``aura chat`` from unexpectedly reading stdin before
     the chat loop.
     """
     return bool(cli_flag)

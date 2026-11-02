@@ -1,10 +1,10 @@
-//! Error types for OpenJarvis.
+//! Error types for AURA.
 
 use thiserror::Error;
 
-/// Top-level error type for all OpenJarvis operations.
+/// Top-level error type for all AURA operations.
 #[derive(Error, Debug)]
-pub enum OpenJarvisError {
+pub enum AURAError {
     #[error("Registry error: {0}")]
     Registry(#[from] RegistryError),
 
@@ -254,9 +254,9 @@ mod tests {
 
     #[test]
     fn test_error_from_registry() {
-        let e: OpenJarvisError =
+        let e: AURAError =
             RegistryError::DuplicateKey("foo".into(), "ToolRegistry").into();
-        assert!(matches!(e, OpenJarvisError::Registry(_)));
+        assert!(matches!(e, AURAError::Registry(_)));
     }
 
     #[test]

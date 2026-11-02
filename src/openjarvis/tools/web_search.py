@@ -70,10 +70,10 @@ FIRECRAWL_KEYS_URL = (
 ENGINE_ENV = "OPENJARVIS_WEB_SEARCH_ENGINE"
 ENGINES = ("auto", "youcom", "tavily", "duckduckgo", "serply", "firecrawl")
 
-# Identifies OpenJarvis to You.com. The keyless tier carries no API key, so the
+# Identifies AURA to You.com. The keyless tier carries no API key, so the
 # User-Agent is the only attribution signal; sent to You.com hosts only.
 YOUCOM_USER_AGENT = (
-    f"openjarvis/{__version__} youdotcom-integration/open-jarvis-openjarvis"
+    f"openjarvis/{__version__} youdotcom-integration/Rohitpvt-openjarvis"
 )
 
 _MAX_FETCH_REDIRECTS = 5
@@ -84,7 +84,7 @@ _REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
 _KEYLESS_LIMIT_STATUSES = (402, 429)
 YOUCOM_PLATFORM_URL = (
     "https://you.com/platform"
-    "?utm_source=open-jarvis-openjarvis&utm_medium=oss_integration"
+    "?utm_source=Rohitpvt-openjarvis&utm_medium=oss_integration"
     "&utm_campaign=2026-09-oss-integrations&utm_content=error-message"
 )
 _KEY_UPGRADE_HINT = (
@@ -254,7 +254,7 @@ class WebSearchTool(BaseTool):
             follow_redirects=False,
             timeout=30.0,
             headers={
-                "User-Agent": "Mozilla/5.0 (compatible; OpenJarvis/1.0; +https://github.com/openjarvis)"
+                "User-Agent": "Mozilla/5.0 (compatible; AURA/1.0; +https://github.com/openjarvis)"
             },
         ) as client:
             for _ in range(_MAX_FETCH_REDIRECTS + 1):

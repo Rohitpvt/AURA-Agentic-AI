@@ -82,7 +82,7 @@ concurrency = 3
 # ============================================================
 # Paper-match pool smoke (2026-05-19). n=5 GAIA. Opts into the
 # closer-to-paper worker pool via `method_cfg.pool = "paper"`:
-#   - search       -> Tavily API (TAVILY_API_KEY in OpenJarvis/.env)
+#   - search       -> Tavily API (TAVILY_API_KEY in AURA/.env)
 #   - enhance_..   -> Qwen2.5-Coder-32B (OpenRouter) + Modal Python sandbox
 #   - answer-1     -> GPT-5             answer-math-* -> Qwen2.5-Coder-32B
 #   - answer-2     -> GPT-5-mini        answer-3     -> Llama-3.3-70B (OR)

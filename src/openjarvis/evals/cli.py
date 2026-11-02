@@ -1,4 +1,4 @@
-"""CLI for the OpenJarvis evaluation framework."""
+"""CLI for the AURA evaluation framework."""
 
 from __future__ import annotations
 
@@ -1185,7 +1185,7 @@ def _run_from_config(
 
 @click.group()
 def main():
-    """OpenJarvis Evaluation Framework."""
+    """AURA Evaluation Framework."""
 
 
 @main.command()

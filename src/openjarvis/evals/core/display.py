@@ -27,7 +27,7 @@ VERSION = "v1.8"
 
 
 def print_banner(console: Console) -> None:
-    """Print the OpenJarvis ASCII banner inside a styled panel."""
+    """Print the AURA ASCII banner inside a styled panel."""
     panel = Panel(
         OPENJARVIS_BANNER.rstrip(),
         border_style="cyan",

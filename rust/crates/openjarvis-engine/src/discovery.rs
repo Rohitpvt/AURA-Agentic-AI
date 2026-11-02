@@ -4,7 +4,7 @@ use crate::traits::InferenceEngine;
 use crate::ollama::OllamaEngine;
 use crate::openai_compat::OpenAICompatEngine;
 use openjarvis_core::config::JarvisConfig;
-use openjarvis_core::OpenJarvisError;
+use openjarvis_core::AURAError;
 
 /// Engine endpoint descriptor discovered at runtime.
 #[derive(Debug, Clone)]
@@ -63,7 +63,7 @@ pub fn discover_engines(config: &JarvisConfig) -> Vec<EngineInfo> {
 pub fn get_engine_static(
     config: &JarvisConfig,
     engine_key: Option<&str>,
-) -> Result<crate::engine_enum::Engine, OpenJarvisError> {
+) -> Result<crate::engine_enum::Engine, AURAError> {
     use crate::engine_enum::Engine;
 
     let key = engine_key
@@ -102,7 +102,7 @@ pub fn get_engine_static(
         "apple_fm" => Ok(Engine::AppleFm(OpenAICompatEngine::apple_fm(
             &config.engine.apple_fm.host,
         ))),
-        other => Err(OpenJarvisError::Engine(
+        other => Err(AURAError::Engine(
             openjarvis_core::error::EngineError::ModelNotFound(format!(
                 "Unknown engine: {other}"
             )),

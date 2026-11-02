@@ -144,7 +144,7 @@ class RLMRepl:
     # ------------------------------------------------------------------
 
     def _tool_call(self, tool_name: str, *args: Any, **kwargs: Any) -> str:
-        """Execute an injected OpenJarvis tool from within the REPL.
+        """Execute an injected AURA tool from within the REPL.
 
         Supported forms:
         - ``tool_call("file_read", {"path": "foo.txt"})``

@@ -1,4 +1,4 @@
-"""SkillOrchestraAgent — the OpenJarvis harness entry point.
+"""SkillOrchestraAgent — the AURA harness entry point.
 
 A faithful port of the SkillOrchestra eval orchestrator (arXiv:2602.19672,
 ``orchestration/eval_frames.py``). The agent runs the multi-round

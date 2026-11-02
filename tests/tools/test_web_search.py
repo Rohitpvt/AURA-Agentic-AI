@@ -957,14 +957,14 @@ class TestYouComSearch:
 
     def test_sends_attribution_user_agent(self, monkeypatch):
         """Keyless traffic carries no key, so the User-Agent is the only
-        signal identifying OpenJarvis to You.com."""
+        signal identifying AURA to You.com."""
         monkeypatch.delenv("YOUDOTCOM_API_KEY", raising=False)
         calls = self._mock_get(monkeypatch)
 
         WebSearchTool(engine="youcom").execute(query="test query")
 
         assert (
-            "youdotcom-integration/open-jarvis-openjarvis"
+            "youdotcom-integration/Rohitpvt-openjarvis"
             in (calls["headers"]["User-Agent"])
         )
 

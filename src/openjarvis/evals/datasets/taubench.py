@@ -1,6 +1,6 @@
 """TauBench V2 dataset provider — multi-turn customer service benchmark.
 
-Wraps the tau2-bench framework for evaluation within OpenJarvis.
+Wraps the tau2-bench framework for evaluation within AURA.
 Supports airline, retail, and telecom domains.
 
 Reference: https://github.com/sierra-research/tau2-bench
@@ -35,7 +35,7 @@ def _ensure_tau2() -> None:
         distribution = metadata.distribution("tau2")
     except metadata.PackageNotFoundError as exc:
         raise ImportError(
-            "TauBench requires tau2, which OpenJarvis does not install at "
+            "TauBench requires tau2, which AURA does not install at "
             "runtime. Install the pinned dependency explicitly (Python >=3.12): "
             f'uv pip install "{TAU2_INSTALL_SPEC}"'
         ) from exc
@@ -52,7 +52,7 @@ def _ensure_tau2() -> None:
 
     if installed_repo != TAU2_REPO or installed_revision != TAU2_REVISION:
         raise ImportError(
-            "The installed tau2 package does not match OpenJarvis's pinned "
+            "The installed tau2 package does not match AURA's pinned "
             "source revision. Reinstall it explicitly (Python >=3.12): "
             f'uv pip install --force-reinstall "{TAU2_INSTALL_SPEC}"'
         )

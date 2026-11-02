@@ -2740,7 +2740,7 @@ def _detect_hardware() -> HardwareInfo:
 def mine() -> None:
     """Pearl PoUW mining commands.
 
-    See https://open-jarvis.github.io/OpenJarvis/user-guide/mining/ for the
+    See https://github.com/Rohitpvt/AURA-Agentic-AIuser-guide/mining/ for the
     full guide.
     """
 
@@ -3359,7 +3359,7 @@ git commit -m "chore: add mining-pearl extra and docker pytest marker"
 ```markdown
 # Pearl mining
 
-OpenJarvis can mine the [Pearl](https://github.com/pearl-research-labs/pearl)
+AURA can mine the [Pearl](https://github.com/pearl-research-labs/pearl)
 Proof-of-Useful-Work blockchain through your local LLM inference. v1
 supports H100/H200 hosts running vLLM. Apple Silicon, AMD, and other
 inference backends are tracked separately — see [Spec B](../design/2026-05-05-apple-silicon-pearl-mining-design.md).

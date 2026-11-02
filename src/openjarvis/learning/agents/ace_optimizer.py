@@ -11,7 +11,7 @@ playbook with entries like::
                                        conversion, prefer the exact
                                        rational form before rounding.
 
-The wrapper adapts OpenJarvis traces into ACE's
+The wrapper adapts AURA traces into ACE's
 ``train_samples`` / ``val_samples`` / ``test_samples`` shape, builds a
 minimal ``DataProcessor`` from the trace feedback signal, runs ACE in
 ``offline`` mode, and writes the resulting ``final_playbook.txt`` as a
@@ -53,7 +53,7 @@ def _default_save_dir(task_name: str) -> Path:
 
 
 class _TraceDataProcessor:
-    """Adapter that exposes OpenJarvis traces in ACE's three-method API.
+    """Adapter that exposes AURA traces in ACE's three-method API.
 
     ACE expects a processor with:
 
@@ -94,7 +94,7 @@ class _TraceDataProcessor:
 
 
 def _traces_to_samples(traces: List[Any]) -> List[Dict[str, Any]]:
-    """Convert OpenJarvis trace records to ACE's sample dict shape."""
+    """Convert AURA trace records to ACE's sample dict shape."""
     samples: List[Dict[str, Any]] = []
     for t in traces:
         question = getattr(t, "query", "") or ""

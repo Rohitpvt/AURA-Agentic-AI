@@ -63,7 +63,7 @@ class TestPrintBanner:
         console, buf = _make_console()
         print_banner(console)
         output = buf.getvalue()
-        assert "OpenJarvis" in output or "___" in output
+        assert "AURA" in output or "___" in output
 
     def test_contains_version(self):
         console, buf = _make_console()

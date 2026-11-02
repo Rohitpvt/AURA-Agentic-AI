@@ -775,7 +775,7 @@ pub struct SandboxConfig {
     pub wasm_memory_limit_mb: i64,
 }
 
-fn default_sandbox_image() -> String { "openjarvis-sandbox:latest".into() }
+fn default_sandbox_image() -> String { "aura-sandbox:latest".into() }
 fn default_sandbox_timeout() -> i64 { 300 }
 fn default_max_concurrent() -> i64 { 5 }
 fn default_docker() -> String { "docker".into() }
@@ -884,7 +884,7 @@ pub struct ChannelConfig {
 // Top-level JarvisConfig
 // ---------------------------------------------------------------------------
 
-/// Top-level configuration for OpenJarvis.
+/// Top-level configuration for AURA.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct JarvisConfig {
     #[serde(skip)]

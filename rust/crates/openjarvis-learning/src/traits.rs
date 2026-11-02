@@ -1,6 +1,6 @@
 //! Learning trait definitions.
 
-use openjarvis_core::{OpenJarvisError, RoutingContext};
+use openjarvis_core::{AURAError, RoutingContext};
 use openjarvis_traces::TraceStore;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -14,5 +14,5 @@ pub trait LearningPolicy: Send + Sync {
     fn update(
         &self,
         trace_store: &TraceStore,
-    ) -> Result<HashMap<String, Value>, OpenJarvisError>;
+    ) -> Result<HashMap<String, Value>, AURAError>;
 }

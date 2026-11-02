@@ -1,4 +1,4 @@
-"""``jarvis config`` — configuration inspection commands."""
+"""``aura config`` — configuration inspection commands."""
 
 from __future__ import annotations
 
@@ -278,9 +278,9 @@ config.add_command(show_group, "show")
 
 @config.command("path")
 def show_path() -> None:
-    """Print the resolved OpenJarvis directories (home, config, cache).
+    """Print the resolved AURA directories (home, config, cache).
 
-    All OpenJarvis state lives under a single root, resolved in priority
+    All AURA state lives under a single root, resolved in priority
     order: ``$OPENJARVIS_HOME`` > ``$XDG_DATA_HOME/openjarvis`` >
     ``~/.openjarvis``. Use this to confirm where your data is stored after
     setting an override.
@@ -346,7 +346,7 @@ def _coerce_value(value: str, target_type: type) -> object:
 @click.argument("key")
 @click.argument("value")
 def set_config(key: str, value: str) -> None:
-    """Set a configuration value (e.g. jarvis config set engine.ollama.host URL)."""
+    """Set a configuration value (e.g. aura config set engine.ollama.host URL)."""
     import tomlkit
 
     from openjarvis.core.config import DEFAULT_CONFIG_DIR, validate_config_key

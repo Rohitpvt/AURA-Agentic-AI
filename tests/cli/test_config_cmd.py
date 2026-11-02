@@ -1,4 +1,4 @@
-"""Tests for the ``jarvis config`` CLI commands."""
+"""Tests for the ``aura config`` CLI commands."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from openjarvis.cli import cli
 
 
 class TestConfigCmd:
-    """Test cases for the jarvis config CLI group."""
+    """Test cases for the aura config CLI group."""
 
     def test_config_group_help(self) -> None:
         """Test that the config group help displays correctly."""

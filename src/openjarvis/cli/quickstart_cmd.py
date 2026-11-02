@@ -132,7 +132,7 @@ def quickstart(force: bool) -> None:
             )
             console.print()
             console.print(f"  Start the {engine_key} server and try again.")
-            console.print("  Run [bold]jarvis doctor[/bold] for detailed diagnostics.")
+            console.print("  Run [bold]aura doctor[/bold] for detailed diagnostics.")
             raise SystemExit(1)
     else:
         console.print(f"  [green]Engine '{engine_key}' is healthy.[/green]")

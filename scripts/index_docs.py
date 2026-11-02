@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Index OpenJarvis docs (README.md + docs/**/*.md) into a DenseMemory backend.
+"""Index AURA docs (README.md + docs/**/*.md) into a DenseMemory backend.
 
 Usage:
     python scripts/index_docs.py              # print retrieval smoke test
@@ -47,8 +47,8 @@ def build_index(
     max_section_tokens: int = 1000,
     paragraph_overlap_tokens: int = 100,
     dedupe: bool = True,
-    # Empirical: on the actual OpenJarvis docs the boilerplate that
-    # crowds retrieval ("OpenJarvis runs entirely on your hardware...")
+    # Empirical: on the actual AURA docs the boilerplate that
+    # crowds retrieval ("AURA runs entirely on your hardware...")
     # appears in exactly 2 files (downloads.md ↔ installation.md).
     # Spec'd 3+ removes 0 chunks; 2+ removes 15 (1.3%) — all genuine
     # cross-file boilerplate. See the dry-run audit logged at index time.

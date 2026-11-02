@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# jarvis-uninstall.sh — clean removal of OpenJarvis from $HOME.
+# jarvis-uninstall.sh — clean removal of AURA from $HOME.
 #
 # Removes:
 #   ~/.openjarvis/
@@ -17,7 +17,7 @@ usage() {
     cat <<'EOF'
 Usage: jarvis-uninstall [-y|--yes]
 
-Removes OpenJarvis and its local data. Without --yes, an explicit confirmation
+Removes AURA and its local data. Without --yes, an explicit confirmation
 is required before config, memory, skills, databases, or connector tokens are
 deleted.
 EOF
@@ -57,14 +57,14 @@ if [[ -d "$OPENJARVIS_HOME" ]]; then
     fi
 
     # Never recursively remove a broad system/temp root, even if an unrelated
-    # file happens to resemble an OpenJarvis marker there.
+    # file happens to resemble an AURA marker there.
     case "$resolved_install_root" in
         /Users|/home|/opt|/tmp|/private|/private/tmp|/var|/var/tmp|/private/var|/private/var/tmp|/usr|/etc)
             refuse_unsafe_root
             ;;
     esac
 
-    # A path being different from $HOME is not evidence that OpenJarvis owns
+    # A path being different from $HOME is not evidence that AURA owns
     # it.  Require the installer's real, non-symlinked state file and at least
     # one known completed install stage before authorizing recursive removal.
     ownership_marker="$resolved_install_root/.state/install-state.json"
@@ -79,7 +79,7 @@ if [[ -d "$OPENJARVIS_HOME" ]]; then
 
     if [[ "$ASSUME_YES" != true ]]; then
         cat <<EOF
-WARNING: This permanently deletes all OpenJarvis data under:
+WARNING: This permanently deletes all AURA data under:
   $OPENJARVIS_HOME
 
 That includes config.toml, SOUL.md/MEMORY.md/USER.md, skills, scheduler and
@@ -91,7 +91,7 @@ EOF
         case "$reply" in
             yes|YES|Yes) ;;
             *)
-                echo "OpenJarvis was not removed."
+                echo "AURA was not removed."
                 exit 0
                 ;;
         esac
@@ -124,7 +124,7 @@ done
 
 cat <<EOF
 
-OpenJarvis removed.
+AURA removed.
 
 Left intact (may be used by other tools):
   - Ollama       (uninstall: brew uninstall ollama  /  rm -f /usr/local/bin/ollama)

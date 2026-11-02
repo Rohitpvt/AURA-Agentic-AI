@@ -1,5 +1,5 @@
 # Orchestrator agent on 5 use-case benchmarks.
-# Multi-turn tool-calling loop — OpenJarvis's flagship agent.
+# Multi-turn tool-calling loop — AURA's flagship agent.
 
 [meta]
 name = "use-case-orchestrator"

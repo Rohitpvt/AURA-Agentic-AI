@@ -1,4 +1,4 @@
-"""Tests for ``jarvis config set`` command."""
+"""Tests for ``aura config set`` command."""
 
 from __future__ import annotations
 

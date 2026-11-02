@@ -1,4 +1,4 @@
-//! OpenJarvis Workflow — DAG-based workflow graph, builder, and execution planner.
+//! AURA Workflow — DAG-based workflow graph, builder, and execution planner.
 //!
 //! Port of `src/openjarvis/workflow/` from Python.
 //! Provides cycle detection (DFS), topological sort (Kahn's algorithm),

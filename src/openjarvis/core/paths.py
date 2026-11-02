@@ -1,6 +1,6 @@
-"""Central, env-aware resolution of OpenJarvis' home directory.
+"""Central, env-aware resolution of AURA' home directory.
 
-OpenJarvis keeps all of its runtime state (config, databases, caches, logs,
+AURA keeps all of its runtime state (config, databases, caches, logs,
 credentials, skills, recipes, …) under a single root so it never clutters the
 user's home directory beyond one directory. That root is resolved here, with
 the following precedence (highest first):
@@ -21,7 +21,7 @@ override. Modules that previously hardcoded ``Path.home() / ".openjarvis"``
 should call :func:`get_config_dir` (or :func:`get_data_dir` /
 :func:`get_cache_dir`) instead.
 
-Defense in depth: the resolved root must never live inside the OpenJarvis
+Defense in depth: the resolved root must never live inside the AURA
 source tree (a misconfigured ``$OPENJARVIS_HOME`` pointing at the repo would
 otherwise scatter runtime artifacts into the working tree). This mirrors the
 guard in ``learning/spec_search/storage/paths.py`` and fails loudly per
@@ -42,9 +42,9 @@ class ConfigurationError(RuntimeError):
 
 
 def _find_source_root() -> Path | None:
-    """Walk upward from this module to find the OpenJarvis source root.
+    """Walk upward from this module to find the AURA source root.
 
-    Returns the directory containing the OpenJarvis ``pyproject.toml`` (the one
+    Returns the directory containing the AURA ``pyproject.toml`` (the one
     whose ``name = "openjarvis"``), or ``None`` when running from an installed
     wheel rather than a source checkout.
     """
@@ -62,7 +62,7 @@ def _find_source_root() -> Path | None:
 
 
 def _reject_source_tree(path: Path) -> Path:
-    """Raise if ``path`` resolves inside the OpenJarvis source tree."""
+    """Raise if ``path`` resolves inside the AURA source tree."""
     source_root = _find_source_root()
     if source_root is not None:
         try:
@@ -71,8 +71,8 @@ def _reject_source_tree(path: Path) -> Path:
             pass  # Good — not inside the source tree.
         else:
             raise ConfigurationError(
-                f"OpenJarvis home ({path}) is inside the source tree "
-                f"({source_root}). OpenJarvis refuses to write runtime state "
+                f"AURA home ({path}) is inside the source tree "
+                f"({source_root}). AURA refuses to write runtime state "
                 "inside its own repo. Set OPENJARVIS_HOME (or XDG_DATA_HOME) "
                 "to a directory outside the repo (default: ~/.openjarvis)."
             )
@@ -80,11 +80,11 @@ def _reject_source_tree(path: Path) -> Path:
 
 
 def get_config_dir() -> Path:
-    """Resolve OpenJarvis' single root directory, honoring env overrides.
+    """Resolve AURA' single root directory, honoring env overrides.
 
     Precedence: ``$OPENJARVIS_HOME`` > ``$XDG_DATA_HOME/openjarvis`` >
     ``~/.openjarvis``. The result is always absolute and is rejected if it
-    falls inside the OpenJarvis source tree.
+    falls inside the AURA source tree.
     """
     env_home = os.environ.get("AURA_HOME") or os.environ.get("OPENJARVIS_HOME")
     if env_home:
@@ -106,7 +106,7 @@ def get_config_dir() -> Path:
 
 
 def get_config_path() -> Path:
-    """Resolve the path to ``config.toml`` under the OpenJarvis root."""
+    """Resolve the path to ``config.toml`` under the AURA root."""
     return get_config_dir() / "config.toml"
 
 
@@ -122,7 +122,7 @@ def get_data_dir() -> Path:
 def get_cache_dir() -> Path:
     """Resolve the directory for regenerable caches (eval datasets, etc.).
 
-    Lives at ``<root>/cache`` so caches stay inside the single OpenJarvis
+    Lives at ``<root>/cache`` so caches stay inside the single AURA
     directory instead of scattering across ``~/.cache``.
     """
     return get_config_dir() / "cache"

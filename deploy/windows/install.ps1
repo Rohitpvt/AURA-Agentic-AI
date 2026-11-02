@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    OpenJarvis native Windows installer.
+    AURA native Windows installer.
 
 .DESCRIPTION
     Phase-1 of the native-Windows-support RFC (#298). Mirrors the
@@ -14,7 +14,7 @@
          see #432).
       3. Check git on PATH.
       4. Install uv (https://astral.sh/uv) if absent.
-      5. Clone the OpenJarvis repository to $env:LOCALAPPDATA\OpenJarvis
+      5. Clone the AURA repository to $env:LOCALAPPDATA\AURA
          (override with $env:OPENJARVIS_HOME).
       5b. Check for MSVC build tools and explain how to install them if absent - the mandatory
          openjarvis-rust extension is compiled from source in step 6.
@@ -24,10 +24,10 @@
          deploy/windows/jarvis-service.ps1).
 
     Usage (one-liner):
-      irm https://open-jarvis.github.io/OpenJarvis/install.ps1 | iex
+      irm https://github.com/Rohitpvt/AURA-Agentic-AIinstall.ps1 | iex
 
     Usage (file invocation, supports flags):
-      irm https://open-jarvis.github.io/OpenJarvis/install.ps1 -OutFile install.ps1
+      irm https://github.com/Rohitpvt/AURA-Agentic-AIinstall.ps1 -OutFile install.ps1
       .\install.ps1 -SkipService
 
     Flags (when running the file directly):
@@ -45,7 +45,7 @@
 .NOTES
     Loopback default: the scheduled-task service binds 127.0.0.1, so no
     API key is needed. To expose on the LAN, edit the registered task to
-    pass `--host 0.0.0.0` AND set $env:OPENJARVIS_API_KEY (an
+    pass `--host 0.0.0.0` AND set $env:AURA_API_KEY (an
     unauthenticated 0.0.0.0 server refuses to start). See
     deploy/windows/README.md.
 #>
@@ -206,7 +206,7 @@ $pyMajor = [int]$verMatch.Groups[1].Value
 $pyMinor = [int]$verMatch.Groups[2].Value
 if ($pyMajor -ne 3 -or $pyMinor -lt 10 -or $pyMinor -gt 13) {
     Write-Fail @"
-Found Python $pyMajor.$pyMinor at $pythonExe, but OpenJarvis requires
+Found Python $pyMajor.$pyMinor at $pythonExe, but AURA requires
 3.10 - 3.13. Python 3.14 has no numpy Windows wheels yet (#432, will
 re-open once numpy ships cp314).
 "@
@@ -271,7 +271,7 @@ Write-Ok "uv ($uvExe)"
 $installRoot = if ($env:OPENJARVIS_HOME) {
     $env:OPENJARVIS_HOME
 } else {
-    Join-Path $env:LOCALAPPDATA 'OpenJarvis'
+    Join-Path $env:LOCALAPPDATA 'AURA'
 }
 $srcDir = Join-Path $installRoot 'src'
 
@@ -489,7 +489,7 @@ if (-not (Test-Path $binDir)) {
 }
 
 # %~dp0 in a .cmd file resolves to the directory containing the script,
-# so the shim is self-locating - moving %LOCALAPPDATA%\OpenJarvis won't
+# so the shim is self-locating - moving %LOCALAPPDATA%\AURA won't
 # break it as long as the user moves the whole tree. `uv` is resolved
 # from PATH at runtime (astral installer adds it to User PATH); avoids
 # pinning to the install-time uv.exe path which can shift on uv updates.
@@ -501,12 +501,12 @@ uv run --project "%SRC%" jarvis %*
 "@
 Set-Content -Path $shimPath -Value $shimContent -Encoding ASCII
 
-# Add %LOCALAPPDATA%\OpenJarvis\bin to User PATH if it isn't already
+# Add %LOCALAPPDATA%\AURA\bin to User PATH if it isn't already
 # there. The current process won't see it until restart - handled in the
 # final banner.
 #
 # Compare against the EXPANDED form: a previous install may have written
-# the entry as `%LOCALAPPDATA%\OpenJarvis\bin` (unexpanded) into User
+# the entry as `%LOCALAPPDATA%\AURA\bin` (unexpanded) into User
 # PATH, and a literal `-ieq` against the expanded `$binDir` would miss
 # it and append a duplicate every re-run.
 $userPath = [System.Environment]::GetEnvironmentVariable('Path', 'User')
@@ -563,7 +563,7 @@ if ($Service) {
     $isInteractive = [Environment]::UserInteractive `
         -and -not [System.Console]::IsInputRedirected
     if ($isInteractive) {
-        $reply = Read-Host "Register OpenJarvis as a Windows scheduled task (auto-start at logon, loopback only)? [y/N]"
+        $reply = Read-Host "Register AURA as a Windows scheduled task (auto-start at logon, loopback only)? [y/N]"
         $shouldInstallService = ($reply -match '^[yY]')
     } else {
         Write-Warn2 "Non-interactive install - skipping scheduled-task setup."
@@ -581,7 +581,7 @@ if ($shouldInstallService) {
     if ($LASTEXITCODE -ne 0) {
         Write-Fail "Scheduled task setup failed."
     }
-    Write-Ok "Scheduled task 'OpenJarvis' registered (loopback default)."
+    Write-Ok "Scheduled task 'AURA' registered (loopback default)."
 }
 
 # ---------------------------------------------------------------------------
@@ -590,7 +590,7 @@ if ($shouldInstallService) {
 
 Write-Host ""
 Write-Host "  +----------------------------------+" -ForegroundColor Green
-Write-Host "  |   OpenJarvis install complete    |" -ForegroundColor Green
+Write-Host "  |   AURA install complete    |" -ForegroundColor Green
 Write-Host "  +----------------------------------+" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Repo:    $srcDir"
@@ -598,7 +598,7 @@ Write-Host "  Repo:    $srcDir"
 # Tell the truth about what the user can run next, given (a) whether the
 # starter model finished pulling and (b) whether the User-PATH update
 # needs a fresh PowerShell to take effect.
-$nextCmd = if ($modelPullOk) { 'jarvis' } else { 'jarvis doctor' }
+$nextCmd = if ($modelPullOk) { 'jarvis' } else { 'aura doctor' }
 
 if ($pathNeedsRefresh) {
     Write-Host ""
@@ -613,14 +613,14 @@ if (-not $modelPullOk) {
     Write-Host ""
     Write-Host "  NOTE: the qwen3.5:2b model didn't finish downloading." -ForegroundColor Yellow
     Write-Host "        Chat will fail until the bg-orchestrator finishes the retry."
-    Write-Host "        'jarvis doctor' shows progress."
+    Write-Host "        'aura doctor' shows progress."
 }
 
 if ($shouldInstallService) {
     Write-Host ""
-    Write-Host "  Service: schtasks /Query /TN OpenJarvis     (status)"
+    Write-Host "  Service: schtasks /Query /TN AURA     (status)"
     Write-Host "           powershell -File `"$serviceScript`" uninstall    (remove)"
 }
 Write-Host ""
-Write-Host "  Docs:    https://open-jarvis.github.io/OpenJarvis/"
+Write-Host "  Docs:    https://github.com/Rohitpvt/AURA-Agentic-AI"
 Write-Host ""

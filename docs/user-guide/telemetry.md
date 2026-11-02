@@ -1,6 +1,6 @@
 # Telemetry & Traces
 
-OpenJarvis has two complementary observability systems: **telemetry** for per-inference metrics and **traces** for full interaction-level recording. Together, they provide comprehensive insight into system behavior and power the learning system's routing policy updates.
+AURA has two complementary observability systems: **telemetry** for per-inference metrics and **traces** for full interaction-level recording. Together, they provide comprehensive insight into system behavior and power the learning system's routing policy updates.
 
 ---
 

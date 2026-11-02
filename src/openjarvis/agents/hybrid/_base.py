@@ -5,7 +5,7 @@ ToolOrchestra) all coordinate at least two models: a small **local** model
 served by vLLM over an OpenAI-compatible endpoint, and a **cloud** model
 reached via the Anthropic or OpenAI SDK.
 
-Why not just use OpenJarvis's :class:`InferenceEngine` for both? Two reasons:
+Why not just use AURA's :class:`InferenceEngine` for both? Two reasons:
 
 1. The reference hybrid adapters (``hybrid-local-cloud-compute/adapters/``) make
    raw SDK calls because some of them (Minions, Archon) construct external
@@ -113,7 +113,7 @@ def tavily_search_context(
     *,
     max_results: int = 5,
 ) -> Dict[str, Any]:
-    """Run OpenJarvis WebSearchTool and return accounting-friendly metadata."""
+    """Run AURA WebSearchTool and return accounting-friendly metadata."""
     from openjarvis.tools.web_search import WebSearchTool
 
     tool = WebSearchTool(max_results=max_results)
@@ -623,7 +623,7 @@ class LocalCloudAgent(BaseAgent):
         custom ``base_url`` and ``OPENROUTER_API_KEY``. ``model`` is the
         OpenRouter slug ``"<provider>/<model>"`` (e.g.
         ``"deepseek/deepseek-r1"``). For convenience the caller may also
-        pass the OpenJarvis-engine-style ``"openrouter/<provider>/<model>"``
+        pass the AURA-engine-style ``"openrouter/<provider>/<model>"``
         prefix (see ``src/openjarvis/engine/cloud.py``) — we strip it here.
 
         Note: unlike ``_call_openai``, we do NOT apply the GPT-5 family

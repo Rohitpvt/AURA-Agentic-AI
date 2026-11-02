@@ -124,8 +124,8 @@ def test_render_does_not_advertise_an_unconsumed_cors_variable() -> None:
 def test_render_public_bind_generates_an_api_key() -> None:
     env = _env_vars(_service())
 
-    assert env["OPENJARVIS_API_KEY"] == {
-        "key": "OPENJARVIS_API_KEY",
+    assert env["AURA_API_KEY"] == {
+        "key": "AURA_API_KEY",
         "generateValue": True,
     }
 

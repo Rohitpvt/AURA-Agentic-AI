@@ -39,7 +39,7 @@ impl AgentEnum {
         &self,
         input: &str,
         context: Option<&openjarvis_core::AgentContext>,
-    ) -> Result<openjarvis_core::AgentResult, openjarvis_core::OpenJarvisError> {
+    ) -> Result<openjarvis_core::AgentResult, openjarvis_core::AURAError> {
         match self {
             AgentEnum::Simple(a) => a.run(input, context).await,
             AgentEnum::Orchestrator(a) => a.run(input, context).await,

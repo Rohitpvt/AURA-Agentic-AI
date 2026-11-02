@@ -7,9 +7,9 @@ Manual testing scenarios for persistent agents in the CLI and desktop app.
 | Prerequisite | Command / Check |
 |---|---|
 | Ollama running with model | `ollama list` shows `qwen3:8b` |
-| OpenJarvis initialized | `uv run jarvis doctor` all green |
+| AURA initialized | `uv run aura doctor` all green |
 | Rust extension built | `uv run maturin develop -m rust/crates/openjarvis-python/Cargo.toml` |
-| Desktop app running | `uv run jarvis serve` + `cd frontend && npm run dev` |
+| Desktop app running | `uv run aura serve` + `cd frontend && npm run dev` |
 | Slack credentials | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` set, bot invited to test channel |
 | Gmail credentials | OAuth credentials.json downloaded, token generated |
 | Twitter credentials | All 5 env vars set (bearer + OAuth 1.0a) |

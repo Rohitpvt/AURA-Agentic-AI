@@ -1,11 +1,11 @@
-"""`jarvis self-update` — upgrade OpenJarvis to the latest release.
+"""`jarvis self-update` — upgrade AURA to the latest release.
 
-Runs the right upgrade command for how the user installed OpenJarvis:
+Runs the right upgrade command for how the user installed AURA:
 
 - PyPI installs get ``pip install --upgrade openjarvis``.
 - uv-tool installs get ``uv tool upgrade openjarvis``.
 - Editable Git checkouts recover release-tag history, fast-forward, and rebuild
-  OpenJarvis in the running environment. The inexact sync preserves packages
+  AURA in the running environment. The inexact sync preserves packages
   previously installed through extras and dependency groups.
 
 The detection logic is shared with the post-command "new version
@@ -54,7 +54,7 @@ def _update_git_checkout(repo_root: Path) -> int:
     # Version metadata is baked at install time, so an up-to-date checkout also
     # needs a rebuild after history repair. The Unix installer keeps its venv
     # beside src/, not inside it: target the running venv, never a new src/.venv.
-    click.echo("Rebuilding OpenJarvis in the running Python environment...")
+    click.echo("Rebuilding AURA in the running Python environment...")
     if sys.prefix != sys.base_prefix:
         result = subprocess.run(
             [
@@ -92,7 +92,7 @@ def _update_git_checkout(repo_root: Path) -> int:
 @click.command(
     "self-update",
     help=(
-        "Upgrade OpenJarvis to the latest release. Detects how you "
+        "Upgrade AURA to the latest release. Detects how you "
         "installed (pip, uv tool, editable git) and runs the right "
         "command. Use --check to only print the upgrade command "
         "without running it."
@@ -113,13 +113,13 @@ def self_update(check: bool, yes: bool) -> None:
     info = detect_install()
     current = openjarvis.__version__
 
-    click.echo(f"Current OpenJarvis version: v{current}")
+    click.echo(f"Current AURA version: v{current}")
     click.echo(f"Install method: {info.kind}")
     if info.kind == "editable-git":
         click.echo(f"Repository: {info.repo_root}")
         click.echo(
             "Upgrade plan: restore release-tag history, git pull --ff-only, "
-            "then rebuild OpenJarvis while preserving installed extras."
+            "then rebuild AURA while preserving installed extras."
         )
     else:
         click.echo(f"Upgrade command: {info.upgrade_command}")

@@ -1,4 +1,4 @@
-//! OpenJarvis Sessions — cross-channel persistent session management.
+//! AURA Sessions — cross-channel persistent session management.
 //!
 //! Port of `src/openjarvis/sessions/` from Python.
 //! Provides SQLite-backed session storage with identity consolidation,

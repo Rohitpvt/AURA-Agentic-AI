@@ -241,7 +241,7 @@ Agents handle both skill types correctly:
 
 ## Skill Discovery from Traces
 
-OpenJarvis can automatically mine your trace history for recurring tool sequences and surface them as candidate skills:
+AURA can automatically mine your trace history for recurring tool sequences and surface them as candidate skills:
 
 ```bash
 # Preview discovered patterns without writing
@@ -320,7 +320,7 @@ Results are written to `docs/superpowers/results/pinchbench-skills-eval-{date}.m
 
 | Tier | Source | Verification | Runtime |
 |------|--------|-------------|---------|
-| **Bundled** | Ships with OpenJarvis | Implicit trust | Full access within declared capabilities |
+| **Bundled** | Ships with AURA | Implicit trust | Full access within declared capabilities |
 | **Indexed** | In official skill index, signed | SHA256 + Ed25519 | Capability-gated |
 | **Unreviewed** | Arbitrary GitHub URL | SHA256 only | Capability-gated + sandbox warning |
 | **Workspace** | Local `./skills/` directory | None (user code) | Trusted |
@@ -404,7 +404,7 @@ When the same skill name exists in multiple locations, closest scope wins:
 
 1. **Workspace** `./skills/` (highest priority)
 2. **User** `~/.openjarvis/skills/`
-3. **Bundled** (shipped with OpenJarvis)
+3. **Bundled** (shipped with AURA)
 
 ## CLI Reference
 

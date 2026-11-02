@@ -7,7 +7,7 @@ body:
       value: |
         Use this template when promoting a raw Hugging Face model to a
         Pearl-compatible `pearl-ai/*-pearl` mining model. A model should remain
-        `planned` in OpenJarvis until this checklist is complete.
+        `planned` in AURA until this checklist is complete.
   - type: input
     id: raw_model
     attributes:

@@ -1,6 +1,6 @@
 """NativeReActAgent -- Thought-Action-Observation loop agent.
 
-Renamed from ``ReActAgent`` to clarify this is OpenJarvis's native
+Renamed from ``ReActAgent`` to clarify this is AURA's native
 implementation, not an integration with an external project.
 """
 

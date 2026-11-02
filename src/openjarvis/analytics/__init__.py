@@ -1,6 +1,6 @@
 """External anonymous usage analytics.
 
-Sends anonymized events to PostHog so the OpenJarvis team can measure
+Sends anonymized events to PostHog so the AURA team can measure
 setup success, retention, feature usage, and churn — without ever
 collecting chat content, prompts, file paths, emails, IPs, or hardware
 identifiers.

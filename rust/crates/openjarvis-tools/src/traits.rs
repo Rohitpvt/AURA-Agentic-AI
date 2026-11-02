@@ -7,7 +7,7 @@ use serde_json::Value;
 pub trait BaseTool: Send + Sync {
     fn tool_id(&self) -> &str;
     fn spec(&self) -> &ToolSpec;
-    fn execute(&self, params: &Value) -> Result<ToolResult, openjarvis_core::OpenJarvisError>;
+    fn execute(&self, params: &Value) -> Result<ToolResult, openjarvis_core::AURAError>;
 
     /// Convert to OpenAI function calling format.
     fn to_openai_function(&self) -> Value {

@@ -2,14 +2,14 @@
 
 Faithful port of ``orchestration/eval_frames.py:call_tool`` — same worker
 prompts, same extraction, same Python subprocess execution. Two deltas,
-both forced by the OpenJarvis environment and documented inline:
+both forced by the AURA environment and documented inline:
 
 * ``search`` — the original POSTs to a FAISS wiki retriever service. We
   honor ``method_cfg.retriever_url`` and POST the exact same payload when
   it's set; with no retriever configured we fall back to Anthropic's
   server-side ``web_search`` tool so the stage still grounds.
 * in-tool correctness check — the original ``answer`` tool LLM-judges the
-  prediction against the gold answer inside ``call_tool``. OpenJarvis
+  prediction against the gold answer inside ``call_tool``. AURA
   scores with its own harness judge downstream, so we only return the
   prediction; no gold answer is threaded in.
 """
@@ -246,7 +246,7 @@ def run_answer(
     The original branches the prompt by model family: Qwen-3 / Qwen-math
     get a ``\\boxed{}`` system prompt; GPT-5 / Claude (and we extend this
     to every other model) get the ``<think>/<answer>`` instruction. The
-    in-tool LLM correctness check is dropped — OpenJarvis scores
+    in-tool LLM correctness check is dropped — AURA scores
     downstream.
     """
     base = context_str.strip() + "\n\n" + problem
@@ -330,7 +330,7 @@ def run_search(
     Query generation is the original verbatim worker prompt. Retrieval:
     if ``retriever_url`` is set we POST the original ``/retrieve`` payload;
     otherwise we fall back to Anthropic ``web_search`` (the documented
-    OpenJarvis substitution for the missing FAISS wiki index).
+    AURA substitution for the missing FAISS wiki index).
     """
     prompt = (
         context_str.strip()

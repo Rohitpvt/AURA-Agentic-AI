@@ -1,13 +1,13 @@
 ---
 title: Installation
-description: Get OpenJarvis running — browser app, desktop app, CLI, or Python SDK
+description: Get AURA running — browser app, desktop app, CLI, or Python SDK
 search:
   boost: 3
 ---
 
 # Installation
 
-OpenJarvis runs entirely on your hardware. Choose the interface that fits your workflow.
+AURA runs entirely on your hardware. Choose the interface that fits your workflow.
 
 ---
 
@@ -19,8 +19,8 @@ your machine and the frontend connects via `localhost`.
 ### One-command setup
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 ./scripts/quickstart.sh
 ```
 
@@ -39,8 +39,8 @@ If you prefer to run each step yourself:
 === "Step 1: Clone and install"
 
     ```bash
-    git clone https://github.com/open-jarvis/OpenJarvis.git
-    cd OpenJarvis
+    git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+    cd AURA
     uv sync --extra desktop
     uv run maturin develop -m rust/crates/openjarvis-python/Cargo.toml
     cd frontend && npm install && cd ..
@@ -61,7 +61,7 @@ If you prefer to run each step yourself:
 === "Step 3: Start backend"
 
     ```bash
-    uv run jarvis serve --port 8000
+    uv run aura serve --port 8000
     ```
 
 === "Step 4: Start frontend"
@@ -77,7 +77,7 @@ Then open [http://localhost:5173](http://localhost:5173).
 
 ## Desktop App
 
-The desktop app is a native window for the OpenJarvis chat UI. All inference and backend
+The desktop app is a native window for the AURA chat UI. All inference and backend
 processing happens on your local machine — the app connects to the backend you start locally.
 
 ### Setup
@@ -85,8 +85,8 @@ processing happens on your local machine — the app connects to the backend you
 **Step 1.** Start the backend (same as Browser App):
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 ./scripts/quickstart.sh
 ```
 
@@ -94,29 +94,29 @@ cd OpenJarvis
 
 | Platform | Download |
 |----------|----------|
-| macOS (Universal) | [:material-download: **OpenJarvis.dmg**](https://github.com/open-jarvis/OpenJarvis/releases/download/desktop-v1.0.2/OpenJarvis_1.0.1_universal.dmg) |
-| Windows (64-bit) | [:material-download: **OpenJarvis-setup.exe**](https://github.com/open-jarvis/OpenJarvis/releases/download/desktop-v1.0.2/OpenJarvis_1.0.1_x64-setup.exe) |
-| Linux (DEB) | [:material-download: **OpenJarvis.deb**](https://github.com/open-jarvis/OpenJarvis/releases/download/desktop-v1.0.2/OpenJarvis_1.0.1_amd64.deb) |
-| Linux (RPM) | [:material-download: **OpenJarvis.rpm**](https://github.com/open-jarvis/OpenJarvis/releases/download/desktop-v1.0.2/OpenJarvis-1.0.1-1.x86_64.rpm) |
-| Linux (AppImage) | [:material-download: **OpenJarvis.AppImage**](https://github.com/open-jarvis/OpenJarvis/releases/download/desktop-v1.0.2/OpenJarvis_1.0.1_amd64.AppImage) |
+| macOS (Universal) | [:material-download: **AURA.dmg**](https://github.com/Rohitpvt/AURA-Agentic-AI/releases/download/desktop-v1.0.2/AURA_1.0.1_universal.dmg) |
+| Windows (64-bit) | [:material-download: **AURA-setup.exe**](https://github.com/Rohitpvt/AURA-Agentic-AI/releases/download/desktop-v1.0.2/AURA_1.0.1_x64-setup.exe) |
+| Linux (DEB) | [:material-download: **AURA.deb**](https://github.com/Rohitpvt/AURA-Agentic-AI/releases/download/desktop-v1.0.2/AURA_1.0.1_amd64.deb) |
+| Linux (RPM) | [:material-download: **AURA.rpm**](https://github.com/Rohitpvt/AURA-Agentic-AI/releases/download/desktop-v1.0.2/AURA-1.0.1-1.x86_64.rpm) |
+| Linux (AppImage) | [:material-download: **AURA.AppImage**](https://github.com/Rohitpvt/AURA-Agentic-AI/releases/download/desktop-v1.0.2/AURA_1.0.1_amd64.AppImage) |
 
 The app connects to `http://localhost:8000` automatically.
 
 !!! warning "macOS: \"app is damaged\""
     If macOS says the app is damaged, clear the Gatekeeper quarantine flag:
     ```bash
-    xattr -cr /Applications/OpenJarvis.app
+    xattr -cr /Applications/AURA.app
     ```
     This is normal for open-source apps distributed outside the App Store.
 
 !!! tip "All releases"
-    Browse all versions on the [GitHub Releases](https://github.com/open-jarvis/OpenJarvis/releases) page.
+    Browse all versions on the [GitHub Releases](https://github.com/Rohitpvt/AURA-Agentic-AI/releases) page.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis/desktop
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA/desktop
 npm install
 npm run tauri build
 ```
@@ -127,14 +127,14 @@ The built installer will be in `frontend/src-tauri/target/release/bundle/`.
 
 ## CLI
 
-The command-line interface is the fastest way to interact with OpenJarvis
+The command-line interface is the fastest way to interact with AURA
 programmatically. Every feature is accessible from the terminal.
 
 ### Install
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync
 uv run maturin develop -m rust/crates/openjarvis-python/Cargo.toml
 ```
@@ -155,13 +155,13 @@ jarvis ask "What is the capital of France?"
 
 jarvis ask --agent orchestrator --tools calculator "What is 137 * 42?"
 
-jarvis serve --port 8000
+aura serve --port 8000
 
-jarvis doctor
+aura doctor
 
 jarvis model list
 
-jarvis chat
+aura chat
 ```
 
 !!! info "Inference backend required"
@@ -177,8 +177,8 @@ For programmatic access, the `Jarvis` class provides a high-level sync API.
 ### Install
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync
 uv run maturin develop -m rust/crates/openjarvis-python/Cargo.toml
 ```
@@ -236,20 +236,20 @@ See the [Python SDK guide](../user-guide/python-sdk.md) for the full API referen
 
 ## Hardware
 
-OpenJarvis has no special hardware requirements of its own — the CLI, server, and
+AURA has no special hardware requirements of its own — the CLI, server, and
 SDK run anywhere the software [Requirements](#requirements) below are met.
-`jarvis init` detects your CPU, RAM, and GPU, then recommends an inference engine
+`aura init` detects your CPU, RAM, and GPU, then recommends an inference engine
 and local model for the generated config. You can choose a different engine during
 setup.
 
 ```bash
-jarvis init          # detect hardware, write a matching config
+aura init          # detect hardware, write a matching config
 ```
 
 ### Recommended configurations
 
 These are the Qwen3.5 recommendations for `llamacpp`, `mlx`, `ollama`, `vllm`, and
-`sglang`. `jarvis init` can offer an already-running engine first, and your engine
+`sglang`. `aura init` can offer an already-running engine first, and your engine
 choice can change the model. The bands use whole-number GB values and assume one
 GPU; the formulas below determine the exact result.
 
@@ -266,7 +266,7 @@ detection reports unified system memory as GPU memory.
 
 ### How the model is chosen
 
-`jarvis init` first computes usable memory:
+`aura init` first computes usable memory:
 
 | Detected | Usable memory |
 |----------|---------------|
@@ -300,12 +300,12 @@ The detected GPU vendor and reported name select the engine:
 | AMD name containing MI300, MI325, MI350, or MI355 | `vllm` |
 | Other AMD (including Radeon) | `lemonade` |
 
-When `lemonade` is selected and usable memory is positive, `jarvis init` instead
+When `lemonade` is selected and usable memory is positive, `aura init` instead
 recommends `Qwen3.6-35B-A3B-GGUF`. The Qwen3.5 tier and download tables above do
 not apply to that default.
 
 See [Setting Up an Inference Backend](#setting-up-an-inference-backend) for
-installing the engine `jarvis init` picks.
+installing the engine `aura init` picks.
 
 ### Minimum
 
@@ -316,7 +316,7 @@ Memory is the real floor. With 4 GB of RAM or less and no GPU, usable memory
 is zero or less and no local model is recommended.
 
 !!! tip "Low-memory and headless machines"
-    You do not need a local model at all. Point OpenJarvis at a hosted API with the
+    You do not need a local model at all. Point AURA at a hosted API with the
     [cloud quick-path](install.md#cloud-quick-path) and the hardware tiers above
     stop applying.
 
@@ -330,7 +330,7 @@ environment and whichever inference engine you install.
     These are defaults, not limits. The generated config records what was detected
     in a comment at the top of the file, and `default_model` under `[intelligence]`
     in `~/.openjarvis/config.toml` can be set to anything larger or smaller — see
-    the [Configuration guide](configuration.md). Re-run `jarvis init --force` to
+    the [Configuration guide](configuration.md). Re-run `aura init --force` to
     re-detect and overwrite an existing config.
 
 ---
@@ -352,7 +352,7 @@ environment and whichever inference engine you install.
 
 ## Optional Extras
 
-OpenJarvis uses optional extras to keep the base installation lightweight.
+AURA uses optional extras to keep the base installation lightweight.
 
 ### Inference Backends
 
@@ -362,7 +362,7 @@ OpenJarvis uses optional extras to keep the base installation lightweight.
 | `inference-google` | `uv sync --extra inference-google` | Google Gemini API |
 
 !!! note "Ollama, vLLM, and llama.cpp are HTTP-based"
-    These engines have no additional Python dependencies — OpenJarvis communicates over HTTP. You still need the engine software running on your machine.
+    These engines have no additional Python dependencies — AURA communicates over HTTP. You still need the engine software running on your machine.
 
 ### Memory Backends
 
@@ -380,7 +380,7 @@ OpenJarvis uses optional extras to keep the base installation lightweight.
 | Extra | Install Command | Description |
 |-------|----------------|-------------|
 | `desktop` | `uv sync --extra desktop` | Desktop/API server plus local speech input |
-| `server` | `uv sync --extra server` | OpenAI-compatible API server (`jarvis serve`) |
+| `server` | `uv sync --extra server` | OpenAI-compatible API server (`aura serve`) |
 | `dev` | `uv sync --extra dev` | Development and testing tools |
 | `docs` | `uv sync --extra docs` | Documentation build tools |
 
@@ -392,7 +392,7 @@ uv sync --extra desktop --extra memory-faiss --extra inference-cloud
 
 ## Setting Up an Inference Backend
 
-OpenJarvis requires at least one inference backend. Choose the one that matches your hardware.
+AURA requires at least one inference backend. Choose the one that matches your hardware.
 
 ### Ollama (Recommended)
 

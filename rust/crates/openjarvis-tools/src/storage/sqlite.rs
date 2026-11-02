@@ -1,7 +1,7 @@
 //! SQLite + FTS5 memory backend.
 
 use crate::storage::traits::MemoryBackend;
-use openjarvis_core::{OpenJarvisError, RetrievalResult};
+use openjarvis_core::{AURAError, RetrievalResult};
 use parking_lot::Mutex;
 use rusqlite::Connection;
 use serde_json::Value;
@@ -14,11 +14,11 @@ pub struct SQLiteMemory {
 }
 
 impl SQLiteMemory {
-    pub fn new(db_path: &Path) -> Result<Self, OpenJarvisError> {
+    pub fn new(db_path: &Path) -> Result<Self, AURAError> {
         // Expand leading ~ to the user's home directory
         let db_path = if db_path.starts_with("~") {
             let home = std::env::var("HOME").map_err(|_| {
-                OpenJarvisError::Io(std::io::Error::other("HOME environment variable not set"))
+                AURAError::Io(std::io::Error::other("HOME environment variable not set"))
             })?;
             PathBuf::from(home).join(db_path.strip_prefix("~").unwrap())
         } else {
@@ -28,11 +28,11 @@ impl SQLiteMemory {
 
         if let Some(parent) = db_path.parent() {
             std::fs::create_dir_all(parent)
-                .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e)))?;
+                .map_err(|e| AURAError::Io(std::io::Error::other(e)))?;
         }
 
         let conn = Connection::open(db_path)
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         // A longer busy timeout plus best-effort WAL mode (#756): without
         // WAL, a concurrent writer can block readers.  Some SQLite targets
@@ -40,7 +40,7 @@ impl SQLiteMemory {
         // cannot switch journal mode, so failure to enable WAL must not make
         // an otherwise usable memory backend fail to open.
         conn.busy_timeout(std::time::Duration::from_secs(10))
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         if db_path != Path::new(":memory:") {
             match conn.query_row("PRAGMA journal_mode=WAL", [], |row| row.get::<_, String>(0)) {
                 Ok(mode) if mode.eq_ignore_ascii_case("wal") => {}
@@ -67,7 +67,7 @@ impl SQLiteMemory {
                 content, source, tokenize='porter unicode61'
             );",
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         // Migrate existing FTS5 tables that lack the unicode61 tokenizer
         // (ensures case-insensitive search on databases created before this fix).
@@ -89,7 +89,7 @@ impl SQLiteMemory {
                  INSERT INTO documents_fts (id, content, source)
                      SELECT id, content, source FROM documents;",
             )
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         }
 
         Ok(Self {
@@ -98,7 +98,7 @@ impl SQLiteMemory {
         })
     }
 
-    pub fn in_memory() -> Result<Self, OpenJarvisError> {
+    pub fn in_memory() -> Result<Self, AURAError> {
         Self::new(Path::new(":memory:"))
     }
 
@@ -107,23 +107,23 @@ impl SQLiteMemory {
         &self,
         source: &str,
         documents: &[(&str, Option<&Value>)],
-    ) -> Result<Vec<String>, OpenJarvisError> {
+    ) -> Result<Vec<String>, AURAError> {
         let mut conn = self.conn.lock();
         let tx = conn
             .transaction()
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         tx.execute(
             "DELETE FROM documents_fts
              WHERE rowid IN (SELECT rowid FROM documents WHERE source = ?1)",
             rusqlite::params![source],
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         tx.execute(
             "DELETE FROM documents WHERE source = ?1",
             rusqlite::params![source],
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         let mut doc_ids = Vec::with_capacity(documents.len());
         for (content, metadata) in documents {
@@ -137,19 +137,19 @@ impl SQLiteMemory {
                  VALUES (?1, ?2, ?3, ?4)",
                 rusqlite::params![doc_id, content, source, meta_str],
             )
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
             let rowid = tx.last_insert_rowid();
             tx.execute(
                 "INSERT INTO documents_fts (rowid, content, source) VALUES (?1, ?2, ?3)",
                 rusqlite::params![rowid, content, source],
             )
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
             doc_ids.push(doc_id);
         }
 
         tx.commit()
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         Ok(doc_ids)
     }
 }
@@ -164,7 +164,7 @@ impl MemoryBackend for SQLiteMemory {
         content: &str,
         source: &str,
         metadata: Option<&Value>,
-    ) -> Result<String, OpenJarvisError> {
+    ) -> Result<String, AURAError> {
         let doc_id = Uuid::new_v4().to_string();
         let meta_str = metadata
             .map(|m| serde_json::to_string(m).unwrap_or_default())
@@ -175,19 +175,19 @@ impl MemoryBackend for SQLiteMemory {
             "INSERT INTO documents (id, content, source, metadata) VALUES (?1, ?2, ?3, ?4)",
             rusqlite::params![doc_id, content, source, meta_str],
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         let rowid = conn.last_insert_rowid();
         conn.execute(
             "INSERT INTO documents_fts (rowid, content, source) VALUES (?1, ?2, ?3)",
             rusqlite::params![rowid, content, source],
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         Ok(doc_id)
     }
 
-    fn retrieve(&self, query: &str, top_k: usize) -> Result<Vec<RetrievalResult>, OpenJarvisError> {
+    fn retrieve(&self, query: &str, top_k: usize) -> Result<Vec<RetrievalResult>, AURAError> {
         let conn = self.conn.lock();
 
         // Split on any non-alphanumeric character (not just whitespace) so
@@ -216,7 +216,7 @@ impl MemoryBackend for SQLiteMemory {
                  ORDER BY bm25(documents_fts, 1.0, 0.5)
                  LIMIT ?2",
             )
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
 
         let results = stmt
             .query_map(rusqlite::params![fts_query, top_k as i64], |row| {
@@ -231,42 +231,42 @@ impl MemoryBackend for SQLiteMemory {
                     score: row.get::<_, f64>(3).unwrap_or(0.0),
                 })
             })
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?
             .filter_map(|r| r.ok())
             .collect();
 
         Ok(results)
     }
 
-    fn delete(&self, doc_id: &str) -> Result<bool, OpenJarvisError> {
+    fn delete(&self, doc_id: &str) -> Result<bool, AURAError> {
         let conn = self.conn.lock();
         // Delete from FTS5 using the rowid from the documents table
         conn.execute(
             "DELETE FROM documents_fts WHERE rowid = (SELECT rowid FROM documents WHERE id = ?1)",
             rusqlite::params![doc_id],
         )
-        .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+        .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         let changes = conn
             .execute(
                 "DELETE FROM documents WHERE id = ?1",
                 rusqlite::params![doc_id],
             )
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         Ok(changes > 0)
     }
 
-    fn clear(&self) -> Result<(), OpenJarvisError> {
+    fn clear(&self) -> Result<(), AURAError> {
         let conn = self.conn.lock();
         conn.execute_batch("DELETE FROM documents_fts; DELETE FROM documents")
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         Ok(())
     }
 
-    fn count(&self) -> Result<usize, OpenJarvisError> {
+    fn count(&self) -> Result<usize, AURAError> {
         let conn = self.conn.lock();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM documents", [], |row| row.get(0))
-            .map_err(|e| OpenJarvisError::Io(std::io::Error::other(e.to_string())))?;
+            .map_err(|e| AURAError::Io(std::io::Error::other(e.to_string())))?;
         Ok(count as usize)
     }
 }

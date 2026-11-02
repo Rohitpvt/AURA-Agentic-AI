@@ -1,6 +1,6 @@
 ---
 title: Quick Start
-description: Get up and running with OpenJarvis in minutes
+description: Get up and running with AURA in minutes
 search:
   boost: 3
 ---
@@ -10,11 +10,11 @@ search:
 !!! tip "Running `jarvis` commands"
     Every `jarvis ...` example below assumes you have either activated the project venv
     (`source .venv/bin/activate`) or are prefixing each command with `uv run`. A bare
-    `jarvis init --preset ...` from a fresh clone will fail with `command not found`.
+    `aura init --preset ...` from a fresh clone will fail with `command not found`.
 
 ## What You Can Build
 
-OpenJarvis is a modular AI assistant framework. Here's what developers build with it:
+AURA is a modular AI assistant framework. Here's what developers build with it:
 
 === "Chat with Any Model"
 
@@ -31,12 +31,12 @@ OpenJarvis is a modular AI assistant framework. Here's what developers build wit
 === "Index Docs & Ask"
 
     ```bash
-    jarvis memory index ./docs/
+    aura memory index ./docs/
     jarvis ask "How do I configure the engine?"
     ```
 
     !!! warning "Requires the Rust extension"
-        `jarvis memory index` and `jarvis memory search` import `openjarvis_rust`. If you
+        `aura memory index` and `aura memory search` import `openjarvis_rust`. If you
         skipped the `uv run maturin develop -m rust/crates/openjarvis-python/Cargo.toml`
         step in [Installation](installation.md), these commands fail with
         `ModuleNotFoundError: No module named 'openjarvis_rust'`. Build the extension
@@ -53,7 +53,7 @@ OpenJarvis is a modular AI assistant framework. Here's what developers build wit
 === "API Server"
 
     ```bash
-    jarvis serve --port 8000
+    aura serve --port 8000
     # Now use any OpenAI-compatible client
     ```
 
@@ -69,8 +69,8 @@ OpenJarvis is a modular AI assistant framework. Here's what developers build wit
 === "Deep Research"
 
     ```bash
-    jarvis init --preset deep-research --force
-    jarvis memory index ~/Documents/papers/
+    aura init --preset deep-research --force
+    aura memory index ~/Documents/papers/
     jarvis ask "Summarize all documents about transformer architectures"
     # Multi-hop search across your indexed docs with citations
     ```
@@ -78,7 +78,7 @@ OpenJarvis is a modular AI assistant framework. Here's what developers build wit
 === "Code Assistant"
 
     ```bash
-    jarvis init --preset code-assistant --force
+    aura init --preset code-assistant --force
     jarvis ask "Write a Python script that parses CSV files"
     # Orchestrator agent with code execution, file I/O, and shell access
     ```
@@ -86,8 +86,8 @@ OpenJarvis is a modular AI assistant framework. Here's what developers build wit
 === "Scheduled Monitor"
 
     ```bash
-    jarvis init --preset scheduled-monitor --force
-    jarvis memory index ~/Documents/
+    aura init --preset scheduled-monitor --force
+    aura memory index ~/Documents/
     jarvis scheduler start
     jarvis scheduler create \
       --prompt "Check for new emails about Project X" \
@@ -103,32 +103,32 @@ Copy one of these to `~/.openjarvis/config.toml` to get a pre-configured setup:
 
 | Config | For | What it does |
 |--------|-----|-------------|
-| [`chat-simple.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/chat-simple.toml) | Any machine | Lightweight chat, no tools -- simplest setup |
-| [`code-assistant.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/code-assistant.toml) | Any machine | Orchestrator agent with code execution, file I/O, shell |
-| [`deep-research.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/deep-research.toml) | Any machine | Multi-hop research across indexed documents with citations |
-| [`scheduled-monitor.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/scheduled-monitor.toml) | Any machine | Persistent operative agent on a cron schedule |
-| [`morning-digest-mac.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/morning-digest-mac.toml) | Mac (Apple Silicon) | Daily spoken briefing from email, calendar, health, news |
-| [`morning-digest-linux.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/morning-digest-linux.toml) | Linux / GPU server | Same, with vLLM support |
-| [`morning-digest-minimal.toml`](https://github.com/open-jarvis/OpenJarvis/blob/main/configs/openjarvis/examples/morning-digest-minimal.toml) | Any machine | Just Gmail + Calendar |
+| [`chat-simple.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/chat-simple.toml) | Any machine | Lightweight chat, no tools -- simplest setup |
+| [`code-assistant.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/code-assistant.toml) | Any machine | Orchestrator agent with code execution, file I/O, shell |
+| [`deep-research.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/deep-research.toml) | Any machine | Multi-hop research across indexed documents with citations |
+| [`scheduled-monitor.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/scheduled-monitor.toml) | Any machine | Persistent operative agent on a cron schedule |
+| [`morning-digest-mac.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/morning-digest-mac.toml) | Mac (Apple Silicon) | Daily spoken briefing from email, calendar, health, news |
+| [`morning-digest-linux.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/morning-digest-linux.toml) | Linux / GPU server | Same, with vLLM support |
+| [`morning-digest-minimal.toml`](https://github.com/Rohitpvt/AURA-Agentic-AI/blob/main/configs/openjarvis/examples/morning-digest-minimal.toml) | Any machine | Just Gmail + Calendar |
 
 Or generate a config with digest included:
 
 ```bash
-jarvis init --digest
+aura init --digest
 ```
 
-This guide walks through the core workflows of OpenJarvis: the browser app, CLI, Python SDK, agents with tools, memory, benchmarks, and the API server.
+This guide walks through the core workflows of AURA: the browser app, CLI, Python SDK, agents with tools, memory, benchmarks, and the API server.
 
 !!! info "Prerequisites"
-    Make sure you have [installed OpenJarvis](installation.md) and have at least one inference backend running (e.g., `ollama serve`).
+    Make sure you have [installed AURA](installation.md) and have at least one inference backend running (e.g., `ollama serve`).
 
 ## Browser App
 
-The quickest way to experience OpenJarvis is the full chat UI running in your browser:
+The quickest way to experience AURA is the full chat UI running in your browser:
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 ./scripts/quickstart.sh
 ```
 
@@ -174,7 +174,7 @@ search backend it is configured with. Keys:
 [firecrawl.dev](https://www.firecrawl.dev/app/api-keys?utm_source=openjarvis&utm_medium=integration).
 
 The script does not automatically source `.env` files. Run `source .env`
-first if that is where you keep the key. Stop any existing OpenJarvis server
+first if that is where you keep the key. Stop any existing AURA server
 before restarting so it inherits the updated environment.
 
 To stop all services, press ++ctrl+c++ in the terminal.
@@ -187,7 +187,7 @@ To stop all services, press ++ctrl+c++ in the terminal.
 Start by detecting your hardware and generating a configuration file:
 
 ```bash
-jarvis init
+aura init
 ```
 
 This runs hardware auto-detection (GPU vendor, VRAM, CPU, RAM) and writes a config file to `~/.openjarvis/config.toml` with sensible defaults for your system. It also selects the recommended inference engine.
@@ -205,7 +205,7 @@ Config written successfully.
 To overwrite an existing config:
 
 ```bash
-jarvis init --force
+aura init --force
 ```
 
 See [Configuration](configuration.md) for the full config reference.
@@ -214,13 +214,13 @@ See [Configuration](configuration.md) for the full config reference.
 
 ### Via CLI
 
-The simplest way to interact with OpenJarvis is the `ask` command:
+The simplest way to interact with AURA is the `ask` command:
 
 ```bash
 jarvis ask "What is the capital of France?"
 ```
 
-OpenJarvis will auto-detect a running engine, select a model using the configured router policy, and return the response.
+AURA will auto-detect a running engine, select a model using the configured router policy, and return the response.
 
 #### CLI Options
 
@@ -332,16 +332,16 @@ The memory system lets you index documents and inject relevant context into quer
 
 ### Index Documents
 
-Index a file or directory. OpenJarvis chunks the content and stores it in the configured memory backend (SQLite/FTS5 by default).
+Index a file or directory. AURA chunks the content and stores it in the configured memory backend (SQLite/FTS5 by default).
 
 === "CLI"
 
     ```bash
     # Index a directory
-    jarvis memory index ./docs/
+    aura memory index ./docs/
 
     # Index a single file with custom chunk size
-    jarvis memory index ./paper.txt --chunk-size 256 --chunk-overlap 32
+    aura memory index ./paper.txt --chunk-size 256 --chunk-overlap 32
     ```
 
 === "Python SDK"
@@ -362,8 +362,8 @@ Query the memory store to find relevant chunks:
 === "CLI"
 
     ```bash
-    jarvis memory search "configuration options"
-    jarvis memory search -k 10 "how to deploy"
+    aura memory search "configuration options"
+    aura memory search -k 10 "how to deploy"
     ```
 
 === "Python SDK"
@@ -379,7 +379,7 @@ Query the memory store to find relevant chunks:
 === "CLI"
 
     ```bash
-    jarvis memory stats
+    aura memory stats
     ```
 
 === "Python SDK"
@@ -391,7 +391,7 @@ Query the memory store to find relevant chunks:
 
 ### Automatic Context Injection
 
-When you have indexed documents, OpenJarvis automatically injects relevant context into your queries. The memory system searches for chunks matching your query and prepends them as system context before sending to the model.
+When you have indexed documents, AURA automatically injects relevant context into your queries. The memory system searches for chunks matching your query and prepends them as system context before sending to the model.
 
 To disable this behavior:
 
@@ -493,7 +493,7 @@ throughput (10 samples, 0 errors)
 
 ## Starting the API Server
 
-OpenJarvis provides an OpenAI-compatible API server for integration with existing tools and frontends.
+AURA provides an OpenAI-compatible API server for integration with existing tools and frontends.
 
 !!! note "Requires the `server` extra"
     ```bash
@@ -503,13 +503,13 @@ OpenJarvis provides an OpenAI-compatible API server for integration with existin
 ### Start the Server
 
 ```bash
-jarvis serve --port 8000
+aura serve --port 8000
 ```
 
 With custom options:
 
 ```bash
-jarvis serve --host 0.0.0.0 --port 8000 --engine ollama --model qwen3:8b --agent orchestrator
+aura serve --host 0.0.0.0 --port 8000 --engine ollama --model qwen3:8b --agent orchestrator
 ```
 
 ### API Endpoints
@@ -548,7 +548,7 @@ curl http://localhost:8000/v1/chat/completions \
 
 ## Telemetry
 
-OpenJarvis records telemetry for every inference call (timing, tokens, cost). View aggregated statistics:
+AURA records telemetry for every inference call (timing, tokens, cost). View aggregated statistics:
 
 ```bash
 jarvis telemetry stats

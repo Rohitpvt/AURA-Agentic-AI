@@ -1,4 +1,4 @@
-//! Canonical data types shared across all OpenJarvis primitives.
+//! Canonical data types shared across all AURA primitives.
 //!
 //! Direct Rust translation of `src/openjarvis/core/types.py`.
 

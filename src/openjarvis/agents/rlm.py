@@ -42,7 +42,7 @@ RLM_SYSTEM_PROMPT = (
     "- `llm_batch(prompts: list[str]) -> list[str]` — Call a "
     "sub-LM with multiple prompts.\n"
     "- `tool_call(tool_name: str, args: dict) -> str` — Execute an "
-    "OpenJarvis tool and return its textual output.\n"
+    "AURA tool and return its textual output.\n"
     "- `read_file(path: str, max_lines: int = 120) -> str` — Read the "
     "first N lines of a file through the real file_read tool.\n"
     "- `read_file_chunk(path: str, start_line: int, end_line: int) -> str` "
@@ -432,7 +432,7 @@ class RLMAgent(ToolUsingAgent):
         return arg_names
 
     def _execute_tool_from_repl(self, tool_name: str, params: Dict[str, Any]) -> str:
-        """Execute a real OpenJarvis tool from within the REPL."""
+        """Execute a real AURA tool from within the REPL."""
         if self._executor is None:
             raise RuntimeError(f"Tool '{tool_name}' is not available")
 

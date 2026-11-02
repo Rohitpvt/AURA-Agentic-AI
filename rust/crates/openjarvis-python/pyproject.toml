@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "openjarvis-rust"
 version = "0.1.0"
-description = "Rust extension module for OpenJarvis"
+description = "Rust extension module for AURA"
 requires-python = ">=3.10"
 
 [tool.maturin]

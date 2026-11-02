@@ -1,7 +1,7 @@
 """Regression tests for openjarvis.mcp.loader.load_mcp_tools_from_config.
 
 Closes the gap that #461 surfaced — MCP tools were silently dropped on
-`jarvis ask` and `jarvis serve` because neither path read
+`jarvis ask` and `aura serve` because neither path read
 `config.tools.mcp.servers`. The loader is the shared helper they now
 both call.
 """

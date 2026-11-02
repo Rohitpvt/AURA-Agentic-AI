@@ -1,9 +1,9 @@
-"""TauBench task environment — native OpenJarvis agent in tau2 simulation.
+"""TauBench task environment — native AURA agent in tau2 simulation.
 
-Plugs OpenJarvis's inference engine into tau2-bench's orchestrator as a
+Plugs AURA's inference engine into tau2-bench's orchestrator as a
 ``HalfDuplexAgent``, so the multi-turn conversation loop, user simulator,
 domain tools, database, and evaluation all come from tau2-bench while the
-agent's LLM calls go through OpenJarvis.
+agent's LLM calls go through AURA.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 def _tau2_to_oj_messages(
     tau2_messages: list,
 ) -> list:
-    """Convert tau2 Message objects to OpenJarvis Message objects."""
+    """Convert tau2 Message objects to AURA Message objects."""
     from openjarvis.core.types import Message, Role
     from openjarvis.core.types import ToolCall as OJToolCall
 
@@ -88,7 +88,7 @@ def _strip_think_tags(text: str) -> str:
 
 
 def _oj_result_to_tau2_msg(result: dict):
-    """Convert OpenJarvis engine.generate() result to a tau2 AssistantMessage."""
+    """Convert AURA engine.generate() result to a tau2 AssistantMessage."""
     from tau2.data_model.message import AssistantMessage, ToolCall
 
     raw_tool_calls = result.get("tool_calls", [])
@@ -125,7 +125,7 @@ def _oj_result_to_tau2_msg(result: dict):
 
 
 class JarvisHalfDuplexAgent:
-    """A tau2 HalfDuplexAgent backed by OpenJarvis's inference engine.
+    """A tau2 HalfDuplexAgent backed by AURA's inference engine.
 
     Replaces tau2's built-in LLMAgent while keeping the same interface
     so the Orchestrator, UserSimulator, and evaluation work unchanged.
@@ -178,7 +178,7 @@ class JarvisHalfDuplexAgent:
         elif message is not None:
             state.messages.append(message)
 
-        # Convert to OpenJarvis format
+        # Convert to AURA format
         oj_messages = _tau2_to_oj_messages(
             state.system_messages + state.messages,
         )
@@ -186,7 +186,7 @@ class JarvisHalfDuplexAgent:
         # Build OpenAI tool schemas from tau2 tools
         openai_tools = [t.openai_schema for t in self.tools]
 
-        # Call OpenJarvis engine
+        # Call AURA engine
         gen_kwargs: dict = {
             "model": self._model,
             "temperature": self._temperature,
@@ -236,7 +236,7 @@ class JarvisHalfDuplexAgent:
 class TauBenchTaskEnv:
     """Per-task environment for TauBench evaluation.
 
-    Creates an OpenJarvis-powered agent, plugs it into tau2's orchestrator,
+    Creates an AURA-powered agent, plugs it into tau2's orchestrator,
     runs the simulation, and stores results in record.metadata for the scorer.
     """
 
@@ -270,7 +270,7 @@ class TauBenchTaskEnv:
         self._system = None
 
     def __enter__(self) -> TauBenchTaskEnv:
-        # Build OpenJarvis system for engine access
+        # Build AURA system for engine access
         from openjarvis.system import SystemBuilder
 
         builder = SystemBuilder()

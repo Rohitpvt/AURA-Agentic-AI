@@ -1,6 +1,6 @@
 # Simple Chat
 
-A lightweight conversational AI with no tools and no agent overhead. This is the simplest possible OpenJarvis setup: just Ollama and a local model. Ideal for general-purpose chat, Q&A, brainstorming, and getting started quickly.
+A lightweight conversational AI with no tools and no agent overhead. This is the simplest possible AURA setup: just Ollama and a local model. Ideal for general-purpose chat, Q&A, brainstorming, and getting started quickly.
 
 ## Quickstart (3 minutes)
 
@@ -11,13 +11,13 @@ A lightweight conversational AI with no tools and no agent overhead. This is the
 ollama pull qwen3.5:4b
 ```
 
-### 2. Install and initialize OpenJarvis
+### 2. Install and initialize AURA
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync
-jarvis init --preset chat-simple --force
+aura init --preset chat-simple --force
 ```
 
 ### 3. Ask a question
@@ -35,10 +35,10 @@ That's it. No API keys, no tools, no cloud -- just a local model answering your 
 jarvis ask "Explain the difference between TCP and UDP"
 
 # Interactive chat session (multi-turn conversation)
-jarvis chat
+aura chat
 
 # Start the API server for the browser or desktop app
-jarvis serve
+aura serve
 
 # Override the model for a single query
 jarvis ask -m qwen3.5:9b "Explain general relativity"
@@ -105,15 +105,15 @@ This opens [http://localhost:5173](http://localhost:5173) in your browser with a
 To run just the API server (for use with the desktop app or external clients):
 
 ```bash
-jarvis serve
+aura serve
 ```
 
 The server is OpenAI-compatible, so any client that works with the OpenAI API can point to `http://localhost:8000/v1`.
 
 ## Using the Desktop App
 
-1. Start the backend: `jarvis serve` (or `./scripts/quickstart.sh`)
-2. Download and open the desktop app from the [releases page](https://github.com/open-jarvis/OpenJarvis/releases)
+1. Start the backend: `aura serve` (or `./scripts/quickstart.sh`)
+2. Download and open the desktop app from the [releases page](https://github.com/Rohitpvt/AURA-Agentic-AI/releases)
 3. The app connects to `http://localhost:8000` automatically
 
 ## Switching Models
@@ -151,4 +151,4 @@ OPENJARVIS_MODEL=qwen3.5:9b jarvis ask "Hello"
 
 **Want to add tools later?** -- Switch to the [Code Assistant](code-assistant.md) or [Deep Research](deep-research.md) config. Simple chat is intentionally minimal.
 
-**Browser app not loading** -- Make sure both the backend (`jarvis serve`) and frontend are running. The `./scripts/quickstart.sh` script starts both automatically.
+**Browser app not loading** -- Make sure both the backend (`aura serve`) and frontend are running. The `./scripts/quickstart.sh` script starts both automatically.

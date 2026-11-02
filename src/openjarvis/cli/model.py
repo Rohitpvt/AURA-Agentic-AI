@@ -706,7 +706,7 @@ def convert(
         artifact = output_path / artifact_relative
         if engine == "ollama":
             assert ollama_name is not None
-            hint = f"jarvis chat --engine ollama --model {shlex.quote(ollama_name)}"
+            hint = f"aura chat --engine ollama --model {shlex.quote(ollama_name)}"
             title = "GGUF conversion and Ollama import complete"
         else:
             hint = f"jarvis host {shlex.quote(str(artifact))} --backend llamacpp"

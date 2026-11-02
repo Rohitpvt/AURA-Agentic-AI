@@ -106,7 +106,7 @@ jobs:
         shell: bash
         run: |
           node frontend/src-tauri/scripts/verify-arm64-pe.mjs \
-            frontend/src-tauri/target/aarch64-pc-windows-msvc/release/openjarvis-desktop.exe \
+            frontend/src-tauri/target/aarch64-pc-windows-msvc/release/aura-desktop.exe \
             frontend/src-tauri/binaries/ollama-aarch64-pc-windows-msvc.exe \
             frontend/src-tauri/binaries/ollama-runtime-aarch64-pc-windows-msvc/lib/ollama/llama-server.exe
           frontend/src-tauri/binaries/ollama-aarch64-pc-windows-msvc.exe --version
@@ -592,7 +592,7 @@ jobs:
         shell: bash
         run: |
           node frontend/src-tauri/scripts/verify-arm64-pe.mjs \
-            frontend/src-tauri/target/aarch64-pc-windows-msvc/release/openjarvis-desktop.exe \
+            frontend/src-tauri/target/aarch64-pc-windows-msvc/release/aura-desktop.exe \
             frontend/src-tauri/binaries/ollama-aarch64-pc-windows-msvc.exe \
             frontend/src-tauri/binaries/ollama-runtime-aarch64-pc-windows-msvc/lib/ollama/llama-server.exe
 

@@ -168,11 +168,11 @@ class TestChannelAgent:
 
         assert len(channel._sent) == 1
         sent_content = channel._sent[0]["content"]
-        assert "openjarvis://research/" not in sent_content
+        assert "aura://research/" not in sent_content
         assert "Here is your answer." in sent_content
 
     def test_deep_query_sends_preview_and_escalation_link(self):
-        """Deep query → preview truncated to 300 chars + openjarvis:// link."""
+        """Deep query → preview truncated to 300 chars + aura:// link."""
         channel = FakeChannel()
         agent = _make_agent("Deep analysis result.")
         ca = ChannelAgent(channel, agent)
@@ -183,7 +183,7 @@ class TestChannelAgent:
 
         assert len(channel._sent) == 1
         sent_content = channel._sent[0]["content"]
-        assert "openjarvis://research/" in sent_content
+        assert "aura://research/" in sent_content
         assert "Full report ready" in sent_content
 
     def test_agent_error_sends_friendly_message(self):
@@ -254,7 +254,7 @@ class TestChannelAgent:
 
         assert len(channel._sent) == 1
         sent_content = channel._sent[0]["content"]
-        assert "openjarvis://research/" in sent_content
+        assert "aura://research/" in sent_content
 
     def test_reply_uses_conversation_id_as_destination_not_channel_type(self):
         """Regression for #459 — Discord (and every per-adapter native API)

@@ -7,10 +7,10 @@ A persistent operative agent that runs on a cron schedule, maintains state acros
 ### 1. Install and initialize
 
 ```bash
-git clone https://github.com/open-jarvis/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/Rohitpvt/AURA-Agentic-AI.git
+cd AURA
 uv sync --extra dev
-jarvis init --preset scheduled-monitor --force
+aura init --preset scheduled-monitor --force
 ```
 
 This writes a pre-configured `~/.openjarvis/config.toml` for the operative agent with scheduling support.
@@ -25,7 +25,7 @@ ollama pull qwen3.5:9b
 ### 3. Index your data
 
 ```bash
-jarvis memory index ~/Documents/
+aura memory index ~/Documents/
 ```
 
 The operative agent uses memory to track state across runs, so indexing your data gives it context for the first run.
@@ -196,6 +196,6 @@ The operative agent differs from other agents in that it maintains state across 
 
 **Agent produces inconsistent results** -- Keep `temperature` at `0.3` or lower for scheduled tasks. Higher temperatures introduce randomness that compounds across runs.
 
-**Memory grows too large** -- Periodically review with `jarvis memory stats`. Clear old entries with `jarvis memory clear --before 2026-01-01` if needed.
+**Memory grows too large** -- Periodically review with `aura memory stats`. Clear old entries with `aura memory clear --before 2026-01-01` if needed.
 
 **Agent runs too long** -- Reduce `max_turns` or simplify the prompt. The operative agent is thorough and may use all available turns.

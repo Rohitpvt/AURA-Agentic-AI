@@ -1,4 +1,4 @@
-"""Command-line interface for OpenJarvis (Click-based)."""
+"""Command-line interface for AURA (Click-based)."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def cli(ctx: click.Context, verbose: bool, quiet: bool, pick_model_bare: bool) -
 
         # Run the PyPI version poll off the hot path: on a cache miss it does
         # a blocking urlopen (up to 3s) that otherwise delays every command,
-        # notably `jarvis serve` startup (#263). It's best-effort and never
+        # notably `aura serve` startup (#263). It's best-effort and never
         # raises, and the nudge prints to stderr, so a daemon thread is safe —
         # for long-lived commands (serve) it finishes; for short commands that
         # exit first, the check is simply skipped this run (same as a miss).

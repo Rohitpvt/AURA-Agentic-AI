@@ -1,4 +1,4 @@
-"""``jarvis gui`` — start and open the local graphical interface."""
+"""``aura gui`` — start and open the local graphical interface."""
 
 from __future__ import annotations
 
@@ -375,7 +375,7 @@ def _check_frontend_port(port: int) -> None:
     held_by = f" It is held by PID {owner}." if owner else ""
     raise click.ClickException(
         f"Frontend port {port} is unavailable and was not started by "
-        f"OpenJarvis.{held_by} Stop it, or choose another port with "
+        f"AURA.{held_by} Stop it, or choose another port with "
         f"--frontend-port."
     )
 
@@ -467,14 +467,14 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
     """Start the browser-based graphical mode in the default browser.
 
     This command is intended for source checkouts. For an installed desktop
-    application, launch OpenJarvis from the operating system menu instead.
+    application, launch AURA from the operating system menu instead.
     """
     console = Console(stderr=True)
     frontend = _frontend_dir()
     if frontend is None:
         raise click.ClickException(
             "The graphical frontend is not available in this installation. "
-            "Download the OpenJarvis desktop app or run this command "
+            "Download the AURA desktop app or run this command "
             "from a source checkout."
         )
     npm = shutil.which("npm") or shutil.which("npm.cmd")
@@ -485,15 +485,15 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
     _check_frontend_port(frontend_port)
     _ensure_frontend_dependencies(frontend, npm)
 
-    # `jarvis start` exits non-zero when a daemon is already registered, so
+    # `aura start` exits non-zero when a daemon is already registered, so
     # without this a perfectly healthy API turned into the misleading "Could
-    # not start the OpenJarvis API server." Adopt it instead.
+    # not start the AURA API server." Adopt it instead.
     if not no_server and _api_healthy(api_port):
         if not _daemon_pid_alive(api_port, require_ready=True):
             raise click.ClickException(
                 f"API port {api_port} is already serving an unregistered service. "
                 "Stop it or choose another port. Use --no-server only when you "
-                "intend to use an externally managed OpenJarvis backend."
+                "intend to use an externally managed AURA backend."
             )
         console.print(
             f"[green]Reusing the API server already running on port {api_port}.[/green]"
@@ -523,13 +523,13 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
             check=False,
         )
         if server.returncode != 0:
-            raise click.ClickException("Could not start the OpenJarvis API server.")
+            raise click.ClickException("Could not start the AURA API server.")
 
     env = os.environ.copy()
     # Let browser requests use Vite's same-origin proxy at any frontend port.
     # VITE_API_URL is exposed to browser code, so clear an inherited override.
     env["VITE_API_URL"] = ""
-    env["OPENJARVIS_VITE_PROXY_TARGET"] = f"http://127.0.0.1:{api_port}"
+    env["AURA_VITE_PROXY_TARGET"] = f"http://127.0.0.1:{api_port}"
     spawn_kwargs = {}
     if sys.platform == "win32":
         spawn_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
@@ -571,7 +571,7 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
             )
         owner.refresh()
         url = f"http://127.0.0.1:{frontend_port}"
-        console.print(f"[green]OpenJarvis graphical mode is ready:[/green] {url}")
+        console.print(f"[green]AURA graphical mode is ready:[/green] {url}")
         if not no_browser:
             webbrowser.open(url)
 
@@ -598,7 +598,7 @@ def gui(frontend_port: int, api_port: int, no_server: bool, no_browser: bool) ->
                 "[red]The API server stopped or failed to start; "
                 "shutting down the frontend.[/red]\n"
                 f"  Check {DEFAULT_CONFIG_DIR / 'server.log'}, "
-                f"then run 'jarvis gui' again."
+                f"then run 'aura gui' again."
             )
             raise SystemExit(1)
     except KeyboardInterrupt:

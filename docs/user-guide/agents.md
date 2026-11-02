@@ -1,6 +1,6 @@
 # Agents
 
-Agents are the agentic logic layer of OpenJarvis. They determine how a query is processed -- whether it goes directly to a model, through a tool-calling loop, via ReAct reasoning, CodeAct code execution, recursive decomposition, or an external agent runtime. All agents implement the `BaseAgent` ABC and are registered via the `AgentRegistry`.
+Agents are the agentic logic layer of AURA. They determine how a query is processed -- whether it goes directly to a model, through a tool-calling loop, via ReAct reasoning, CodeAct code execution, recursive decomposition, or an external agent runtime. All agents implement the `BaseAgent` ABC and are registered via the `AgentRegistry`.
 
 ## Overview
 
@@ -425,7 +425,7 @@ The `ClaudeCodeAgent` wraps the `@anthropic-ai/claude-agent-sdk` package via a b
 | `system_prompt`  | `str`             | `""`                | Additional system prompt for the agent           |
 | `timeout`        | `int`             | `300`               | Subprocess timeout in seconds                    |
 
-**When to use:** For software engineering tasks where the Claude Agent SDK's built-in tools (code editing, bash execution, file operations) provide capabilities beyond what OpenJarvis tool-calling agents support.
+**When to use:** For software engineering tasks where the Claude Agent SDK's built-in tools (code editing, bash execution, file operations) provide capabilities beyond what AURA tool-calling agents support.
 
 ```python
 from openjarvis.agents.claude_code import ClaudeCodeAgent
@@ -447,16 +447,16 @@ jarvis ask --agent claude_code "Refactor the tests to use pytest fixtures"
 ```
 
 !!! info "accepts_tools = False"
-    `ClaudeCodeAgent` does not accept OpenJarvis tools via `--tools`. Tool access for the Claude agent is configured separately via the `allowed_tools` constructor parameter, which passes tool names understood by the Claude Agent SDK itself.
+    `ClaudeCodeAgent` does not accept AURA tools via `--tools`. Tool access for the Claude agent is configured separately via the `allowed_tools` constructor parameter, which passes tool names understood by the Claude Agent SDK itself.
 
 ---
 
 ## OpenCodeAgent
 
-The `OpenCodeAgent` delegates coding tasks to [opencode](https://opencode.ai), the open-source coding agent, running it **on your local engine**. opencode handles the agentic loop, file edits, and tool use; OpenJarvis supplies the model — keeping coding-agent work local-first.
+The `OpenCodeAgent` delegates coding tasks to [opencode](https://opencode.ai), the open-source coding agent, running it **on your local engine**. opencode handles the agentic loop, file edits, and tool use; AURA supplies the model — keeping coding-agent work local-first.
 
 !!! warning "Requirements"
-    Requires the `opencode` binary on `PATH` (`npm i -g opencode-ai` or `brew install anomalyco/tap/opencode`). It is **not** bundled; `run()` returns a clear error if it is missing. No `ANTHROPIC_API_KEY` needed — inference goes through your OpenJarvis engine.
+    Requires the `opencode` binary on `PATH` (`npm i -g opencode-ai` or `brew install anomalyco/tap/opencode`). It is **not** bundled; `run()` returns a clear error if it is missing. No `ANTHROPIC_API_KEY` needed — inference goes through your AURA engine.
 
 **How it works:**
 
@@ -663,7 +663,7 @@ from openjarvis.sandbox import ContainerRunner, SandboxedAgent
 from openjarvis.agents.simple import SimpleAgent
 
 runner = ContainerRunner(
-    image="openjarvis-sandbox:latest",
+    image="aura-sandbox:latest",
     timeout=60,
     mount_allowlist_path="/etc/openjarvis/mount_allowlist.json",
 )
@@ -686,7 +686,7 @@ result = agent.run("Summarize the CSV files in /home/user/data")
 
 | Parameter              | Type   | Default                      | Description                                    |
 |------------------------|--------|------------------------------|------------------------------------------------|
-| `image`                | `str`  | `"openjarvis-sandbox:latest"`| Docker image to run                            |
+| `image`                | `str`  | `"aura-sandbox:latest"`| Docker image to run                            |
 | `timeout`              | `int`  | `300`                        | Max container execution time in seconds        |
 | `mount_allowlist_path` | `str`  | `""`                         | Path to JSON mount-allowlist file              |
 | `max_concurrent`       | `int`  | `5`                          | Max concurrent containers (informational)      |

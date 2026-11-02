@@ -1334,7 +1334,7 @@ def include_all_routes(app) -> None:
     # WebSocket bridge for real-time agent events. Must subscribe on the
     # same EventBus instance channels/agents actually publish to
     # (app.state.bus, set in server/app.py) — the get_event_bus() global
-    # singleton is a *different* bus that nothing in `jarvis serve` ever
+    # singleton is a *different* bus that nothing in `aura serve` ever
     # publishes to, so events silently never reached this endpoint.
     try:
         from openjarvis.core.events import get_event_bus

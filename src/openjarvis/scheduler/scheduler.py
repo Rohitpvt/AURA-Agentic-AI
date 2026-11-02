@@ -321,7 +321,7 @@ class TaskScheduler:
             from croniter import croniter  # type: ignore[import-untyped]
         except ImportError as exc:
             raise RuntimeError(
-                "croniter is required for cron schedules; reinstall OpenJarvis"
+                "croniter is required for cron schedules; reinstall AURA"
             ) from exc
 
         if now.tzinfo is None:

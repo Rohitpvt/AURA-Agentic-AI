@@ -1473,7 +1473,7 @@ Create `docs/user-guide/mining-apple-silicon.md`:
 ````markdown
 # Mining Pearl on Apple Silicon (and other CPU hosts)
 
-OpenJarvis can mine the [Pearl](https://github.com/pearl-research-labs/pearl) chain
+AURA can mine the [Pearl](https://github.com/pearl-research-labs/pearl) chain
 on Apple Silicon Macs (M1/M2/M3/M4) using the `cpu-pearl` provider. **This is
 v1**: decoupled CPU mining. Your existing local LLM workflow (Ollama, MLX-LM,
 llama.cpp, vLLM) is untouched; mining runs in the background as a separate
@@ -1508,7 +1508,7 @@ plugin. v3 may add a native Metal kernel. **Neither is shipped today.**
 ## Install
 
 ```bash
-# from your OpenJarvis repo
+# from your AURA repo
 uv sync --extra mining-pearl-cpu
 ```
 
@@ -1599,7 +1599,7 @@ Session
 | `maturin build` complains about `tikv-jemallocator` | macOS SDK too old | Update macOS / Xcode |
 
 For anything not on this list, capture `~/.openjarvis/logs/mining/` and open
-an issue at https://github.com/open-jarvis/OpenJarvis/issues.
+an issue at https://github.com/Rohitpvt/AURA-Agentic-AI/issues.
 
 ## What changes in v2 / v3
 

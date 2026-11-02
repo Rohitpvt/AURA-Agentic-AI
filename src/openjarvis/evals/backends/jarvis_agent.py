@@ -78,7 +78,7 @@ class JarvisAgentBackend(InferenceBackend):
 
     @property
     def framework_commit_value(self) -> str:
-        """OpenJarvis repo HEAD commit (for telemetry tagging)."""
+        """AURA repo HEAD commit (for telemetry tagging)."""
         from openjarvis.evals.backends._commit_util import openjarvis_commit
 
         return openjarvis_commit()

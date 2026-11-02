@@ -1,7 +1,7 @@
 # Hybrid local+cloud paradigm agents
 
 Six paradigms ported from the original ``hybrid-local-cloud-compute``
-harness — each is registered as a standard OpenJarvis agent so the rest
+harness — each is registered as a standard AURA agent so the rest
 of the platform (SDK, CLI, distillation, evals) can use them like any
 other agent. Results live under ``$OPENJARVIS_HYBRID_EXPERIMENTS_DIR``
 (defaults to ``~/.openjarvis/experiments/hybrid/``).
@@ -15,7 +15,7 @@ other agent. Results live under ``$OPENJARVIS_HYBRID_EXPERIMENTS_DIR``
 | `skillorchestra`  | per-query pick  | (paper: profiler)    | 1 local + 1 cloud         |
 | `toolorchestra`   | reactive loop   | (paper: 8B RL)       | local + tools + LLM pool  |
 
-Items in parentheses are what the *paper* trains. These OpenJarvis ports
+Items in parentheses are what the *paper* trains. These AURA ports
 are **inference-only** — none modify weights. The trained variants (advisor
 RL, Orchestrator-8B, SkillOrchestra learn-phase) stay TODOs; the prompted
 lower-bounds get you 80-90% of the headline accuracy at zero training cost.
@@ -46,7 +46,7 @@ structural scorer).
 ## Quickstart
 
 ```bash
-cd OpenJarvis
+cd AURA
 source .env                                           # API keys
 
 # 1. Start vLLM in another shell (see your local launch recipe)
@@ -96,6 +96,6 @@ GAIA val n=165, SWE-bench-Verified n=500. Local = Qwen-3.5-27B-FP8, cloud
 
 Cell configs in `registry/` are copies of the hybrid harness's
 `experiments/registry/` — same models, same N, same `method_cfg` — so
-these OpenJarvis cells should reproduce the harness numbers within
+these AURA cells should reproduce the harness numbers within
 noise. Until that's validated, the harness stays the authoritative
 reference.

@@ -1,6 +1,6 @@
 # Docker Deployment
 
-OpenJarvis provides Docker images for both CPU-only and GPU-accelerated deployments, along with a Docker Compose configuration that bundles the API server with an Ollama inference backend.
+AURA provides Docker images for both CPU-only and GPU-accelerated deployments, along with a Docker Compose configuration that bundles the API server with an Ollama inference backend.
 
 ## Quick Start
 
@@ -10,7 +10,7 @@ refuses to start on a non-loopback address without one. Set it first:
 ```bash
 cd deploy/docker
 cp .env.example .env
-echo "OPENJARVIS_API_KEY=$(jarvis auth generate-key)" > .env   # or paste your own
+echo "AURA_API_KEY=$(jarvis auth generate-key)" > .env   # or paste your own
 ```
 
 Then start both the API server and an Ollama backend with Docker Compose:
@@ -19,7 +19,7 @@ Then start both the API server and an Ollama backend with Docker Compose:
 docker compose up -d
 ```
 
-`docker compose` reads `OPENJARVIS_API_KEY` from `.env` (or your shell
+`docker compose` reads `AURA_API_KEY` from `.env` (or your shell
 environment) and fails fast if it is unset. Clients must then send
 `Authorization: Bearer <key>` on `/v1/*` and `/api/*` requests.
 
@@ -27,7 +27,7 @@ This brings up two services:
 
 | Service  | Port  | Description                        |
 |----------|-------|------------------------------------|
-| `jarvis` | 8000  | OpenJarvis API server              |
+| `jarvis` | 8000  | AURA API server              |
 | `ollama` | 11434 | Ollama inference engine            |
 
 Verify the server is running:
@@ -138,7 +138,7 @@ docker run -d --gpus all -p 8000:8000 openjarvis:gpu
 
 ## Docker Compose Configuration
 
-The `docker-compose.yml` defines a complete deployment with the OpenJarvis API server and an Ollama backend:
+The `docker-compose.yml` defines a complete deployment with the AURA API server and an Ollama backend:
 
 ```yaml
 version: "3.9"
@@ -212,7 +212,7 @@ services:
 
 ### Persisting Data
 
-To persist telemetry data, memory databases, and trace records across container restarts, mount the entire OpenJarvis data directory:
+To persist telemetry data, memory databases, and trace records across container restarts, mount the entire AURA data directory:
 
 ```yaml
 services:
@@ -325,7 +325,7 @@ services:
       - "9000:9000"
 ```
 
-### Available CLI Options for `jarvis serve`
+### Available CLI Options for `aura serve`
 
 | Option               | Description                                         |
 |----------------------|-----------------------------------------------------|

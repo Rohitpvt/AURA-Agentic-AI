@@ -1,6 +1,6 @@
 # Scheduled Personal Ops
 
-This tutorial demonstrates how to use OpenJarvis to run **autonomous scheduled agents** that perform recurring personal tasks on a cron-like schedule.
+This tutorial demonstrates how to use AURA to run **autonomous scheduled agents** that perform recurring personal tasks on a cron-like schedule.
 
 ## What This Demonstrates
 
@@ -125,5 +125,5 @@ See `jarvis channel list` for all available channels.
 - **Review window**: Use `--days 14` with `code_review.py` for a two-week review cycle.
 - **Different agents**: Swap `orchestrator` for `native_react` (or vice versa) in the scripts to compare agent behavior.
 - **Add tools**: Extend the `tools` list in any script (e.g., add `"calculator"` or `"file_write"` for saving reports to disk).
-- **Model selection**: Use `--model` to target a specific model, or let OpenJarvis auto-select from what is available.
+- **Model selection**: Use `--model` to target a specific model, or let AURA auto-select from what is available.
 - **Cron expressions**: Standard five-field cron syntax is supported. Install `croniter` for full expression parsing; without it, basic hour/minute patterns still work.

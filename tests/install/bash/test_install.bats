@@ -243,7 +243,7 @@ IDEOF
     [ -f "$OPENJARVIS_HOME/.state/install-state.json" ]
 }
 
-@test "calls git clone for the OpenJarvis repo" {
+@test "calls git clone for the AURA repo" {
     run bash "$SCRIPT" --no-bg-orchestrator
     grep -q "clone" "$GIT_STUB_LOG"
 }

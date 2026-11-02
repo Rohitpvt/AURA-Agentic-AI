@@ -35,7 +35,7 @@ SCORE_THRESHOLD = twitter_bot.SCORE_THRESHOLD
 MENTION = {
     "id": "3000000000000000001",
     "author": "indie_hacker",
-    "text": "@OpenJarvisAI can I run the orchestrator agent on a laptop without a gpu?",
+    "text": "@AURAAI can I run the orchestrator agent on a laptop without a gpu?",
 }
 
 

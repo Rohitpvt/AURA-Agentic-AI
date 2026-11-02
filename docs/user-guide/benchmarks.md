@@ -4,7 +4,7 @@ The benchmarking framework measures inference engine performance with reproducib
 
 ## Overview
 
-OpenJarvis ships with two benchmarks:
+AURA ships with two benchmarks:
 
 | Benchmark     | Registry Key   | Measures                                      |
 |---------------|----------------|-----------------------------------------------|

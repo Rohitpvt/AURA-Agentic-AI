@@ -1,4 +1,4 @@
-"""High-level Python SDK for OpenJarvis."""
+"""High-level Python SDK for AURA."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ class MemoryHandle:
 
 
 class Jarvis:
-    """High-level OpenJarvis SDK.
+    """High-level AURA SDK.
 
     Usage::
 
@@ -191,7 +191,7 @@ class Jarvis:
 
     @property
     def version(self) -> str:
-        """Return the OpenJarvis version string."""
+        """Return the AURA version string."""
         return openjarvis.__version__
 
     def _ensure_engine(self) -> None:

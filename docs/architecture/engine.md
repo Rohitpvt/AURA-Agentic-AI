@@ -1,6 +1,6 @@
 # Inference Engine Primitive
 
-The Engine primitive provides the **inference runtime** -- the layer that connects OpenJarvis to language model servers. All backends implement a uniform interface, making it straightforward to swap between local and cloud inference without changing application code.
+The Engine primitive provides the **inference runtime** -- the layer that connects AURA to language model servers. All backends implement a uniform interface, making it straightforward to swap between local and cloud inference without changing application code.
 
 ---
 
@@ -267,7 +267,7 @@ The LiteLLM backend connects to a LiteLLM proxy server, which provides a unified
 
 ## Hardware Auto-Detection
 
-OpenJarvis automatically detects system hardware to recommend the best engine. Detection runs at config load time via `detect_hardware()`:
+AURA automatically detects system hardware to recommend the best engine. Detection runs at config load time via `detect_hardware()`:
 
 | Detection | Method | Information Extracted |
 |-----------|--------|---------------------|

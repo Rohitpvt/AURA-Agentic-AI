@@ -1,10 +1,10 @@
 # Use-Case Benchmark Suite
-# Evaluates OpenJarvis on 5 practical use cases:
+# Evaluates AURA on 5 practical use cases:
 # email triage, morning briefs, research, knowledge base QA, coding tasks.
 
 [meta]
 name = "use-case-suite"
-description = "Top 5 use-case benchmarks for OpenJarvis product demo"
+description = "Top 5 use-case benchmarks for AURA product demo"
 
 [defaults]
 temperature = 0.0

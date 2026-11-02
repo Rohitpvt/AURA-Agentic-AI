@@ -1,4 +1,4 @@
-"""``jarvis doctor`` — run diagnostic checks on the OpenJarvis installation."""
+"""``aura doctor`` — run diagnostic checks on the AURA installation."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def _check_config_exists() -> CheckResult:
         "Config file",
         "warn",
         f"Not found at {DEFAULT_CONFIG_PATH}",
-        details="Run `jarvis init` to generate a config file.",
+        details="Run `aura init` to generate a config file.",
     )
 
 
@@ -392,7 +392,7 @@ def _results_to_dicts(checks: List[CheckResult]) -> List[Dict[str, Any]]:
 @click.command()
 @click.option("--json", "as_json", is_flag=True, help="Output results as JSON.")
 def doctor(as_json: bool) -> None:
-    """Run diagnostic checks on your OpenJarvis installation."""
+    """Run diagnostic checks on your AURA installation."""
     checks = _run_all_checks()
 
     if as_json:

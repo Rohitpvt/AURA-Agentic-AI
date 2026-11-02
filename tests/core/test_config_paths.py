@@ -1,4 +1,4 @@
-"""Tests for the env-aware OpenJarvis home-directory resolver (issue #462).
+"""Tests for the env-aware AURA home-directory resolver (issue #462).
 
 Covers the single-root consolidation: ``$OPENJARVIS_HOME`` >
 ``$XDG_DATA_HOME/openjarvis`` > ``~/.openjarvis``, backward compatibility

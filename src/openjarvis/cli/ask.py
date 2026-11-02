@@ -35,7 +35,7 @@ from openjarvis.telemetry.store import TelemetryStore
 logger = logging.getLogger(__name__)
 
 # Engines that run inference on this machine. Used by the image privacy guard
-# below: a screenshot is sensitive and OpenJarvis is local-first, so sending
+# below: a screenshot is sensitive and AURA is local-first, so sending
 # one to a non-local engine warrants a warning first. Module-level so it can be
 # asserted against directly -- an engine missing from here produces a false
 # "your image is leaving this machine" warning.
@@ -939,7 +939,7 @@ def ask(
             "  [cyan]llama-server -m <gguf>[/cyan] — start llama.cpp\n\n"
             "Or set OPENAI_API_KEY / ANTHROPIC_API_KEY for cloud inference.\n\n"
             "[dim]To use a remote engine:[/dim]\n"
-            "  [cyan]jarvis config set engine.ollama.host http://<remote-ip>:11434[/cyan]\n"
+            "  [cyan]aura config set engine.ollama.host http://<remote-ip>:11434[/cyan]\n"
             "  [dim]or[/dim] [cyan]export OLLAMA_HOST=http://<remote-ip>:11434[/cyan]"
         )
         sys.exit(1)

@@ -1,4 +1,4 @@
-"""Tests for ToolTranslator — translate external tool names to OpenJarvis."""
+"""Tests for ToolTranslator — translate external tool names to AURA."""
 
 from __future__ import annotations
 

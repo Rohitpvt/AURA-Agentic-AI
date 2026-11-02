@@ -200,7 +200,7 @@ class SkillParser:
                 )
 
         # Merge metadata.openjarvis.* into canonical fields (these override
-        # top-level mappings since they are explicit OpenJarvis-namespaced).
+        # top-level mappings since they are explicit AURA-namespaced).
         for key in (
             "version",
             "author",

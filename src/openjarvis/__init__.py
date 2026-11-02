@@ -1,4 +1,4 @@
-"""OpenJarvis — modular AI assistant backend with composable intelligence primitives."""
+"""AURA — modular AI assistant backend with composable intelligence primitives."""
 
 from __future__ import annotations
 

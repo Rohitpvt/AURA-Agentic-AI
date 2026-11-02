@@ -368,7 +368,7 @@ result = agent.run("Fix the failing test in test_utils.py")
 
 **Registry key:** `claude_code`
 
-Wraps the `@anthropic-ai/claude-agent-sdk` package via a bundled Node.js subprocess bridge. Unlike every other agent, inference is handled entirely by the Claude Agent SDK -- the OpenJarvis inference engine is not used. This makes `ClaudeCodeAgent` a true external agent, similar in spirit to `OpenHandsAgent` but implemented via subprocess rather than an importable Python SDK.
+Wraps the `@anthropic-ai/claude-agent-sdk` package via a bundled Node.js subprocess bridge. Unlike every other agent, inference is handled entirely by the Claude Agent SDK -- the AURA inference engine is not used. This makes `ClaudeCodeAgent` a true external agent, similar in spirit to `OpenHandsAgent` but implemented via subprocess rather than an importable Python SDK.
 
 ```mermaid
 graph LR
@@ -428,7 +428,7 @@ graph LR
 - Sends a JSON payload to container stdin (prompt, agent ID, model, and optional secrets)
 - Reads stdout and parses sentinel-delimited JSON output
 - On timeout, force-kills the container via `docker rm -f`
-- `cleanup_orphans()` removes any stale containers labelled `openjarvis-sandbox=true`
+- `cleanup_orphans()` removes any stale containers labelled `aura-sandbox=true`
 
 **Mount security** (`sandbox/mount_security.py`) enforces two independent checks on every mount path:
 
@@ -439,7 +439,7 @@ graph LR
 from openjarvis.sandbox import ContainerRunner, SandboxedAgent
 
 runner = ContainerRunner(
-    image="openjarvis-sandbox:latest",
+    image="aura-sandbox:latest",
     timeout=60,
     runtime="docker",
 )

@@ -31,7 +31,7 @@ against MLX or Ollama:
   label only — :meth:`AppleFMEngine.describe` records the SDK version, context
   size and host chip so a run can be attributed after the fact.
 * There is no Private Cloud Compute path in the Python SDK, which suits
-  OpenJarvis: off-device inference would make the on-device energy
+  AURA: off-device inference would make the on-device energy
   measurement meaningless.
 """
 

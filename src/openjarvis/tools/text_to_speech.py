@@ -65,7 +65,7 @@ class TextToSpeechTool(BaseTool):
         backend_key = params.get("backend", "")
 
         # Fall back to the configured speech voice so the agent-facing tool
-        # speaks in the same voice as `jarvis chat --voice` instead of the
+        # speaks in the same voice as `aura chat --voice` instead of the
         # backend default. Explicit params always win.
         if not voice_id or not backend_key:
             try:

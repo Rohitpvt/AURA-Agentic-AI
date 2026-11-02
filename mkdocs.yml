@@ -141,7 +141,7 @@ extra:
     index_name: ""   # e.g. "openjarvis"
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/open-jarvis/OpenJarvis
+      link: https://github.com/Rohitpvt/AURA-Agentic-AI
 
 nav:
   - Home: index.md

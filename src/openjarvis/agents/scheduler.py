@@ -33,7 +33,7 @@ def _next_cron_fire(
         from croniter import croniter
     except ImportError as exc:
         raise RuntimeError(
-            "croniter is required for cron schedules; reinstall OpenJarvis"
+            "croniter is required for cron schedules; reinstall AURA"
         ) from exc
 
     base = time.time() if now is None else now

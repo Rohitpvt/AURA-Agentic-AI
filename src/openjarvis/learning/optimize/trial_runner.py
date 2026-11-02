@@ -275,7 +275,7 @@ class MultiBenchTrialRunner:
             "dataset_version": "0.1.1",
             "model_name": litellm_model,
             "agent_import_path": (
-                "openjarvis.evals.backends.tb_agent:OpenJarvisTerminalBenchAgent"
+                "openjarvis.evals.backends.tb_agent:AURATerminalBenchAgent"
             ),
             "agent_kwargs": {
                 "model_name": litellm_model,

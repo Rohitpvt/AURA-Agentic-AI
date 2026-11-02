@@ -60,7 +60,7 @@ def test_events_to_transcript_tool_call_pair():
 
 
 def test_events_to_transcript_tool_name_mapping():
-    """OpenJarvis tool names are mapped to PinchBench-expected names."""
+    """AURA tool names are mapped to PinchBench-expected names."""
     from openjarvis.evals.scorers.pinchbench import events_to_transcript
 
     events = [

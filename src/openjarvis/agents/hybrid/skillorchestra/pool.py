@@ -3,7 +3,7 @@
 The original SkillOrchestra (``config/models.py`` + ``config/pool_config.json``)
 maps stage aliases — ``search-1/2/3``, ``reasoner-1/2/3``,
 ``answer-1/2/3/4``, ``answer-math-1/2`` — onto a pool of 6+ models served
-via SGLang. OpenJarvis runs a 2-model world (one local vLLM student + one
+via SGLang. AURA runs a 2-model world (one local vLLM student + one
 cloud model), so the default pool *collapses* the alias tiers onto
 local/cloud by cost rank: the dearer ``-1`` / ``-2`` aliases (and
 ``answer-math-1``) route to the cloud model, the cheaper ``-3`` / ``-4``

@@ -1,4 +1,4 @@
-"""Check for newer OpenJarvis releases on PyPI."""
+"""Check for newer AURA releases on PyPI."""
 
 from __future__ import annotations
 
@@ -138,7 +138,7 @@ def _do_check() -> None:
                 "" if cmd == "jarvis self-update" else "Or run: jarvis self-update\n"
             )
             sys.stderr.write(
-                f"\033[33mA new version of OpenJarvis is available "
+                f"\033[33mA new version of AURA is available "
                 f"(v{current} → v{latest})\n"
                 f"Update: {cmd}\n"
                 f"{alternative}\033[0m\n"

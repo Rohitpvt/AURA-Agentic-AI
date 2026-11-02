@@ -1,4 +1,4 @@
-"""Benchmarking framework for OpenJarvis inference engines."""
+"""Benchmarking framework for AURA inference engines."""
 
 from __future__ import annotations
 

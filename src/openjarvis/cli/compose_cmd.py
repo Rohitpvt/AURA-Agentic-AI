@@ -12,7 +12,7 @@ from rich.table import Table
 
 @click.group()
 def compose() -> None:
-    """Compose, run, benchmark, and deploy OpenJarvis configurations.
+    """Compose, run, benchmark, and deploy AURA configurations.
 
     Recipes are unified TOML configs that wire all five primitives
     (Intelligence, Engine, Agent, Tools, Learning).  They come in two

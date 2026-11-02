@@ -1,4 +1,4 @@
-//! OpenJarvis Skills — skill manifests, execution results, and signature verification.
+//! AURA Skills — skill manifests, execution results, and signature verification.
 
 use ed25519_dalek::{Signature, VerifyingKey};
 use serde::{Deserialize, Serialize};

@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.88"
 publish = false
 
-# An isolated handoff example: no changes to the OpenJarvis runtime or workspace.
+# An isolated handoff example: no changes to the AURA runtime or workspace.
 [workspace]
 
 [dependencies]

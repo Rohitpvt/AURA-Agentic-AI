@@ -28,7 +28,7 @@ _LOCK = threading.RLock()
 
 
 def _default_path() -> Path:
-    """Resolve the credentials file under the OpenJarvis root (env-aware)."""
+    """Resolve the credentials file under the AURA root (env-aware)."""
     return get_config_dir() / "credentials.toml"
 
 
@@ -74,7 +74,7 @@ TOOL_CREDENTIALS: dict[str, list[str]] = {
 
 # Keys that unlock or upgrade a tool but are not prerequisites for it. Every
 # key in TOOL_CREDENTIALS is otherwise treated as required — by the Settings UI,
-# by ``jarvis doctor``, and by anything else reading credential status — which
+# by ``aura doctor``, and by anything else reading credential status — which
 # leaves no way to describe a tool that also works without one. ``web_search``
 # is the first such tool: the You.com keyless tier serves it with no key at all,
 # and every listed key only raises limits, changes the engine, or improves

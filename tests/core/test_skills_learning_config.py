@@ -13,7 +13,7 @@ class TestSkillsLearningConfig:
         assert cfg.optimizer == "dspy"
         assert cfg.min_traces_per_skill == 20
         assert cfg.optimization_interval_seconds == 86400
-        # overlay_dir now resolves under the env-aware OpenJarvis root (#462),
+        # overlay_dir now resolves under the env-aware AURA root (#462),
         # defaulting to <home>/learning/skills instead of the old literal.
         assert cfg.overlay_dir == str(get_config_dir() / "learning" / "skills")
 

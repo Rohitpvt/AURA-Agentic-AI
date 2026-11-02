@@ -1,21 +1,21 @@
 # CLI Reference
 
-OpenJarvis provides a command-line interface through the `jarvis` command. Built on [Click](https://click.palletsprojects.com/), it offers subcommands for querying models, managing memory, running benchmarks, and serving an OpenAI-compatible API.
+AURA provides a command-line interface through the `jarvis` command. Built on [Click](https://click.palletsprojects.com/), it offers subcommands for querying models, managing memory, running benchmarks, and serving an OpenAI-compatible API.
 
 ## Global Options
 
 ```bash
-jarvis --version   # Print the OpenJarvis version
+jarvis --version   # Print the AURA version
 jarvis --help      # Show top-level help with all subcommands
 ```
 
-## `jarvis init`
+## `aura init`
 
 Detect local hardware (CPU, GPU, RAM) and generate a configuration file at `~/.openjarvis/config.toml`.
 
 ```bash
-jarvis init           # Interactive — refuses to overwrite existing config
-jarvis init --force   # Overwrite existing config without prompting
+aura init           # Interactive — refuses to overwrite existing config
+aura init --force   # Overwrite existing config without prompting
 ```
 
 | Option    | Description                                   |
@@ -145,7 +145,7 @@ JARVIS_NUM_CTX=8192 jarvis ask --screen "What's on my screen?"
 ```
 
 !!! note "Keep vision on-device"
-    Images are sensitive. OpenJarvis prints a privacy warning before sending
+    Images are sensitive. AURA prints a privacy warning before sending
     an image to a non-local engine, so a screenshot never leaves your machine
     unnoticed. Use a local engine (e.g. `ollama` with `gemma3:4b`) to keep
     vision fully local.
@@ -246,7 +246,7 @@ jarvis model pull qwen3:8b
 
 ## `jarvis pearl`
 
-Access Pearl's native node, wallet, and RPC tools from the OpenJarvis CLI.
+Access Pearl's native node, wallet, and RPC tools from the AURA CLI.
 
 ```bash
 jarvis pearl doctor
@@ -259,7 +259,7 @@ jarvis pearl address
 All Pearl wrapper commands use the `jarvis pearl <command>` shape. The
 pass-through commands map to Pearl's native binaries:
 
-| OpenJarvis command | Pearl binary | Use |
+| AURA command | Pearl binary | Use |
 |--------------------|--------------|-----|
 | `jarvis pearl doctor` | n/a | Check whether `pearld`, `oyster`, and `prlctl` are discoverable |
 | `jarvis pearl node` | `pearld` | Run the Pearl full node |
@@ -273,19 +273,19 @@ examples.
 
 ---
 
-## `jarvis memory`
+## `aura memory`
 
 Manage the document memory store for retrieval-augmented generation.
 
-### `jarvis memory index <path>`
+### `aura memory index <path>`
 
 Index documents from a file or directory into the memory store.
 
 ```bash
-jarvis memory index ./docs/
-jarvis memory index ./notes.md
-jarvis memory index ./data/ --chunk-size 256 --chunk-overlap 32
-jarvis memory index ./docs/ --backend sqlite
+aura memory index ./docs/
+aura memory index ./notes.md
+aura memory index ./data/ --chunk-size 256 --chunk-overlap 32
+aura memory index ./docs/ --backend sqlite
 ```
 
 | Option                      | Type   | Default | Description                          |
@@ -296,14 +296,14 @@ jarvis memory index ./docs/ --backend sqlite
 
 The ingestion pipeline supports text, markdown, code files, and PDF (with `pdfplumber` installed). Binary files and hidden directories are automatically skipped.
 
-### `jarvis memory search <query>`
+### `aura memory search <query>`
 
 Search the memory store for relevant document chunks.
 
 ```bash
-jarvis memory search "machine learning basics"
-jarvis memory search -k 10 "neural networks"
-jarvis memory search --backend faiss "embeddings"
+aura memory search "machine learning basics"
+aura memory search -k 10 "neural networks"
+aura memory search --backend faiss "embeddings"
 ```
 
 | Option             | Type   | Default | Description                          |
@@ -313,13 +313,13 @@ jarvis memory search --backend faiss "embeddings"
 
 Results are displayed in a table with rank, score, source file, and a content preview.
 
-### `jarvis memory stats`
+### `aura memory stats`
 
 Show memory store statistics including document count and database size.
 
 ```bash
-jarvis memory stats
-jarvis memory stats --backend sqlite
+aura memory stats
+aura memory stats --backend sqlite
 ```
 
 | Option             | Type   | Default | Description                          |
@@ -451,16 +451,16 @@ jarvis channel status
 
 ---
 
-## `jarvis serve`
+## `aura serve`
 
 Start an OpenAI-compatible API server.
 
 ```bash
-jarvis serve                                 # Default host/port from config
-jarvis serve --port 8000                     # Custom port
-jarvis serve --host 0.0.0.0 --port 9000      # Bind to all interfaces
-jarvis serve --model qwen3:8b                # Specify default model
-jarvis serve --agent orchestrator            # Route requests through an agent
+aura serve                                 # Default host/port from config
+aura serve --port 8000                     # Custom port
+aura serve --host 0.0.0.0 --port 9000      # Bind to all interfaces
+aura serve --model qwen3:8b                # Specify default model
+aura serve --agent orchestrator            # Route requests through an agent
 ```
 
 | Option                   | Type   | Default | Description                              |

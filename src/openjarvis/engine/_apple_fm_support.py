@@ -2,7 +2,7 @@
 
 Deliberately free of any ``apple_fm_sdk`` import so this logic stays testable
 on CI runners that cannot install the SDK — it builds Swift bindings and needs
-a full Xcode on an Apple Silicon Mac, and OpenJarvis has no macOS runner.
+a full Xcode on an Apple Silicon Mac, and AURA has no macOS runner.
 
 Ported from IPW's ``ipw/clients/_afm_support.py``.
 """
@@ -99,10 +99,10 @@ def snapshot_deltas(snapshots: Sequence[Any]) -> List[str]:
 
 
 def build_options_kwargs(params: Mapping[str, Any]) -> Dict[str, Any]:
-    """Map OpenJarvis params onto ``fm.GenerationOptions`` fields.
+    """Map AURA params onto ``fm.GenerationOptions`` fields.
 
     Only non-``None`` values are returned so the SDK's own defaults apply for
-    anything the caller did not set. ``max_tokens`` is OpenJarvis's
+    anything the caller did not set. ``max_tokens`` is AURA's
     cross-backend name for what the SDK calls ``maximum_response_tokens``.
     """
     options: Dict[str, Any] = {}

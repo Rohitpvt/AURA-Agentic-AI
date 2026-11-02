@@ -4,7 +4,7 @@
 
 use crate::traits::OjAgent;
 use crate::utils::strip_think_tags;
-use openjarvis_core::{AgentContext, AgentResult, OpenJarvisError};
+use openjarvis_core::{AgentContext, AgentResult, AURAError};
 use rig::agent::AgentBuilder;
 use rig::completion::request::{Chat, CompletionModel};
 use std::collections::HashMap;
@@ -38,7 +38,7 @@ impl<M: CompletionModel + 'static> OjAgent for SimpleAgent<M> {
         &self,
         input: &str,
         context: Option<&AgentContext>,
-    ) -> Result<AgentResult, OpenJarvisError> {
+    ) -> Result<AgentResult, AURAError> {
         let history: Vec<rig::completion::message::Message> = context
             .map(|ctx| {
                 ctx.conversation
@@ -62,7 +62,7 @@ impl<M: CompletionModel + 'static> OjAgent for SimpleAgent<M> {
             .chat(input, history)
             .await
             .map_err(|e| {
-                OpenJarvisError::Agent(openjarvis_core::error::AgentError::Execution(
+                AURAError::Agent(openjarvis_core::error::AgentError::Execution(
                     e.to_string(),
                 ))
             })?;

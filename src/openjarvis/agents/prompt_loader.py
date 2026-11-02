@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def _openjarvis_home() -> Path:
-    """Resolve the OpenJarvis root, honoring OPENJARVIS_HOME / XDG_DATA_HOME."""
+    """Resolve the AURA root, honoring OPENJARVIS_HOME / XDG_DATA_HOME."""
     return get_config_dir()
 
 

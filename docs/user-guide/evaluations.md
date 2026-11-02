@@ -1,9 +1,9 @@
 # Evaluations
 
-The OpenJarvis evaluation framework (`openjarvis.evals`) measures model **correctness and accuracy** on academic datasets. It ships inside the main `openjarvis` package (at `src/openjarvis/evals/`) and is designed specifically for research workflows where you need reproducible, dataset-driven quality assessments.
+The AURA evaluation framework (`openjarvis.evals`) measures model **correctness and accuracy** on academic datasets. It ships inside the main `openjarvis` package (at `src/openjarvis/evals/`) and is designed specifically for research workflows where you need reproducible, dataset-driven quality assessments.
 
 !!! info "Evals vs. Benchmarks"
-    OpenJarvis has two distinct measurement systems that complement each other:
+    AURA has two distinct measurement systems that complement each other:
 
     | System | Module | Measures | Entry Point |
     |--------|--------|----------|-------------|
@@ -38,7 +38,7 @@ package. Install the pinned revision explicitly before running that benchmark:
 uv pip install "tau2 @ git+https://github.com/sierra-research/tau2-bench.git@fc0055dc4e0a316c3f83133267fbd6faaa770992"
 ```
 
-OpenJarvis does not install third-party packages automatically when an
+AURA does not install third-party packages automatically when an
 evaluation is imported or run.
 
 !!! note "Python version requirement"
@@ -63,7 +63,7 @@ The framework ships with **40 registered benchmarks** covering academic reasonin
 
 ### Use-Case Benchmarks
 
-These benchmarks evaluate models on practical tasks that mirror real OpenJarvis use cases.
+These benchmarks evaluate models on practical tasks that mirror real AURA use cases.
 
 | Dataset | Key | Description |
 |---------|-----|-------------|
@@ -349,7 +349,7 @@ uv run jarvis eval report results/supergpqa_qwen3-8b.jsonl
 
 ## Evaluating an Already-Running Endpoint
 
-If you already have an OpenAI-compatible server running — `jarvis serve`, vLLM, SGLang, llama.cpp's server, or a hosted endpoint — point an eval directly at it with `--base-url` and `--api-key`:
+If you already have an OpenAI-compatible server running — `aura serve`, vLLM, SGLang, llama.cpp's server, or a hosted endpoint — point an eval directly at it with `--base-url` and `--api-key`:
 
 ```bash
 # A vLLM server is already serving Qwen/Qwen3-8B on a GPU node:
@@ -807,4 +807,4 @@ uv run python -m openjarvis.evals run -b supergpqa -m qwen3:8b -w 8 -n 500
 - [Telemetry & Traces](telemetry.md) — Record and analyze inference metrics from production use
 - [Agents](agents.md) — Configure the `OrchestratorAgent` used by `jarvis-agent` backend
 - [Tools](tools.md) — Available tools for agent-backed evaluations
-- [Python SDK](python-sdk.md) — Programmatic access to OpenJarvis inference and agents
+- [Python SDK](python-sdk.md) — Programmatic access to AURA inference and agents

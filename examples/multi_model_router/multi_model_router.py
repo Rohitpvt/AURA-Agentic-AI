@@ -20,7 +20,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Route queries to the cheapest capable model "
-            "using OpenJarvis learning/routing."
+            "using AURA learning/routing."
         ),
     )
     parser.add_argument(

@@ -1,6 +1,6 @@
 # Telemetry
 
-OpenJarvis offers **optional external usage analytics** so the team can
+AURA offers **optional external usage analytics** so the team can
 see where the product breaks, what features people actually use, and
 how to make it better. This page documents exactly what is and isn't
 collected, where the data goes, and how to enable or disable it.
@@ -8,7 +8,7 @@ collected, where the data goes, and how to enable or disable it.
 ## TL;DR
 
 - **Off until you choose to share.** In an interactive Bash installation or
-  `jarvis init`, the dedicated prompt says: **Press Enter or Y to consent,
+  `aura init`, the dedicated prompt says: **Press Enter or Y to consent,
   or N to decline**. Enter at that prompt enables sharing; EOF, cancellation,
   or an unattended run does not.
 - **Installation ID** — one random UUID links install and usage events.
@@ -30,17 +30,17 @@ For unattended installs, consent explicitly with `--analytics` or decline with
 `--no-analytics`:
 
 ```bash
-curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash -s -- --analytics
+curl -fsSL https://github.com/Rohitpvt/AURA-Agentic-AIinstall.sh | bash -s -- --analytics
 # Or: ... | bash -s -- --no-analytics
-jarvis init --analytics
-# Or: jarvis init --no-analytics
+aura init --analytics
+# Or: aura init --no-analytics
 ```
 
 To change your choice later:
 
 ```bash
-jarvis config set analytics.enabled false
-# To enable: jarvis config set analytics.enabled true
+aura config set analytics.enabled false
+# To enable: aura config set analytics.enabled true
 ```
 
 Restart the server and reload the frontend after changing the setting.
@@ -136,13 +136,13 @@ recording are disabled. Installer beacons use fixed fields assembled separately.
 ## Where the data goes
 
 - The default runtime and Bash installer endpoint is
-  `https://34.231.106.201.sslip.io`, configured for the OpenJarvis team's
+  `https://34.231.106.201.sslip.io`, configured for the AURA team's
   PostHog project.
 - Runtime deployments can override `[analytics] host`; installer deployments
   can override `OPENJARVIS_ANALYTICS_HOST`. A configured endpoint alone does
   not establish its hosting provider or server logging settings.
 - **Never** sold, shared with advertisers, or used for anything other
-  than improving OpenJarvis.
+  than improving AURA.
 
 ## Retention
 
@@ -181,5 +181,5 @@ previous UUID remain on the receiving service until deleted there.
   `[analytics]`) in `config.toml`.
 - The leaderboard / contest opt-in (`OptInModal.tsx`) is a separate,
   voluntary feature that publicly shares your energy and savings on
-  the OpenJarvis leaderboard. It is **not** the same as analytics and
+  the AURA leaderboard. It is **not** the same as analytics and
   requires explicit opt-in with a display name and email.

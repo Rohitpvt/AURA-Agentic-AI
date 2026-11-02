@@ -28,7 +28,7 @@ _PATH_ENV_VAR = {
 
 # Map framework name -> env var that overrides its language-runtime executable.
 # For hermes this overrides `python_executable` (point at the Hermes venv's
-# python so its deps don't need to be installed in OpenJarvis's venv); for
+# python so its deps don't need to be installed in AURA's venv); for
 # openclaw it overrides `node_executable` (point at a Node ≥14.8 binary if
 # the system default is too old).
 _RUNTIME_ENV_VAR = {

@@ -303,7 +303,7 @@ When memory context injection is enabled (the default), queries are automaticall
 The following context was retrieved from the knowledge base.
 Use it to inform your response, citing sources where applicable:
 
-[Source: docs/intro.md] OpenJarvis is a modular AI framework...
+[Source: docs/intro.md] AURA is a modular AI framework...
 
 [Source: docs/config.md] Configuration is stored in TOML format...
 ```
@@ -328,19 +328,19 @@ Use it to inform your response, citing sources where applicable:
 
 ```bash
 # Index a directory
-jarvis memory index ./docs/
+aura memory index ./docs/
 
 # Index with custom chunking
-jarvis memory index ./notes/ --chunk-size 256 --chunk-overlap 32
+aura memory index ./notes/ --chunk-size 256 --chunk-overlap 32
 
 # Search the memory store
-jarvis memory search "machine learning"
+aura memory search "machine learning"
 
 # Search with more results
-jarvis memory search -k 10 "neural networks"
+aura memory search -k 10 "neural networks"
 
 # Show memory statistics
-jarvis memory stats
+aura memory stats
 ```
 
 ## SDK Usage

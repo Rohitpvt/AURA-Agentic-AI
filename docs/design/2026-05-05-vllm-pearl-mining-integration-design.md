@@ -4,9 +4,9 @@
 |---|---|
 | **Date** | 2026-05-05 |
 | **Status** | Design — pending implementation plan |
-| **Owner** | OpenJarvis team |
+| **Owner** | AURA team |
 | **Companion spec** | [Spec B — Apple Silicon enablement](2026-05-05-apple-silicon-pearl-mining-design.md) (separate effort, runs in parallel) |
-| **Repos referenced** | `OpenJarvis` (this repo), `pearl-research-labs/pearl` |
+| **Repos referenced** | `AURA` (this repo), `pearl-research-labs/pearl` |
 
 ## 1. Summary
 

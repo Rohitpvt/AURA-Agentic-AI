@@ -97,7 +97,7 @@ knowledge_sql. Return the document title and source.
 emails". Filter gmail by recency, summarize senders and subjects.
 
 **Cross-source synthesis** — "everything about the Scipio project", \
-"what do I know about OpenJarvis?". Search a topic across ALL sources \
+"what do I know about AURA?". Search a topic across ALL sources \
 (messages, emails, meetings, docs, notes) and synthesize findings.
 
 **Deep research** — "when was my trip to Spain?", "which VCs have I \

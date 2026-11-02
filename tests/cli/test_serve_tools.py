@@ -1,4 +1,4 @@
-"""Regression tests for tool selection during ``jarvis serve`` startup."""
+"""Regression tests for tool selection during ``aura serve`` startup."""
 
 from __future__ import annotations
 

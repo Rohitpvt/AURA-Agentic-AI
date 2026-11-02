@@ -1,4 +1,4 @@
-"""Optimization framework for OpenJarvis configuration tuning."""
+"""Optimization framework for AURA configuration tuning."""
 
 from openjarvis.learning.optimize.config import (
     load_benchmark_specs,

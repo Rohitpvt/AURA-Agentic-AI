@@ -295,7 +295,7 @@ class KokoroTTSBackend(TTSBackend):
 
     def available_voices(self) -> List[str]:
         # Curated subset of Kokoro v1.x voices. The full catalog is larger;
-        # the list here covers the languages OpenJarvis users most commonly
+        # the list here covers the languages AURA users most commonly
         # ask for and avoids voice IDs that have changed across Kokoro
         # releases.
         return [

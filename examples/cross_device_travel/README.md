@@ -172,7 +172,7 @@ idempotency work but do not provide durable deduplication or exactly-once delive
 Timeout enforcement belongs to the transport. The mock explicitly simulates
 timeouts; it does not start a real timer or interrupt running work.
 
-## OpenJarvis integration map
+## AURA integration map
 
 These future integration points are outside the demo's runtime and dependencies.
 
@@ -183,7 +183,7 @@ These future integration points are outside the demo's runtime and dependencies.
 | `src/openjarvis/a2a/client.py`: `A2AClient` | Adapt discovery to agent cards and dispatch to the existing `tasks/send` endpoint. |
 | `src/openjarvis/a2a/tool.py`: `A2AAgentTool` | Follow the existing remote-agent-as-tool pattern for Python orchestration. |
 | `rust/crates/openjarvis-core/src/hardware.rs`: `detect_hardware` | Populate laptop compute advertisements; peer discovery still needs its own adapter. |
-| `rust/crates/openjarvis-core/src/types.rs`: `Trace`, `TraceStep` | Record routing, tool calls, and responses in OpenJarvis tracing. |
+| `rust/crates/openjarvis-core/src/types.rs`: `Trace`, `TraceStep` | Record routing, tool calls, and responses in AURA tracing. |
 
 Integration needs explicit adaptation. Rust A2A currently uses
 `pending/active/cancelled`, whereas Python uses `submitted/working/canceled`;

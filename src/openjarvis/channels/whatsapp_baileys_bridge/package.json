@@ -1,7 +1,7 @@
 {
   "name": "openjarvis-whatsapp-baileys-bridge",
   "version": "0.1.0",
-  "description": "Node.js bridge between OpenJarvis and WhatsApp via Baileys",
+  "description": "Node.js bridge between AURA and WhatsApp via Baileys",
   "main": "dist/bridge.js",
   "scripts": {
     "build": "tsc",

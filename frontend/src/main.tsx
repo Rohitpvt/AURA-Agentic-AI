@@ -11,7 +11,7 @@ import './index.css';
 
 function applyTheme() {
   try {
-    const raw = localStorage.getItem('openjarvis-settings');
+    const raw = localStorage.getItem('aura-settings');
     const settings = raw ? JSON.parse(raw) : {};
     const theme = settings.theme || 'system';
     if (theme === 'dark') {

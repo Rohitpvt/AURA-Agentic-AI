@@ -51,7 +51,7 @@ impl TraceCollector {
         trace_id: &str,
         result: &str,
         outcome: Option<&str>,
-    ) -> Result<(), openjarvis_core::OpenJarvisError> {
+    ) -> Result<(), openjarvis_core::AURAError> {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()

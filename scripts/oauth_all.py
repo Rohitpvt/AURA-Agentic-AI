@@ -339,7 +339,7 @@ def do_spotify() -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Run OAuth flows for OpenJarvis connectors"
+        description="Run OAuth flows for AURA connectors"
     )
     parser.add_argument("--google", action="store_true", help="Only Google")
     parser.add_argument("--strava", action="store_true", help="Only Strava")

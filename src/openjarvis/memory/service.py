@@ -1,14 +1,14 @@
 """Persistent memory service: async fact extraction integrated into core.
 
 ``MemoryService`` runs fact extraction on a dedicated background thread so it
-never blocks ``jarvis serve`` request handling or the ``jarvis chat`` REPL.
+never blocks ``aura serve`` request handling or the ``aura chat`` REPL.
 Callers hand off an exchange via :meth:`submit`, which enqueues the work and
 returns immediately — the slow model call and disk write happen out of band.
 The worker swallows every per-job error (including ``BrokenPipeError`` when a
 client disconnects mid-extraction), so a flaky extraction model can never take
 down the host process.
 
-The service is started and stopped as part of the OpenJarvis lifecycle (see
+The service is started and stopped as part of the AURA lifecycle (see
 ``cli/serve.py`` and ``cli/chat_cmd.py``) and is configured through the
 ``[memory]`` section of ``config.toml``.
 """
