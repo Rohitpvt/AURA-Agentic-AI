@@ -107,20 +107,14 @@ export function CommandPalette() {
   const setCommandPaletteOpen = useAppStore((s) => s.setCommandPaletteOpen);
 
   const installedIds = new Set(models.map((m) => m.id));
-  const desktopKeyStorage = isTauri();
-
   const refreshCloudKeyStatus = useCallback(async () => {
-    if (!desktopKeyStorage) {
-      setCloudKeyStatus({});
-      return;
-    }
     try {
       setCloudKeyStatus(await getCloudKeyStatus());
       setCloudKeyError(null);
     } catch (e: any) {
       setCloudKeyError(e?.message || 'Failed to read cloud key status');
     }
-  }, [desktopKeyStorage]);
+  }, []);
 
   const filtered = tab === 'installed'
     ? (query
@@ -466,9 +460,7 @@ export function CommandPalette() {
             /* ── Cloud Models tab ── */
             <div className="px-4 py-2">
               <div className="text-[11px] mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
-                {desktopKeyStorage
-                  ? 'Add your API keys to use cloud models. Keys are stored in secure desktop storage.'
-                  : 'Configure cloud provider keys in the server environment to use cloud models.'}
+                Add your API keys to use cloud models. Keys are stored securely on your local machine.
               </div>
 
               {CLOUD_PROVIDERS.map((provider) => {
@@ -498,9 +490,10 @@ export function CommandPalette() {
                           type={isVisible ? 'text' : 'password'}
                           value={key}
                           onChange={(e) => setApiKeys((prev) => ({ ...prev, [provider.envKey]: e.target.value }))}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleKeyBlur(provider); } }}
                           onBlur={() => handleKeyBlur(provider)}
-                          placeholder={hasSavedKey ? 'Saved in secure storage' : provider.envKey}
-                          disabled={!desktopKeyStorage || isSaving}
+                          placeholder={hasSavedKey ? 'Configured (enter new to update)' : provider.envKey}
+                          disabled={isSaving}
                           className="flex-1 text-xs px-2 py-1.5 bg-transparent outline-none font-mono"
                           style={{ color: 'var(--color-text)' }}
                         />
@@ -511,6 +504,16 @@ export function CommandPalette() {
                           {isVisible ? <EyeOff size={12} /> : <Eye size={12} />}
                         </button>
                       </div>
+                      {key.trim() && (
+                        <button
+                          onClick={() => handleSaveKey(provider, key)}
+                          disabled={isSaving}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-medium cursor-pointer"
+                          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', opacity: isSaving ? 0.5 : 1 }}
+                        >
+                          {isSaving ? 'Saving' : 'Save'}
+                        </button>
+                      )}
                       {hasSavedKey && (
                         <button
                           onClick={() => handleSaveKey(provider, '')}

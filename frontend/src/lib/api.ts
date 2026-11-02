@@ -16,29 +16,6 @@ export const isTauri = () => typeof window !== 'undefined' && !!window.__TAURI_I
 
 export type CloudKeyStatus = Record<string, boolean>;
 
-export async function getCloudKeyStatus(): Promise<CloudKeyStatus> {
-  if (!isTauri()) return {};
-  try {
-    const { invoke } = await import('@tauri-apps/api/core');
-    const rows = await invoke<Array<{ key: string; set: boolean }>>('get_cloud_key_status');
-    return Object.fromEntries(rows.map((row) => [row.key, row.set]));
-  } catch (e: any) {
-    throw new Error(e?.message ?? e ?? 'Failed to read cloud key status');
-  }
-}
-
-export async function saveCloudKey(keyName: string, keyValue: string): Promise<void> {
-  if (!isTauri()) {
-    throw new Error('Cloud API keys can be saved in the desktop app only.');
-  }
-  try {
-    const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('save_cloud_key', { keyName, keyValue });
-  } catch (e: any) {
-    throw new Error(e?.message ?? e ?? 'Failed to save cloud key');
-  }
-}
-
 // Cached API base URL fetched from the Tauri backend at startup.
 // This avoids hardcoding the port — the Rust backend is the single
 // source of truth for JARVIS_PORT.
@@ -119,6 +96,46 @@ export const apiFetch = (
   );
   return fetch(`${getBase()}${path}`, { ...init, headers });
 };
+
+export async function getCloudKeyStatus(): Promise<CloudKeyStatus> {
+  if (isTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const rows = await invoke<Array<{ key: string; set: boolean }>>('get_cloud_key_status');
+      return Object.fromEntries(rows.map((row) => [row.key, row.set]));
+    } catch (e: any) {
+      throw new Error(e?.message ?? e ?? 'Failed to read cloud key status');
+    }
+  }
+  try {
+    const res = await apiFetch('/v1/cloud-keys/status');
+    if (!res.ok) return {};
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function saveCloudKey(keyName: string, keyValue: string): Promise<void> {
+  if (isTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('save_cloud_key', { keyName, keyValue });
+      return;
+    } catch (e: any) {
+      throw new Error(e?.message ?? e ?? 'Failed to save cloud key');
+    }
+  }
+  const res = await apiFetch('/v1/cloud-keys', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key_name: keyName, key_value: keyValue }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || err.message || 'Failed to save cloud key');
+  }
+}
 
 async function tauriInvoke<T>(command: string, args: Record<string, unknown> = {}): Promise<T> {
   const { invoke } = await import('@tauri-apps/api/core');

@@ -26,7 +26,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'AURA',
-        short_name: 'Jarvis',
+        short_name: 'AURA',
         description: 'On-device AI assistant',
         theme_color: '#161618',
         background_color: '#161618',

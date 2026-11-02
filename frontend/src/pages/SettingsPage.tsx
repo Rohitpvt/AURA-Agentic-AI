@@ -74,24 +74,17 @@ function ApiKeyInput({
   const [saved, setSaved] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [error, setError] = useState('');
-  const desktopKeyStorage = isTauri();
-  const serverToolStorage = !desktopKeyStorage && !!toolName;
-  const canManage = desktopKeyStorage || serverToolStorage;
 
   const refresh = useCallback(async () => {
-    if (!canManage) {
-      setHasKey(false);
-      return;
-    }
     try {
-      const status = desktopKeyStorage
-        ? await getCloudKeyStatus()
-        : await fetchToolCredentialStatus(toolName!);
+      const status = toolName
+        ? await fetchToolCredentialStatus(toolName)
+        : await getCloudKeyStatus();
       setHasKey(!!status[keyName]);
     } catch {
       setHasKey(false);
     }
-  }, [canManage, desktopKeyStorage, keyName, toolName]);
+  }, [keyName, toolName]);
 
   useEffect(() => {
     void refresh();
@@ -104,12 +97,10 @@ function ApiKeyInput({
     if (!next) return;
     setError('');
     try {
-      if (desktopKeyStorage) {
-        await saveCloudKey(keyName, next);
-      } else if (toolName) {
+      if (toolName) {
         await saveToolCredentials(toolName, { [keyName]: next });
       } else {
-        return;
+        await saveCloudKey(keyName, next);
       }
       setValue('');
       setHasKey(true);
@@ -124,12 +115,10 @@ function ApiKeyInput({
   const remove = async () => {
     setError('');
     try {
-      if (desktopKeyStorage) {
-        await saveCloudKey(keyName, '');
-      } else if (toolName) {
+      if (toolName) {
         await deleteToolCredential(toolName, keyName);
       } else {
-        return;
+        await saveCloudKey(keyName, '');
       }
       setValue('');
       setHasKey(false);
@@ -147,11 +136,20 @@ function ApiKeyInput({
         type="password"
         value={value}
         onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void save(value); } }}
         onBlur={() => { if (value.trim()) void save(value); }}
-        placeholder={hasKey ? (desktopKeyStorage ? 'Saved in secure storage' : 'Saved by local server') : placeholder}
-        disabled={!canManage}
+        placeholder={hasKey ? 'Key configured (enter to update)' : placeholder}
         className="w-48 px-2 py-1 rounded text-xs"
         style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+      {value.trim() && (
+        <button
+          onClick={() => void save(value)}
+          className="px-2 py-1 rounded text-[10px] font-medium cursor-pointer"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
+        >
+          Save
+        </button>
+      )}
       {hasKey && (
         <button
           onClick={() => void remove()}
@@ -169,20 +167,15 @@ function ApiKeyInput({
 
 function CloudProviderStatus({ label, keyName }: { label: string; keyName: string }) {
   const [hasKey, setHasKey] = useState(false);
-  const desktopKeyStorage = isTauri();
 
   const refresh = useCallback(async () => {
-    if (!desktopKeyStorage) {
-      setHasKey(false);
-      return;
-    }
     try {
       const status = await getCloudKeyStatus();
       setHasKey(!!status[keyName]);
     } catch {
       setHasKey(false);
     }
-  }, [desktopKeyStorage, keyName]);
+  }, [keyName]);
 
   useEffect(() => {
     void refresh();

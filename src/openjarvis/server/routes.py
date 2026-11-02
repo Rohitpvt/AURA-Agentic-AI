@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import threading
 import uuid
 import weakref
@@ -30,6 +31,7 @@ from openjarvis.server.models import (
     UsageInfo,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -1213,6 +1215,123 @@ async def delete_model(model_name: str, request: Request):
         )
 
     return {"status": "deleted", "model": model_name}
+
+
+
+def _read_cloud_keys_file() -> dict[str, str]:
+    keys_path = get_config_dir() / "cloud-keys.env"
+    result: dict[str, str] = {}
+    if keys_path.exists():
+        try:
+            for raw_line in keys_path.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    result[k.strip()] = v.strip()
+        except Exception as exc:
+            logger.warning("Failed to read cloud-keys.env: %s", exc)
+    return result
+
+
+def _write_cloud_keys_file(keys: dict[str, str]) -> None:
+    keys_path = get_config_dir() / "cloud-keys.env"
+    keys_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["# AURA Cloud API Keys"]
+    for k, v in sorted(keys.items()):
+        if v:
+            lines.append(f"{k}={v}")
+    keys_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+@router.get("/v1/cloud-keys/status")
+async def get_cloud_keys_status():
+    """Return status of recognized cloud API keys."""
+    saved_keys = _read_cloud_keys_file()
+    recognized = [
+        "GEMINI_API_KEY",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OPENROUTER_API_KEY",
+        "MINIMAX_API_KEY",
+        "ATLASCLOUD_API_KEY",
+        "TAVILY_API_KEY",
+    ]
+    status: dict[str, bool] = {}
+    for key in recognized:
+        has_key = bool(os.environ.get(key)) or bool(saved_keys.get(key))
+        if key == "GEMINI_API_KEY" and not has_key:
+            has_key = bool(os.environ.get("GOOGLE_API_KEY")) or bool(saved_keys.get("GOOGLE_API_KEY"))
+        status[key] = has_key
+    return status
+
+
+@router.post("/v1/cloud-keys")
+async def save_cloud_key_endpoint(request: Request):
+    """Save or remove a cloud API key and reload cloud engine."""
+    body = await request.json()
+    key_name = body.get("key_name") or body.get("keyName") or ""
+    key_value = body.get("key_value") if "key_value" in body else body.get("keyValue", "")
+    key_name = str(key_name).strip()
+    key_value = str(key_value).strip() if key_value is not None else ""
+
+    if not key_name or not key_name.endswith("_API_KEY"):
+        raise HTTPException(status_code=400, detail="Invalid API key name")
+
+    saved_keys = _read_cloud_keys_file()
+    if key_value:
+        saved_keys[key_name] = key_value
+        os.environ[key_name] = key_value
+        if key_name == "GEMINI_API_KEY":
+            saved_keys["GOOGLE_API_KEY"] = key_value
+            os.environ["GOOGLE_API_KEY"] = key_value
+    else:
+        saved_keys.pop(key_name, None)
+        os.environ.pop(key_name, None)
+        if key_name == "GEMINI_API_KEY":
+            saved_keys.pop("GOOGLE_API_KEY", None)
+            os.environ.pop("GOOGLE_API_KEY", None)
+
+    _write_cloud_keys_file(saved_keys)
+
+    try:
+        from openjarvis.engine.cloud import CloudEngine
+        from openjarvis.engine.multi import MultiEngine
+
+        cloud = CloudEngine()
+        outer = getattr(request.app.state, "engine", None)
+        if outer is not None:
+            inner = getattr(outer, "_inner", outer)
+            if isinstance(inner, MultiEngine):
+                new_engines = [(k, e) for k, e in inner._engines if k != "cloud"]
+                if cloud.health():
+                    new_engines.append(("cloud", cloud))
+                inner._engines = new_engines
+                inner._refresh_map()
+            elif cloud.health():
+                engine_name = getattr(request.app.state, "engine_name", "local")
+                new_multi = MultiEngine([(engine_name, inner), ("cloud", cloud)])
+                if hasattr(outer, "_inner"):
+                    outer._inner = new_multi
+                else:
+                    request.app.state.engine = new_multi
+                request.app.state.engine_name = "multi"
+    except Exception as exc:
+        logger.warning("Cloud engine reload note: %s", exc)
+
+    return {"status": "ok", "key_name": key_name, "is_set": bool(key_value)}
+
+
+@router.delete("/v1/cloud-keys/{key_name}")
+async def delete_cloud_key_endpoint(key_name: str, request: Request):
+    """Delete a cloud API key and reload cloud engine."""
+    saved_keys = _read_cloud_keys_file()
+    saved_keys.pop(key_name, None)
+    os.environ.pop(key_name, None)
+    if key_name == "GEMINI_API_KEY":
+        saved_keys.pop("GOOGLE_API_KEY", None)
+        os.environ.pop("GOOGLE_API_KEY", None)
+    _write_cloud_keys_file(saved_keys)
+    return {"status": "deleted", "key_name": key_name}
 
 
 @router.post("/v1/cloud/reload")
