@@ -615,6 +615,8 @@ def create_connectors_router():
                 instance.configure(feeds)
 
             else:
+                if hasattr(instance, "connect"):
+                    instance.connect()
                 # Generic: try to store token or credentials if the instance
                 # exposes the relevant attributes.
                 if req.token and hasattr(instance, "_token"):

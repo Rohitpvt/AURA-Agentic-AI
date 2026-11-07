@@ -41,12 +41,23 @@ class HackerNewsConnector(BaseConnector):
 
     def __init__(self) -> None:
         self._status = SyncStatus()
+        from openjarvis.core.paths import get_config_dir
+
+        self._disabled_file = get_config_dir() / "connectors" / "hackernews_disabled"
 
     def is_connected(self) -> bool:
-        return True
+        return not self._disabled_file.exists()
+
+    def connect(self, credentials: Optional[Dict[str, Any]] = None) -> None:
+        if self._disabled_file.exists():
+            try:
+                self._disabled_file.unlink()
+            except OSError:
+                pass
 
     def disconnect(self) -> None:
-        pass  # No credentials to revoke
+        self._disabled_file.parent.mkdir(parents=True, exist_ok=True)
+        self._disabled_file.touch(exist_ok=True)
 
     def sync(
         self, *, since: Optional[datetime] = None, cursor: Optional[str] = None
